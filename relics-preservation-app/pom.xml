@@ -2,10 +2,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>relics-app</artifactId>
+    <artifactId>relics-preservation-app</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>relics-app</name>
-    <description>relics-app</description>
+    <name>relics-preservation-app</name>
+    <description>relics-preservation-app</description>
     <parent>
         <groupId>com.ling</groupId>
         <artifactId>relics-preservation</artifactId>
@@ -16,6 +16,18 @@
     </properties>
     <dependencies>
 
+
+        <!--  项目工程依赖  -->
+        <dependency>
+            <groupId>com.ling</groupId>
+            <artifactId>relics-preservation-trigger</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>com.ling</groupId>
+            <artifactId>relics-preservation-infrastructure</artifactId>
+            <version>0.0.1-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>
