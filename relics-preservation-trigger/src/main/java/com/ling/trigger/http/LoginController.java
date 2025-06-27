@@ -29,7 +29,7 @@ public class LoginController {
 
     /**
      * 注册接口
-     * @param registerVO 注册信息
+     * @param registerDTO 注册信息
      * @param session HTTP会话
      * @return 注册结果
      */
@@ -71,7 +71,7 @@ public class LoginController {
 
     /**
      * 登录接口
-     * @param loginVO 登录信息
+     * @param loginDTO 登录信息
      * @param session HTTP会话
      * @return 登录结果
      */
@@ -102,7 +102,7 @@ public class LoginController {
 
     /**
      * 修改密码接口
-     * @param changePasswordVO 修改密码信息
+     * @param changePasswordDTO 修改密码信息
      * @param session HTTP会话
      * @return 修改结果
      */
