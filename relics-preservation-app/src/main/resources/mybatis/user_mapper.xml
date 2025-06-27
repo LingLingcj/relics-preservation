@@ -30,7 +30,7 @@
     
     <insert id="insertUser" parameterType="com.ling.infrastructure.dao.po.User">
         INSERT INTO users (username, nickname, password, email, status, role, create_time, update_time)
-        VALUES (#{username}, #{nickname} , #{password}, #{email}, 1, 'USER', now(), now())
+        VALUES (#{username}, #{nickname} , #{password}, #{email}, 1, #{role}, now(), now())
     </insert>
     
     <update id="updatePassword" parameterType="com.ling.infrastructure.dao.po.User">

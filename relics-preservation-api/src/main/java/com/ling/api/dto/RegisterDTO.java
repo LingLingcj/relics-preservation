@@ -1,5 +1,6 @@
 package com.ling.api.dto;
 
+import com.ling.domain.auth.model.valobj.RoleEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -23,4 +24,9 @@ public class RegisterDTO {
     private String confirmPassword;
     // 身份
     private String role;
+
+    public boolean validateRole() {
+        return this.role.equals(RoleEnum.USER.getRole()) || this.role.equals(RoleEnum.EXPERT.getRole())
+                ;
+    }
 }

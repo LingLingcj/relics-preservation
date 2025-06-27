@@ -21,7 +21,8 @@ public enum ResponseCode {
     PASSWORD_CONFIRM_ERROR("1006", "两次输入的密码不一致"),
     LOGIN_ERROR("1007", "用户名或密码错误"),
     OLD_PASSWORD_ERROR("1008", "原密码错误"),
-    USER_NOT_LOGGED_IN("1009", "用户未登录");
+    USER_NOT_LOGGED_IN("1009", "用户未登录"),
+    INVALID_ROLE("1010", "无效的用户角色");
 
     private final String code;
     private final String info;

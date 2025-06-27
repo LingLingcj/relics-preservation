@@ -5,6 +5,7 @@ import com.ling.domain.auth.model.entity.UserEntity;
 import com.ling.domain.auth.model.valobj.ChangePasswordVO;
 import com.ling.domain.auth.model.valobj.LoginVO;
 import com.ling.domain.auth.model.valobj.RegisterVO;
+import com.ling.domain.auth.model.valobj.RoleEnum;
 import com.ling.domain.auth.model.valobj.UserInfoVO;
 import com.ling.domain.auth.service.IUserAuthService;
 import com.ling.types.common.Response;
@@ -13,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Optional;
 
 /**
  * @Author: LingRJ
@@ -81,11 +84,23 @@ public class UserAuthServiceImpl implements IUserAuthService {
                     .build();
         }
 
+        // 角色校验
+        if (!registerVO.isValidRole()) {
+            return UserInfoVO.builder()
+                    .success(false)
+                    .message(ResponseCode.INVALID_ROLE.getInfo())
+                    .build();
+        }
+        
+        // 获取有效的角色枚举值
+        Optional<RoleEnum> roleEnum = registerVO.getRoleEnum();
+        String roleValue = roleEnum.get().getRole();
+
         // 创建用户并加密密码
         UserEntity user = UserEntity.builder()
                 .username(registerVO.getUsername())
                 .password(passwordEncoder.encode(registerVO.getPassword()))
-                .role(registerVO.getRole())
+                .role(roleValue)
                 .nickname(registerVO.getUsername())
                 .status((byte) 1)
                 .build();
@@ -94,7 +109,7 @@ public class UserAuthServiceImpl implements IUserAuthService {
         userRepository.save(user);
 
         return UserInfoVO.builder()
-                .role(registerVO.getRole())
+                .role(roleValue)
                 .success(true)
                 .username(user.getUsername())
                 .message(ResponseCode.SUCCESS.getInfo())
@@ -170,12 +185,6 @@ public class UserAuthServiceImpl implements IUserAuthService {
         userEntity.setPassword(passwordEncoder.encode(changePasswordVO.getNewPassword()));
         userRepository.updatePassword(userEntity);
         
-        return true;
-    }
-
-    @Override
-    public boolean validateToken(String token) {
-        // 实际的JWT验证在JwtAuthenticationFilter中处理，这里仅供业务逻辑扩展
         return true;
     }
 

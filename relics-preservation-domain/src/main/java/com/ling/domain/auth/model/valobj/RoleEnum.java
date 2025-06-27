@@ -11,8 +11,8 @@ import lombok.Getter;
 @AllArgsConstructor
 @Getter
 public enum RoleEnum {
-    USER("USER","普通用户"),
-    EXPERT("USER","专家")
+    USER("user","普通用户"),
+    EXPERT("expert","专家")
     ;
     private final String role;
     private final String description;

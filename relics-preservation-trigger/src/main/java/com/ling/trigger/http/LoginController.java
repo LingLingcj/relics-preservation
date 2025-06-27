@@ -35,6 +35,13 @@ public class LoginController {
      */
     @PostMapping("/register")
     public Response<String> register(@RequestBody RegisterDTO registerDTO, HttpSession session) {
+        // 检测身份（Role）选择是否正确
+        if(!registerDTO.validateRole()) {
+            return Response.<String>builder()
+                    .code(ResponseCode.INVALID_ROLE.getCode())
+                    .info(ResponseCode.INVALID_ROLE.getInfo())
+                    .build();
+        }
         // 校验密码是否一致
         if (!registerDTO.getPassword().equals(registerDTO.getConfirmPassword())) {
             return Response.<String>builder()

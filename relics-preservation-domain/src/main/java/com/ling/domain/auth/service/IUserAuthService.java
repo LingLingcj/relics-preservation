@@ -34,12 +34,6 @@ public interface IUserAuthService {
      */
     boolean changePassword(ChangePasswordVO changePasswordVO, String username);
 
-    /**
-     * 验证token
-     * @param token 用户token
-     * @return 验证结果
-     */
-    boolean validateToken(String token);
 
     /**
      * 验证用户是否存在

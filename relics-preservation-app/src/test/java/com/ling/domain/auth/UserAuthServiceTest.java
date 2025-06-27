@@ -27,6 +27,7 @@ public class UserAuthServiceTest {
         registerVO.setUsername("admin");
         registerVO.setPassword("admin123");
         registerVO.setConfirmPassword("admin123");
+        registerVO.setRole("expert");
 
         UserInfoVO userInfoVO1 = userAuthService.register(registerVO);
         log.info("注册结果：userInfo:{}", JSON.toJSONString(userInfoVO1));
@@ -34,6 +35,7 @@ public class UserAuthServiceTest {
         registerVO.setUsername("admin");
         registerVO.setPassword("admin123");
         registerVO.setConfirmPassword("admin123");
+        registerVO.setRole("expert");
 
         UserInfoVO userInfoVO2 = userAuthService.register(registerVO);
         log.info("注册结果：userInfo:{}", JSON.toJSONString(userInfoVO2));
