@@ -1,6 +1,8 @@
 package com.ling.infrastructure.dao;
 
+import com.ling.infrastructure.dao.po.User;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 
 /**
  * @Author: LingRJ
@@ -9,4 +11,5 @@ import org.apache.ibatis.annotations.Mapper;
  **/
 @Mapper
 public interface IUserDao {
+    User findByUsernameOrEmail(@Param("value")String usernameOrEmail);
 }

@@ -1,8 +1,11 @@
 package com.ling.domain.login.model.entity;
 
+import lombok.Builder;
 import lombok.Data;
 import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
+
+import java.util.Date;
 
 /**
  * 用户实体类
@@ -10,16 +13,17 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class User {
+@Builder
+public class UserEntity {
 
-    private String userId;
     private String username;
     private String password;
     private String email;
     private String role;
-    private Integer status; // 0: 禁用, 1: 启用
-    private String createTime;
-    private String updateTime;
+    // 0: 禁用, 1: 启用
+    private Byte status;
+    private Date createTime;
+    private Date updateTime;
 
     public boolean isEnabled() {
         return status != null && status == 1;

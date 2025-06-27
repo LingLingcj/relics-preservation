@@ -20,7 +20,7 @@ public class User {
     // 自增主键
     private Integer id;
     // 用户唯一标识
-    private String userId;
+    private String username;
     // 昵称
     private String nickname;
     // 真实姓名

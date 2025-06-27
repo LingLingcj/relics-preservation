@@ -5,7 +5,7 @@
 
     <resultMap id="UserResultMap" type="com.ling.infrastructure.dao.po.User">
         <id property="id" column="id"/>
-        <result property="userId" column="user_id"/>
+        <result property="username" column="username"/>
         <result property="nickname" column="nickname"/>
         <result property="fullName" column="full_name"/>
         <result property="password" column="password"/>
@@ -19,6 +19,14 @@
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
     </resultMap>
+    <select id="findByUsernameOrEmail" resultType="com.ling.infrastructure.dao.po.User"
+            parameterType="java.lang.String">
+        SELECT *
+        FROM users
+        WHERE username = #{value}
+           OR email = #{value}
+        LIMIT 1
+    </select>
 
 
 </mapper>
