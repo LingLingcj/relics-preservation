@@ -1,4 +1,4 @@
-package com.ling.domain.auth.model.valobj;
+package com.ling.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -7,14 +7,14 @@ import lombok.NoArgsConstructor;
 
 /**
  * @Author: LingRJ
- * @Description: 用户注册值对象
- * @DateTime: 2025/6/26 23:14
+ * @Description: DTO
+ * @DateTime: 2025/6/27 14:39
  **/
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class RegisterVO {
+public class RegisterDTO {
     // 用户Id
     private String username;
     // 用户密码

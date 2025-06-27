@@ -85,7 +85,7 @@ public class UserAuthServiceImpl implements IUserAuthService {
         UserEntity user = UserEntity.builder()
                 .username(registerVO.getUsername())
                 .password(passwordEncoder.encode(registerVO.getPassword()))
-                .role("USER")
+                .role(registerVO.getRole())
                 .nickname(registerVO.getUsername())
                 .status((byte) 1)
                 .build();
@@ -94,6 +94,7 @@ public class UserAuthServiceImpl implements IUserAuthService {
         userRepository.save(user);
 
         return UserInfoVO.builder()
+                .role(registerVO.getRole())
                 .success(true)
                 .username(user.getUsername())
                 .message(ResponseCode.SUCCESS.getInfo())

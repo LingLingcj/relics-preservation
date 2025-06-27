@@ -7,20 +7,15 @@ import lombok.NoArgsConstructor;
 
 /**
  * @Author: LingRJ
- * @Description: 用户注册值对象
- * @DateTime: 2025/6/26 23:14
+ * @Description: 修改密码值对象
+ * @DateTime: 2025/6/26 23:50
  **/
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class RegisterVO {
-    // 用户Id
-    private String username;
-    // 用户密码
-    private String password;
-    // 确认密码
+public class ChangePasswordVO {
+    private String oldPassword;
+    private String newPassword;
     private String confirmPassword;
-    // 身份
-    private String role;
-}
+} 

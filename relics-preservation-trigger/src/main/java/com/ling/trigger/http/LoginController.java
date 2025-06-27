@@ -1,5 +1,8 @@
 package com.ling.trigger.http;
 
+import com.ling.api.dto.ChangePasswordDTO;
+import com.ling.api.dto.LoginDTO;
+import com.ling.api.dto.RegisterDTO;
 import com.ling.domain.auth.model.valobj.ChangePasswordVO;
 import com.ling.domain.auth.model.valobj.LoginVO;
 import com.ling.domain.auth.model.valobj.RegisterVO;
@@ -8,6 +11,7 @@ import com.ling.domain.auth.service.IUserAuthService;
 import com.ling.types.common.Response;
 import com.ling.types.common.ResponseCode;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -30,14 +34,19 @@ public class LoginController {
      * @return 注册结果
      */
     @PostMapping("/register")
-    public Response<String> register(@RequestBody RegisterVO registerVO, HttpSession session) {
+    public Response<String> register(@RequestBody RegisterDTO registerDTO, HttpSession session) {
         // 校验密码是否一致
-        if (!registerVO.getPassword().equals(registerVO.getConfirmPassword())) {
+        if (!registerDTO.getPassword().equals(registerDTO.getConfirmPassword())) {
             return Response.<String>builder()
                     .code(ResponseCode.PASSWORD_CONFIRM_ERROR.getCode())
                     .info(ResponseCode.PASSWORD_CONFIRM_ERROR.getInfo())
                     .build();
         }
+
+        RegisterVO registerVO = new RegisterVO();
+        registerVO.setUsername(registerDTO.getUsername());
+        registerVO.setPassword(registerDTO.getPassword());
+        registerVO.setConfirmPassword(registerDTO.getConfirmPassword());
 
         // 调用服务进行注册
         UserInfoVO userInfo = userAuthService.register(registerVO);
@@ -67,7 +76,9 @@ public class LoginController {
      * @return 登录结果
      */
     @PostMapping("/login")
-    public Response<String> login(@RequestBody LoginVO loginVO, HttpSession session) {
+    public Response<String> login(@RequestBody LoginDTO loginDTO, HttpSession session) {
+        LoginVO loginVO = new LoginVO();
+        BeanUtils.copyProperties(loginDTO,loginVO);
         // 调用服务进行登录
         UserInfoVO userInfo = userAuthService.login(loginVO);
         
@@ -96,7 +107,7 @@ public class LoginController {
      * @return 修改结果
      */
     @PostMapping("/change-password")
-    public Response<String> changePassword(@RequestBody ChangePasswordVO changePasswordVO, HttpSession session) {
+    public Response<String> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO, HttpSession session) {
         // 获取当前登录用户
         String username = (String) session.getAttribute("username");
         
@@ -109,12 +120,15 @@ public class LoginController {
         }
         
         // 校验新密码和确认密码
-        if (!changePasswordVO.getNewPassword().equals(changePasswordVO.getConfirmPassword())) {
+        if (!changePasswordDTO.getNewPassword().equals(changePasswordDTO.getConfirmPassword())) {
             return Response.<String>builder()
                     .code(ResponseCode.PASSWORD_CONFIRM_ERROR.getCode())
                     .info(ResponseCode.PASSWORD_CONFIRM_ERROR.getInfo())
                     .build();
         }
+
+        ChangePasswordVO changePasswordVO = new ChangePasswordVO();
+        BeanUtils.copyProperties(changePasswordDTO,changePasswordVO);
         
         // 调用服务修改密码
         boolean success = userAuthService.changePassword(changePasswordVO, username);
