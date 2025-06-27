@@ -1,5 +1,8 @@
 package com.ling.types.jwt;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.ling.types.common.Response;
+import com.ling.types.common.ResponseCode;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -17,10 +20,20 @@ import java.io.IOException;
 
 @Component
 public class JwtAuthenticationEntryPoint implements AuthenticationEntryPoint {
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     @Override
     public void commence(HttpServletRequest request,
                          HttpServletResponse response,
                          AuthenticationException authException) throws IOException, ServletException {
         response.sendError(HttpServletResponse.SC_UNAUTHORIZED, authException.getMessage());
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        Response<String> errorResponse = Response.<String>builder()
+                .code(ResponseCode.USER_NOT_LOGGED_IN.getCode())
+                .info(ResponseCode.USER_NOT_LOGGED_IN.getInfo())
+                .build();
+
+        objectMapper.writeValue(response.getOutputStream() ,errorResponse.toString());
     }
 }

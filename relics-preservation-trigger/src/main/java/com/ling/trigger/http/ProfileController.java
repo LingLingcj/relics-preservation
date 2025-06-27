@@ -6,6 +6,14 @@ import com.ling.domain.auth.model.valobj.UserInfoVO;
 import com.ling.domain.auth.service.IUserProfileService;
 import com.ling.types.common.Response;
 import com.ling.types.common.ResponseCode;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -19,6 +27,8 @@ import org.springframework.web.bind.annotation.*;
  **/
 @RestController
 @RequestMapping("/api/user/profile")
+@Tag(name = "用户资料管理", description = "用户个人信息查询和修改接口")
+@SecurityRequirement(name = "JWT")
 public class ProfileController {
 
     @Autowired
@@ -29,7 +39,9 @@ public class ProfileController {
      * @return 用户信息
      */
     @GetMapping
+    @Operation(summary = "获取用户信息", description = "获取当前登录用户的详细个人信息")
     public Response<UserInfoVO> getUserProfile(
+            @Parameter(description = "JWT令牌", required = true)
             @RequestHeader(value = "Authorization", required = true) String token) {
         // 从Spring Security上下文获取当前登录用户
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -47,8 +59,12 @@ public class ProfileController {
      * @return 更新结果
      */
     @PutMapping
-    public Response<UserInfoVO> updateUserProfile(@RequestBody ProfileUpdateDTO profileUpdateDTO,
-                                                  @RequestHeader(value = "Authorization", required = true) String token) {
+    @Operation(summary = "更新用户信息", description = "更新当前登录用户的个人信息")
+    public Response<UserInfoVO> updateUserProfile(
+            @Parameter(description = "用户信息更新数据", required = true)
+            @RequestBody ProfileUpdateDTO profileUpdateDTO,
+            @Parameter(description = "JWT令牌", required = true)
+            @RequestHeader(value = "Authorization", required = true) String token) {
         // 从Spring Security上下文获取当前登录用户
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();

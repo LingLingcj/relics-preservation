@@ -41,12 +41,15 @@ public class JwtTokenProvider {
                     // 确保密钥长度足够
                     // 如果密钥长度不够，Base64编码可以增加长度
                     String secret = jwtSecret;
-                    if (secret.length() < 32) { // 至少需要32字符（256位）
+                    // 至少需要32字符（256位）
+                    if (secret.length() < 32) {
                         StringBuilder sb = new StringBuilder(secret);
                         while (sb.length() < 32) {
-                            sb.append(secret); // 重复密钥直到长度足够
+                            // 重复密钥直到长度足够
+                            sb.append(secret);
                         }
-                        secret = sb.toString().substring(0, 32); // 取前32个字符
+                        // 取前32个字符
+                        secret = sb.substring(0, 32);
                     }
                     
                     // 使用配置的密钥

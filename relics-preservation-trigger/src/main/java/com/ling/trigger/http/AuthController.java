@@ -11,6 +11,15 @@ import com.ling.domain.auth.service.IUserAuthService;
 import com.ling.types.common.Response;
 import com.ling.types.common.ResponseCode;
 import com.ling.types.jwt.JwtTokenProvider;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,6 +39,7 @@ import java.util.Map;
  **/
 @RestController
 @RequestMapping("/api/auth")
+@Tag(name = "用户认证", description = "用户登录、注册和密码管理接口")
 public class AuthController {
 
     @Autowired
@@ -40,6 +50,8 @@ public class AuthController {
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
+    @Autowired
+    private ServletResponse servletResponse;
 
     /**
      * 注册接口
@@ -47,7 +59,10 @@ public class AuthController {
      * @return 注册结果
      */
     @PostMapping("/register")
-    public Response<Map<String, String>> register(@RequestBody RegisterDTO registerDTO) {
+    @Operation(summary = "用户注册", description = "创建新用户并返回JWT令牌")
+    public Response<Map<String, String>> register(
+            @Parameter(description = "注册信息", required = true)
+            @RequestBody RegisterDTO registerDTO) {
         // 校验密码是否一致
         if (!registerDTO.getPassword().equals(registerDTO.getConfirmPassword())) {
             return Response.<Map<String, String>>builder()
@@ -77,6 +92,7 @@ public class AuthController {
         Authentication authentication = authenticateUser(registerDTO.getUsername(), registerDTO.getPassword());
         String token = jwtTokenProvider.generateToken(authentication);
 
+
         return buildTokenResponse(token, "注册成功");
     }
 
@@ -86,7 +102,10 @@ public class AuthController {
      * @return 登录结果
      */
     @PostMapping("/login")
-    public Response<Map<String, String>> login(@RequestBody LoginDTO loginDTO) {
+    @Operation(summary = "用户登录", description = "验证用户凭据并返回JWT令牌")
+    public Response<Map<String, String>> login(
+            @Parameter(description = "登录信息", required = true)
+            @RequestBody LoginDTO loginDTO) {
         LoginVO loginVO = new LoginVO();
         BeanUtils.copyProperties(loginDTO, loginVO);
         
@@ -135,7 +154,11 @@ public class AuthController {
      * @return 修改结果
      */
     @PostMapping("/change-password")
-    public Response<String> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
+    @Operation(summary = "修改密码", description = "修改当前登录用户的密码")
+    @SecurityRequirement(name = "JWT")
+    public Response<String> changePassword(
+            @Parameter(description = "密码修改信息", required = true)
+            @RequestBody ChangePasswordDTO changePasswordDTO) {
         // 获取当前登录用户
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();

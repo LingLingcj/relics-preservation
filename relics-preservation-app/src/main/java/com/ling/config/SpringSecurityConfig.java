@@ -61,6 +61,13 @@ public class SpringSecurityConfig {
                     authorize.requestMatchers("/api/auth/**").permitAll();
                     authorize.requestMatchers("/api/test/public").permitAll();
                     authorize.requestMatchers("/api/test/headers").permitAll();
+                    // Swagger UI 相关路径
+                    authorize.requestMatchers("/swagger-ui.html").permitAll();
+                    authorize.requestMatchers("/swagger-ui/**").permitAll();
+                    authorize.requestMatchers("/v3/api-docs/**").permitAll();
+                    authorize.requestMatchers("/api-docs/**").permitAll();
+                    authorize.requestMatchers("/doc.html").permitAll();
+                    authorize.requestMatchers("/webjars/**").permitAll();
                     authorize.anyRequest().authenticated();
                     log.debug("已配置请求授权规则");
                 })
@@ -72,7 +79,8 @@ public class SpringSecurityConfig {
                     session.sessionCreationPolicy(SessionCreationPolicy.STATELESS);
                     log.debug("已配置会话管理策略为STATELESS");
                 })
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+        ;
         
         log.debug("安全过滤链配置完成");        
         return http.build();

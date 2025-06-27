@@ -29,6 +29,12 @@
             <artifactId>logback-classic</artifactId>
         </dependency>
 
+        <!-- Swagger API文档 -->
+        <dependency>
+            <groupId>org.springdoc</groupId>
+            <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        </dependency>
+
         <!-- 序列化 -->
         <dependency>
             <groupId>com.alibaba.fastjson2</groupId>
