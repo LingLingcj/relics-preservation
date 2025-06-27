@@ -8,7 +8,7 @@ DROP TABLE IF EXISTS `users`;
 CREATE TABLE `users` (
      `id` INT NOT NULL AUTO_INCREMENT COMMENT '自增主键',
      `username` VARCHAR(32) NOT NULL COMMENT '用户唯一标识',
-     `nickname` VARCHAR(64) NOT NULL COMMENT '昵称',
+     `nickname` VARCHAR(64) NULL COMMENT '昵称',
      `full_name` VARCHAR(64) NULL DEFAULT NULL COMMENT '真实姓名',
      `password` VARCHAR(256) NOT NULL COMMENT '密码 (应加密存储)',
      `email` VARCHAR(32) NULL DEFAULT NULL COMMENT '邮箱',

@@ -27,6 +27,23 @@
            OR email = #{value}
         LIMIT 1
     </select>
-
+    
+    <insert id="insertUser" parameterType="com.ling.infrastructure.dao.po.User">
+        INSERT INTO users (username, nickname, password, email, status, role, create_time, update_time)
+        VALUES (#{username}, #{nickname} , #{password}, #{email}, 1, 'USER', now(), now())
+    </insert>
+    
+    <update id="updatePassword" parameterType="com.ling.infrastructure.dao.po.User">
+        UPDATE users
+        SET password = #{password},
+            update_time = now()
+        WHERE username = #{username}
+    </update>
+    
+    <select id="existsByUsername" resultType="boolean" parameterType="java.lang.String">
+        SELECT COUNT(*) > 0
+        FROM users
+        WHERE username = #{username}
+    </select>
 
 </mapper>

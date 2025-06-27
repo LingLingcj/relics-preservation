@@ -1,4 +1,4 @@
-package com.ling.domain.login.model.entity;
+package com.ling.domain.auth.model.entity;
 
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +9,7 @@ import java.util.Date;
 
 /**
  * 用户实体类
+ * @author 31229
  */
 @Data
 @AllArgsConstructor
@@ -17,6 +18,7 @@ import java.util.Date;
 public class UserEntity {
 
     private String username;
+    private String nickname;
     private String password;
     private String email;
     private String role;

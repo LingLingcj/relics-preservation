@@ -1,4 +1,4 @@
-package com.ling.domain.login.model.valobj;
+package com.ling.domain.auth.model.valobj;
 
 import lombok.*;
 

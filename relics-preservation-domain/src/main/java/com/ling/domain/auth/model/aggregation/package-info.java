@@ -3,4 +3,4 @@
  * @Description: 聚合
  * @DateTime: 2025/6/26 23:11
  **/
-package com.ling.domain.login.model.aggregation;
+package com.ling.domain.auth.model.aggregation;

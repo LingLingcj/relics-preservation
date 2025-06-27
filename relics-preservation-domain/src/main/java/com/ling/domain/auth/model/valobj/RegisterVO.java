@@ -1,4 +1,4 @@
-package com.ling.domain.login.model.valobj;
+package com.ling.domain.auth.model.valobj;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,7 +16,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RegisterVO {
     // 用户Id
-    private String userId;
+    private String username;
     // 用户密码
     private String password;
+    // 确认密码
+    private String confirmPassword;
 }

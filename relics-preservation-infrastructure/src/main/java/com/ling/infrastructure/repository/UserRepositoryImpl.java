@@ -1,11 +1,13 @@
 package com.ling.infrastructure.repository;
 
-import com.ling.domain.login.adapter.IUserRepository;
-import com.ling.domain.login.model.entity.UserEntity;
-import com.ling.domain.login.model.valobj.RegisterVO;
+import com.ling.domain.auth.adapter.IUserRepository;
+import com.ling.domain.auth.model.entity.UserEntity;
+import com.ling.domain.auth.model.valobj.RegisterVO;
 import com.ling.infrastructure.dao.IUserDao;
 import com.ling.infrastructure.dao.po.User;
 import jakarta.annotation.Resource;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Repository;
 
@@ -17,7 +19,7 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class UserRepositoryImpl implements IUserRepository {
 
-    @Resource
+    @Autowired
     private IUserDao userDao;
 
     @Override
@@ -26,21 +28,45 @@ public class UserRepositoryImpl implements IUserRepository {
     }
 
     @Override
-    public UserEntity findByUsernameOrEmail(String usernameOrEmail) throws UsernameNotFoundException {
-        User user = userDao.findByUsernameOrEmail(usernameOrEmail);
+    public boolean save(UserEntity userEntity) {
+        User user = new User();
+        BeanUtils.copyProperties(userEntity, user);
+        return userDao.insertUser(user) > 0;
+    }
 
+    @Override
+    public boolean updatePassword(UserEntity userEntity) {
+        User user = new User();
+        BeanUtils.copyProperties(userEntity, user);
+        return userDao.updatePassword(user) > 0;
+    }
+
+    @Override
+    public UserEntity findByUsername(String username) {
+        User user = userDao.findByUsernameOrEmail(username);
         if (user == null) {
             return null;
         }
+        
+        UserEntity userEntity = new UserEntity();
+        BeanUtils.copyProperties(user, userEntity);
+        return userEntity;
+    }
 
-        return UserEntity.builder()
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .password(user.getPassword())
-                .role(user.getRole())
-                .createTime(user.getCreateTime())
-                .updateTime(user.getUpdateTime())
-                .status(user.getStatus())
-                .build();
+    @Override
+    public UserEntity findByUsernameOrEmail(String usernameOrEmail) {
+        User user = userDao.findByUsernameOrEmail(usernameOrEmail);
+        if (user == null) {
+            return null;
+        }
+        
+        UserEntity userEntity = new UserEntity();
+        BeanUtils.copyProperties(user, userEntity);
+        return userEntity;
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        return userDao.existsByUsername(username);
     }
 }

@@ -5,4 +5,4 @@
  *  * 2. 对象名称如；XxxVO
  * @DateTime: 2025/6/26 23:11
  **/
-package com.ling.domain.login.model.valobj;
+package com.ling.domain.auth.model.valobj;

@@ -1,4 +1,4 @@
-package com.ling.domain.login.model.valobj;
+package com.ling.domain.auth.model.valobj;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -8,15 +8,15 @@ import lombok.NoArgsConstructor;
 /**
  * @Author: LingRJ
  * @Description: 用户信息值对象
- * @DateTime: 2025/6/26 23:50
+ * @DateTime: 2025/6/26 23:09
  **/
 @Data
-@AllArgsConstructor
-@NoArgsConstructor
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class UserInfoVO {
     // 用户唯一标识
-    private String userId;
+    private String username;
     // 昵称
     private String nickname;
     // 真实姓名
@@ -37,4 +37,10 @@ public class UserInfoVO {
     private String title;
     // 权限级别或位掩码
     private Integer permission;
+    // 操作成功标志
+    private boolean success;
+    // 响应消息
+    private String message;
+    // token
+    private String token;
 }

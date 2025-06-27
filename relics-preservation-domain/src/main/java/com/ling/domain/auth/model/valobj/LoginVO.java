@@ -1,4 +1,4 @@
-package com.ling.domain.login.model.valobj;
+package com.ling.domain.auth.model.valobj;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -15,6 +15,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class LoginVO {
-    private String userId;
+    private String username;
     private String password;
 }

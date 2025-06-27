@@ -1,7 +1,7 @@
-package com.ling.domain.login.service.impl;
+package com.ling.domain.auth.service.impl;
 
-import com.ling.domain.login.adapter.IUserRepository;
-import com.ling.domain.login.model.entity.UserEntity;
+import com.ling.domain.auth.adapter.IUserRepository;
+import com.ling.domain.auth.model.entity.UserEntity;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
