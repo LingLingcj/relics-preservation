@@ -12,12 +12,13 @@ spring:
 mybatis-plus:
   mapper-locations: classpath:/mybatis/*.xml
 
-# JWT??
+# JWT配置
 jwt:
-  secret: mySecretKey123456789012345678901234567890
-  expiration: 86400 # 24??
+  # 使用长度至少为32个字符的密钥（256位）
+  secret: mySecretKey123456789012345678901234567890ABCDEFGHIJKLMNOPQRST
+  expiration: 86400 # 24小时
 
-# ????
+# 日志配置
 logging:
   level:
     com.ling: DEBUG

@@ -10,10 +10,18 @@ import com.ling.domain.auth.model.valobj.UserInfoVO;
 import com.ling.domain.auth.service.IUserAuthService;
 import com.ling.types.common.Response;
 import com.ling.types.common.ResponseCode;
+import com.ling.types.jwt.JwtTokenProvider;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @Author: LingRJ
@@ -27,17 +35,22 @@ public class AuthController {
     @Autowired
     private IUserAuthService userAuthService;
 
+    @Autowired
+    private AuthenticationManager authenticationManager;
+
+    @Autowired
+    private JwtTokenProvider jwtTokenProvider;
+
     /**
      * 注册接口
      * @param registerDTO 注册信息
-     * @param session HTTP会话
      * @return 注册结果
      */
     @PostMapping("/register")
-    public Response<String> register(@RequestBody RegisterDTO registerDTO, HttpSession session) {
+    public Response<Map<String, String>> register(@RequestBody RegisterDTO registerDTO) {
         // 校验密码是否一致
         if (!registerDTO.getPassword().equals(registerDTO.getConfirmPassword())) {
-            return Response.<String>builder()
+            return Response.<Map<String, String>>builder()
                     .code(ResponseCode.PASSWORD_CONFIRM_ERROR.getCode())
                     .info(ResponseCode.PASSWORD_CONFIRM_ERROR.getInfo())
                     .build();
@@ -54,71 +67,78 @@ public class AuthController {
         
         // 处理注册结果
         if (!userInfo.isSuccess()) {
-            return Response.<String>builder()
+            return Response.<Map<String, String>>builder()
                     .code(getErrorCodeByMessage(userInfo.getMessage()))
                     .info(userInfo.getMessage())
                     .build();
         }
         
-        // 将用户信息保存到会话
-        session.setAttribute("username", userInfo.getUsername());
-        
-        return Response.<String>builder()
-                .code(ResponseCode.SUCCESS.getCode())
-                .info(ResponseCode.SUCCESS.getInfo())
-                .data("注册成功")
-                .build();
+        // 注册成功后，登录并生成令牌
+        Authentication authentication = authenticateUser(registerDTO.getUsername(), registerDTO.getPassword());
+        String token = jwtTokenProvider.generateToken(authentication);
+
+        return buildTokenResponse(token, "注册成功");
     }
 
     /**
      * 登录接口
      * @param loginDTO 登录信息
-     * @param session HTTP会话
      * @return 登录结果
      */
     @PostMapping("/login")
-    public Response<String> login(@RequestBody LoginDTO loginDTO, HttpSession session) {
+    public Response<Map<String, String>> login(@RequestBody LoginDTO loginDTO) {
         LoginVO loginVO = new LoginVO();
-        BeanUtils.copyProperties(loginDTO,loginVO);
-        // 调用服务进行登录
+        BeanUtils.copyProperties(loginDTO, loginVO);
+        
+        // 调用服务进行登录验证
         UserInfoVO userInfo = userAuthService.login(loginVO);
         
         // 处理登录结果
         if (!userInfo.isSuccess()) {
-            return Response.<String>builder()
+            return Response.<Map<String, String>>builder()
                     .code(ResponseCode.LOGIN_ERROR.getCode())
                     .info(ResponseCode.LOGIN_ERROR.getInfo())
                     .build();
         }
         
-        // 将用户信息保存到会话
-        session.setAttribute("username", userInfo.getUsername());
-        
-        return Response.<String>builder()
+        // 登录成功，生成JWT令牌
+        Authentication authentication = authenticateUser(loginDTO.getUsername(), loginDTO.getPassword());
+        String token = jwtTokenProvider.generateToken(authentication);
+
+        return buildTokenResponse(token, "登录成功");
+    }
+
+    private Authentication authenticateUser(String username, String password) {
+        Authentication authentication = authenticationManager.authenticate(
+                new UsernamePasswordAuthenticationToken(
+                        username, password));
+        SecurityContextHolder.getContext().setAuthentication(authentication);
+        return authentication;
+    }
+
+    // 令牌响应
+    private Response<Map<String, String>> buildTokenResponse(String token, String message) {
+        Map<String, String> response = new HashMap<>();
+        response.put("token", token);
+        response.put("message", message);
+
+        return Response.<Map<String, String>>builder()
                 .code(ResponseCode.SUCCESS.getCode())
                 .info(ResponseCode.SUCCESS.getInfo())
-                .data("登录成功")
+                .data(response)
                 .build();
     }
 
     /**
      * 修改密码接口
      * @param changePasswordDTO 修改密码信息
-     * @param session HTTP会话
      * @return 修改结果
      */
     @PostMapping("/change-password")
-    public Response<String> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO, HttpSession session) {
+    public Response<String> changePassword(@RequestBody ChangePasswordDTO changePasswordDTO) {
         // 获取当前登录用户
-        String username = (String) session.getAttribute("username");
-        
-        // 检查是否已登录
-        if (username == null) {
-            return Response.<String>builder()
-                    .code(ResponseCode.USER_NOT_LOGGED_IN.getCode())
-                    .info(ResponseCode.USER_NOT_LOGGED_IN.getInfo())
-                    .build();
-        }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
         
         // 校验新密码和确认密码
         if (!changePasswordDTO.getNewPassword().equals(changePasswordDTO.getConfirmPassword())) {
@@ -129,7 +149,7 @@ public class AuthController {
         }
 
         ChangePasswordVO changePasswordVO = new ChangePasswordVO();
-        BeanUtils.copyProperties(changePasswordDTO,changePasswordVO);
+        BeanUtils.copyProperties(changePasswordDTO, changePasswordVO);
         
         // 调用服务修改密码
         boolean success = userAuthService.changePassword(changePasswordVO, username);

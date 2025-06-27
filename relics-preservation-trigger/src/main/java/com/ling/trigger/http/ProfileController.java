@@ -6,9 +6,10 @@ import com.ling.domain.auth.model.valobj.UserInfoVO;
 import com.ling.domain.auth.service.IUserProfileService;
 import com.ling.types.common.Response;
 import com.ling.types.common.ResponseCode;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -17,62 +18,48 @@ import org.springframework.web.bind.annotation.*;
  * @DateTime: 2025/6/27 15:57
  **/
 @RestController
-@RequestMapping("/api/profile")
+@RequestMapping("/api/user/profile")
 public class ProfileController {
-    
+
     @Autowired
     private IUserProfileService userProfileService;
-    
+
     /**
      * 获取当前用户信息
-     * @param session HTTP会话
      * @return 用户信息
      */
     @GetMapping
-    public Response<UserInfoVO> getUserProfile(HttpSession session) {
-        // 获取当前登录用户
-        String username = (String) session.getAttribute("username");
-        
-        // 检查是否已登录
-        if (username == null) {
-            return Response.<UserInfoVO>builder()
-                    .code(ResponseCode.USER_NOT_LOGGED_IN.getCode())
-                    .info(ResponseCode.USER_NOT_LOGGED_IN.getInfo())
-                    .build();
-        }
-        
+    public Response<UserInfoVO> getUserProfile(
+            @RequestHeader(value = "Authorization", required = true) String token) {
+        // 从Spring Security上下文获取当前登录用户
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
         // 获取用户信息
         UserInfoVO userInfoVO = userProfileService.getUserInfo(username);
-        
+
         return responseUserInfo(userInfoVO);
     }
-    
+
     /**
      * 更新用户信息
      * @param profileUpdateDTO 用户信息更新DTO
-     * @param session HTTP会话
      * @return 更新结果
      */
     @PutMapping
-    public Response<UserInfoVO> updateUserProfile(@RequestBody ProfileUpdateDTO profileUpdateDTO, HttpSession session) {
-        // 获取当前登录用户
-        String username = (String) session.getAttribute("username");
-        
-        // 检查是否已登录
-        if (username == null) {
-            return Response.<UserInfoVO>builder()
-                    .code(ResponseCode.USER_NOT_LOGGED_IN.getCode())
-                    .info(ResponseCode.USER_NOT_LOGGED_IN.getInfo())
-                    .build();
-        }
-        
+    public Response<UserInfoVO> updateUserProfile(@RequestBody ProfileUpdateDTO profileUpdateDTO,
+                                                  @RequestHeader(value = "Authorization", required = true) String token) {
+        // 从Spring Security上下文获取当前登录用户
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String username = authentication.getName();
+
         // 转换DTO到VO
         ProfileUpdateVO profileUpdateVO = new ProfileUpdateVO();
         BeanUtils.copyProperties(profileUpdateDTO, profileUpdateVO);
-        
+
         // 更新用户信息
         UserInfoVO updatedUserInfo = userProfileService.updateUserProfile(profileUpdateVO, username);
-        
+
         return responseUserInfo(updatedUserInfo);
     }
 

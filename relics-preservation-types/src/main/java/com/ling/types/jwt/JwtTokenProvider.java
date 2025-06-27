@@ -3,6 +3,7 @@ package com.ling.types.jwt;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.WeakKeyException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
@@ -11,7 +12,8 @@ import org.springframework.stereotype.Component;
 import javax.crypto.SecretKey;
 import java.security.Key;
 import java.util.Date;
-
+import java.util.Base64;
+import jakarta.annotation.PostConstruct;
 
 /**
  * @Author: LingRJ
@@ -27,6 +29,42 @@ public class JwtTokenProvider {
 
     @Value("${jwt.expiration}")
     private long jwtExpiration;
+    
+    private SecretKey secretKey;
+    
+    @PostConstruct
+    public void init() {
+        try {
+            // 尝试使用配置的密钥
+            if (jwtSecret != null && !jwtSecret.isEmpty()) {
+                try {
+                    // 确保密钥长度足够
+                    // 如果密钥长度不够，Base64编码可以增加长度
+                    String secret = jwtSecret;
+                    if (secret.length() < 32) { // 至少需要32字符（256位）
+                        StringBuilder sb = new StringBuilder(secret);
+                        while (sb.length() < 32) {
+                            sb.append(secret); // 重复密钥直到长度足够
+                        }
+                        secret = sb.toString().substring(0, 32); // 取前32个字符
+                    }
+                    
+                    // 使用配置的密钥
+                    secretKey = Keys.hmacShaKeyFor(secret.getBytes());
+                    log.info("使用配置的JWT密钥");
+                    return;
+                } catch (WeakKeyException e) {
+                    log.warn("配置的JWT密钥不安全: {}", e.getMessage());
+                }
+            }
+        } catch (Exception e) {
+            log.warn("解析JWT密钥失败: {}", e.getMessage());
+        }
+        
+        // 如果配置的密钥有问题或没有配置，生成一个新密钥
+        secretKey = Jwts.SIG.HS256.key().build();
+        log.info("生成了新的JWT密钥");
+    }
 
     // 生成 jwtToken
     public String generateToken(Authentication auth) {
@@ -39,15 +77,13 @@ public class JwtTokenProvider {
                 .subject(username)
                 .issuedAt(currentDate)
                 .expiration(expirationDate)
-                .signWith(key())
+                .signWith(secretKey)
                 .compact();
     }
 
-    //生成key
+    //获取密钥
     private SecretKey key() {
-        return Keys.hmacShaKeyFor(
-                Decoders.BASE64.decode(jwtSecret)
-        );
+        return secretKey;
     }
 
     // 从jwtToken获取用户名
