@@ -69,4 +69,27 @@ public class UserRepositoryImpl implements IUserRepository {
     public boolean existsByUsername(String username) {
         return userDao.existsByUsername(username);
     }
+    
+    @Override
+    public boolean existsByEmailExcludeCurrentUser(String email, String currentUsername) {
+        if (email == null || email.isEmpty()) {
+            return false;
+        }
+        return userDao.existsByEmailExcludeCurrentUser(email, currentUsername);
+    }
+    
+    @Override
+    public boolean existsByPhoneNumberExcludeCurrentUser(String phoneNumber, String currentUsername) {
+        if (phoneNumber == null || phoneNumber.isEmpty()) {
+            return false;
+        }
+        return userDao.existsByPhoneNumberExcludeCurrentUser(phoneNumber, currentUsername);
+    }
+    
+    @Override
+    public boolean updateProfile(UserEntity userEntity) {
+        User user = new User();
+        BeanUtils.copyProperties(userEntity, user);
+        return userDao.updateProfile(user) > 0;
+    }
 }

@@ -19,8 +19,12 @@ public class UserEntity {
 
     private String username;
     private String nickname;
+    private String fullName;
     private String password;
     private String email;
+    private String phoneNumber;
+    private String avatarUrl;
+    private String title;
     private String role;
     // 0: 禁用, 1: 启用
     private Byte status;

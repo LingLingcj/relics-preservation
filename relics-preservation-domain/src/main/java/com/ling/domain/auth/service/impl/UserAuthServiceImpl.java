@@ -8,7 +8,6 @@ import com.ling.domain.auth.model.valobj.RegisterVO;
 import com.ling.domain.auth.model.valobj.RoleEnum;
 import com.ling.domain.auth.model.valobj.UserInfoVO;
 import com.ling.domain.auth.service.IUserAuthService;
-import com.ling.types.common.Response;
 import com.ling.types.common.ResponseCode;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;

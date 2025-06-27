@@ -29,6 +29,22 @@ public interface IUserRepository {
      * @return 查找结果
      */
     boolean existsByUsername(String username);
+    
+    /**
+     * 检查邮箱是否已经存在（排除当前用户）
+     * @param email 邮箱地址
+     * @param currentUsername 当前用户名（排除自己）
+     * @return 是否存在
+     */
+    boolean existsByEmailExcludeCurrentUser(String email, String currentUsername);
+    
+    /**
+     * 检查手机号是否已经存在（排除当前用户）
+     * @param phoneNumber 手机号
+     * @param currentUsername 当前用户名（排除自己）
+     * @return 是否存在
+     */
+    boolean existsByPhoneNumberExcludeCurrentUser(String phoneNumber, String currentUsername);
 
     /**
      * 保存用户
@@ -50,4 +66,11 @@ public interface IUserRepository {
      * @return 更新结果
      */
     boolean updatePassword(UserEntity userEntity);
+
+    /**
+     * 更新用户信息
+     * @param userEntity 用户实体
+     * @return 更新结果
+     */
+    boolean updateProfile(UserEntity userEntity);
 }

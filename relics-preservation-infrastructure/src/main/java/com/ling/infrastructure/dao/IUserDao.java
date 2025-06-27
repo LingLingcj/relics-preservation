@@ -38,4 +38,27 @@ public interface IUserDao {
      * @return 是否存在
      */
     boolean existsByUsername(@Param("username") String username);
+    
+    /**
+     * 检查邮箱是否已经存在（排除当前用户）
+     * @param email 邮箱地址
+     * @param currentUsername 当前用户名（排除自己）
+     * @return 是否存在
+     */
+    boolean existsByEmailExcludeCurrentUser(@Param("email") String email, @Param("currentUsername") String currentUsername);
+    
+    /**
+     * 检查手机号是否已经存在（排除当前用户）
+     * @param phoneNumber 手机号
+     * @param currentUsername 当前用户名（排除自己）
+     * @return 是否存在
+     */
+    boolean existsByPhoneNumberExcludeCurrentUser(@Param("phoneNumber") String phoneNumber, @Param("currentUsername") String currentUsername);
+    
+    /**
+     * 更新用户信息
+     * @param user 用户对象
+     * @return 影响行数
+     */
+    int updateProfile(User user);
 }

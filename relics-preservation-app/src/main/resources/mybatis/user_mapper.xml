@@ -45,5 +45,30 @@
         FROM users
         WHERE username = #{username}
     </select>
+    
+    <select id="existsByEmailExcludeCurrentUser" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM users
+        WHERE email = #{email} AND username != #{currentUsername}
+    </select>
+    
+    <select id="existsByPhoneNumberExcludeCurrentUser" resultType="boolean">
+        SELECT COUNT(*) > 0
+        FROM users
+        WHERE phone_number = #{phoneNumber} AND username != #{currentUsername}
+    </select>
+    
+    <update id="updateProfile" parameterType="com.ling.infrastructure.dao.po.User">
+        UPDATE users
+        SET
+            <if test="nickname != null">nickname = #{nickname},</if>
+            <if test="fullName != null">full_name = #{fullName},</if>
+            <if test="email != null">email = #{email},</if>
+            <if test="phoneNumber != null">phone_number = #{phoneNumber},</if>
+            <if test="avatarUrl != null">avatar_url = #{avatarUrl},</if>
+            <if test="title != null">title = #{title},</if>
+            update_time = now()
+        WHERE username = #{username}
+    </update>
 
 </mapper>
