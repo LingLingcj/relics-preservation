@@ -23,10 +23,6 @@ public class RegisterDTO {
     // 确认密码
     private String confirmPassword;
     // 身份
-    private String role;
+    private RoleEnum role;
 
-    public boolean validateRole() {
-        return this.role.equals(RoleEnum.USER.getRole()) || this.role.equals(RoleEnum.EXPERT.getRole())
-                ;
-    }
 }
