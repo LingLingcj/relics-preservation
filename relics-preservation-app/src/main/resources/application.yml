@@ -20,4 +20,15 @@ spring:
 mybatis-plus:
   mapper-locations: classpath:/mybatis/*.xml
 
+# JWT??
+jwt:
+  secret: mySecretKey123456789012345678901234567890
+  expiration: 86400 # 24???????
 
+# ????
+logging:
+  level:
+    com.ling: DEBUG
+    org.springframework.security: DEBUG
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

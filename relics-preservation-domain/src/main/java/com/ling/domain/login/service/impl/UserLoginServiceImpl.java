@@ -7,6 +7,7 @@ import com.ling.domain.login.model.valobj.UserInfoVO;
 import com.ling.domain.login.service.IUserLoginService;
 import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 /**
@@ -20,6 +21,9 @@ public class UserLoginServiceImpl implements IUserLoginService {
 
     @Resource
     private IUserRepository repository;
+    @Resource
+    private PasswordEncoder passwordEncoder;
+
 
     @Override
     public UserInfoVO register(RegisterVO registerVO) {

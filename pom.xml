@@ -41,22 +41,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-starter-data-redis</artifactId>
             </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-oauth2-authorization-server</artifactId>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-oauth2-client</artifactId>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-            </dependency>
-            <dependency>
-                <groupId>org.springframework.boot</groupId>
-                <artifactId>spring-boot-starter-security</artifactId>
-            </dependency>
 
             <dependency>
                 <groupId>mysql</groupId>
@@ -84,6 +68,41 @@
                 <version>1.5.18</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-security</artifactId>
+                <version>3.5.3</version>
+            </dependency>
+
+            <!-- JWT 相关依赖 -->
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-api</artifactId>
+                <version>0.12.3</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-impl</artifactId>
+                <version>0.12.3</version>
+            </dependency>
+            <dependency>
+                <groupId>io.jsonwebtoken</groupId>
+                <artifactId>jjwt-jackson</artifactId>
+                <version>0.12.3</version>
+            </dependency>
+
+            <!-- Spring Boot Web -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-web</artifactId>
+                <version>3.5.3</version>
+            </dependency>
+
+            <!-- 验证 -->
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-starter-validation</artifactId>
+            </dependency>
 
             <dependency>
                 <groupId>org.springframework.boot</groupId>
