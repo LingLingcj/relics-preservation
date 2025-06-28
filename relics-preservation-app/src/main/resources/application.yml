@@ -8,9 +8,57 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:3309/relics?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&useSSL=true
 
+  ai:
+    vectorstore:
+      pgvector:
+        url: jdbc:postgresql://localhost:5433/springai
+        username: postgres
+        password: postgres
+
+    openai:
+      base-url: https://api.chatanywhere.tech
+      api-key: sk-W3DFjrvyj2nLsFSpiw9ZFhKs5k58dbmdVVOe3MwqoaukH4Pk
+      chat:
+        options:
+          model: gpt-4.1-mini
+      embedding:
+        options:
+          num-batch: 1536
+          model: text-embedding-3-small
+  # Jackson JSON序列化配置
+  jackson:
+    # 日期格式化
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    # 序列化配置
+    serialization:
+      write-dates-as-timestamps: false
+      fail-on-empty-beans: false
+    # 反序列化配置
+    deserialization:
+      fail-on-unknown-properties: false
+    # 默认属性包含策略
+    default-property-inclusion: non_null
+    # 属性命名策略
+    property-naming-strategy: LOWER_CAMEL_CASE
 
 mybatis-plus:
   mapper-locations: classpath:/mybatis/*.xml
+
+# Redis
+redis:
+  sdk:
+    config:
+      host: localhost
+      port: 26379
+      pool-size: 10
+      min-idle-size: 5
+      idle-timeout: 30000
+      connect-timeout: 5000
+      retry-attempts: 3
+      retry-interval: 1000
+      ping-interval: 60000
+      keep-alive: true
 
 # JWT配置
 jwt:

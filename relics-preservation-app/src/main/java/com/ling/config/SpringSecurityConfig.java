@@ -68,6 +68,7 @@ public class SpringSecurityConfig {
                     authorize.requestMatchers("/api-docs/**").permitAll();
                     authorize.requestMatchers("/doc.html").permitAll();
                     authorize.requestMatchers("/webjars/**").permitAll();
+                    authorize.requestMatchers("/api/knowledge/rag").permitAll();
                     authorize.anyRequest().authenticated();
                     log.debug("已配置请求授权规则");
                 })

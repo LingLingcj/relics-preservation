@@ -5,10 +5,8 @@ import com.ling.domain.auth.model.entity.UserEntity;
 import com.ling.domain.auth.model.valobj.RegisterVO;
 import com.ling.infrastructure.dao.IUserDao;
 import com.ling.infrastructure.dao.po.User;
-import jakarta.annotation.Resource;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Repository;
 
 /**
