@@ -4,9 +4,9 @@ server:
 spring:
   datasource: # MySQL数据源配置（用于用户登录等核心业务）
     username: root
-    password: 114514
+    password: 123456
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/relics?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&useSSL=true
+    url: jdbc:mysql://localhost:3309/relics?useUnicode=true&characterEncoding=utf8&autoReconnect=true&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai&useSSL=true
 
   ai:
     vectorstore:

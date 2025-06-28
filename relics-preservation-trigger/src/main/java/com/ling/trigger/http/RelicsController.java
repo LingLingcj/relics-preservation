@@ -34,16 +34,16 @@ public class RelicsController {
             @ApiResponse(responseCode = "400", description = "参数错误", content = @Content)
     })
     @PostMapping
-    public Response<RelicsEntity> addRelics(@Parameter(description = "文物上传信息", required = true)
+    public Response<String> addRelics(@Parameter(description = "文物上传信息", required = true)
                                         @RequestBody RelicsUploadDTO relicsUploadDTO) {
         // DTO转VO
         RelicsVO vo = new RelicsVO();
         org.springframework.beans.BeanUtils.copyProperties(relicsUploadDTO, vo);
         RelicsEntity result = relicsService.uploadRelics(vo);
-        return Response.<RelicsEntity>builder()
+        return Response.<String>builder()
                 .code(result.isSuccess() ? ResponseCode.SUCCESS.getCode() : ResponseCode.SYSTEM_ERROR.getCode())
                 .info(result.getMessage())
-                .data(result)
+                .data("上传数据库失败")
                 .build();
     }
 //
