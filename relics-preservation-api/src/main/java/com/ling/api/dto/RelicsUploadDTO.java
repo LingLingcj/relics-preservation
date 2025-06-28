@@ -1,24 +1,18 @@
-package com.ling.infrastructure.dao.po;
+package com.ling.api.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
-
 /**
- * @Author: LingRJ
- * @Description: 文物实体
- * @DateTime: 2025/6/27 23:52
- **/
+ * 文物上传DTO
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class Relics {
-    /** 自增主键 */
-    private Integer id;
+public class RelicsUploadDTO {
     /** 文物业务ID */
     private String relicsId;
     /** 文物名称 */
@@ -39,8 +33,4 @@ public class Relics {
     private Integer status;
     /** 所在位置ID */
     private Integer locationId;
-    /** 创建时间 */
-    private Date createTime;
-    /** 最后更新时间 */
-    private Date updateTime;
 }
