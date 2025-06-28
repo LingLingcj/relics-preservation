@@ -17,7 +17,7 @@ spring:
 
     openai:
       base-url: https://api.chatanywhere.tech
-      api-key: sk-W3DFjrvyj2nLsFSpiw9ZFhKs5k58dbmdVVOe3MwqoaukH4Pk
+      api-key: xxx
       chat:
         options:
           model: gpt-4.1-mini
