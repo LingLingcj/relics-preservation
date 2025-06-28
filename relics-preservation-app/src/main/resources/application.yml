@@ -87,3 +87,14 @@ springdoc:
   show-actuator: false
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
+
+# MQTT配置
+mqtt:
+  broker:
+    url: tcp://localhost:1883
+  client:
+    id: relics-preservation-client
+  username: mqtt_user
+  password: mqtt_password
+  topic:
+    sensor: sensor/+/data
