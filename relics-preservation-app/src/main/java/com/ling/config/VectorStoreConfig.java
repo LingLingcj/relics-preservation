@@ -42,13 +42,11 @@ public class VectorStoreConfig {
     }
 
     @Bean
-    @Primary
     public TokenTextSplitter tokenTextSplitter() {
         return new TokenTextSplitter();
     }
 
     @Bean
-    @Primary
     public PgVectorStore pgVectorStore(
             OpenAiApi openAiApi,
             @Qualifier("pgJdbcTemplate") JdbcTemplate jdbcTemplate) {
