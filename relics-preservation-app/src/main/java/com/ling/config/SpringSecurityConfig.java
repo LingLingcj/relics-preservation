@@ -65,6 +65,7 @@ public class SpringSecurityConfig {
                     authorize.requestMatchers("/swagger-ui.html").permitAll();
                     authorize.requestMatchers("/swagger-ui/**").permitAll();
                     authorize.requestMatchers("/v3/api-docs/**").permitAll();
+                    authorize.requestMatchers("/api/relics").permitAll();
                     authorize.requestMatchers("/api-docs/**").permitAll();
                     authorize.requestMatchers("/doc.html").permitAll();
                     authorize.requestMatchers("/webjars/**").permitAll();

@@ -26,7 +26,7 @@ public class Relics {
     /** 文物详细描述 */
     private String description;
     /** 保护等级 */
-    private Byte preservation;
+    private Integer preservation;
     /** 类别 */
     private String category;
     /** 所属年代 */
@@ -36,7 +36,7 @@ public class Relics {
     /** 文物图片链接 */
     private String imageUrl;
     /** 状态 */
-    private Byte status;
+    private Integer status;
     /** 所在位置ID */
     private Integer locationId;
     /** 创建时间 */
