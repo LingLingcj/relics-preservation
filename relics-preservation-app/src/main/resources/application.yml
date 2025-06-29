@@ -69,7 +69,7 @@ jwt:
 # 日志配置
 logging:
   level:
-    com.ling: DEBUG
+    com.ling: INFO
     org.springframework.security: DEBUG
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
@@ -97,4 +97,4 @@ mqtt:
   username: dowithout
   password: dowithout
   topic:
-    sensor: sensor/+/data
+    sensor: light_intensity_1

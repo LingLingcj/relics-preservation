@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class LoginVO {
+    private RoleEnum role;
     private String username;
     private String password;
 }

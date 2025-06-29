@@ -1,6 +1,7 @@
 package com.ling.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.ling.domain.auth.model.valobj.RoleEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -16,6 +17,8 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class LoginDTO {
+
+    private RoleEnum role;
 
     private String username;
 

@@ -1,5 +1,6 @@
 package com.ling.domain.auth.model.entity;
 
+import com.ling.domain.auth.model.valobj.RoleEnum;
 import lombok.Builder;
 import lombok.Data;
 import lombok.AllArgsConstructor;
@@ -25,7 +26,7 @@ public class UserEntity {
     private String phoneNumber;
     private String avatarUrl;
     private String title;
-    private String role;
+    private RoleEnum role;
     // 0: 禁用, 1: 启用
     private Byte status;
     private Date createTime;

@@ -26,8 +26,9 @@ public enum ResponseCode {
     USER_NOT_EXIST("1011", "用户不存在"),
     PROFILE_UPDATE_FAILED("1012", "更新用户信息失败"),
     EMAIL_EXISTS("1013", "邮箱已存在"),
-    PHONE_EXISTS("1014", "手机号已存在");
-
+    PHONE_EXISTS("1014", "手机号已存在"),
+    WRONG_ROLE("1015", "身份错误")
+;
     private final String code;
     private final String info;
 } 

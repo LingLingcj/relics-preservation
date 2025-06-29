@@ -93,13 +93,12 @@ public class UserAuthServiceImpl implements IUserAuthService {
         
         // 获取有效的角色枚举值
         Optional<RoleEnum> roleEnum = registerVO.getRoleEnum();
-        String roleValue = roleEnum.get().getRole();
 
         // 创建用户并加密密码
         UserEntity user = UserEntity.builder()
                 .username(registerVO.getUsername())
                 .password(passwordEncoder.encode(registerVO.getPassword()))
-                .role(roleValue)
+                .role(RoleEnum.valueOf(registerVO.getRole()))
                 .nickname(registerVO.getUsername())
                 .status((byte) 1)
                 .build();
@@ -108,7 +107,7 @@ public class UserAuthServiceImpl implements IUserAuthService {
         userRepository.save(user);
 
         return UserInfoVO.builder()
-                .role(roleValue)
+                .role(registerVO.getRole())
                 .success(true)
                 .username(user.getUsername())
                 .message(ResponseCode.SUCCESS.getInfo())
@@ -133,6 +132,13 @@ public class UserAuthServiceImpl implements IUserAuthService {
                     .message(ResponseCode.LOGIN_ERROR.getInfo())
                     .build();
         }
+
+        if (!userEntity.getRole().equals(loginVO.getRole())) {
+            return UserInfoVO.builder()
+                    .success(false)
+                    .message(ResponseCode.LOGIN_ERROR.getInfo())
+                    .build();
+        }
         
         // 验证密码
         if (!passwordEncoder.matches(loginVO.getPassword(), userEntity.getPassword())) {
@@ -145,7 +151,7 @@ public class UserAuthServiceImpl implements IUserAuthService {
         return UserInfoVO.builder()
                 .success(true)
                 .username(userEntity.getUsername())
-                .role(userEntity.getRole())
+                .role(userEntity.getRole().getRole())
                 .message(ResponseCode.SUCCESS.getInfo())
                 .build();
     }

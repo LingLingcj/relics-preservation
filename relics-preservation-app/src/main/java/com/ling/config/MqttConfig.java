@@ -33,13 +33,13 @@ public class MqttConfig {
     @Value("${mqtt.client.id:relics-preservation-client}")
     private String clientId;
 
-    @Value("${mqtt.username:}")
+    @Value("${mqtt.username}")
     private String username;
 
-    @Value("${mqtt.password:}")
+    @Value("${mqtt.password}")
     private String password;
 
-    @Value("${mqtt.topic.sensor:sensor/+/data}")
+    @Value("${mqtt.topic.sensor}")
     private String sensorTopic;
 
     @Value("${mqtt.topic.alert:alert/+/+}")
@@ -93,7 +93,7 @@ public class MqttConfig {
     public MessageProducer inbound() {
         MqttPahoMessageDrivenChannelAdapter adapter =
                 new MqttPahoMessageDrivenChannelAdapter(clientId + "_inbound", mqttClientFactory(), 
-                        sensorTopic, alertTopic);
+                        sensorTopic, alertTopic, "sensor/#", "temperature/#", "humidity/#", "light/#");
         adapter.setCompletionTimeout(5000);
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(1);
@@ -104,8 +104,22 @@ public class MqttConfig {
     @Bean
     public HeaderValueRouter mqttMessageRouter() {
         HeaderValueRouter router = new HeaderValueRouter("mqtt_receivedTopic");
+        // 标准传感器主题前缀
         router.setChannelMapping("sensor/", "sensorChannel");
+        
+        // 特定传感器主题前缀
+        router.setChannelMapping("light_intensity_", "sensorChannel");
+        router.setChannelMapping("temperature_", "sensorChannel");
+        router.setChannelMapping("humidity_", "sensorChannel");
+        
+        // 不带下划线的传感器主题
+        router.setChannelMapping("light", "sensorChannel");
+        router.setChannelMapping("temperature", "sensorChannel");
+        router.setChannelMapping("humidity", "sensorChannel");
+        
+        // 告警主题
         router.setChannelMapping("alert/", "alertChannel");
+        
         router.setDefaultOutputChannelName("defaultChannel");
         return router;
     }

@@ -8,6 +8,11 @@ import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Consumer;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * @Author: LingRJ
@@ -17,6 +22,21 @@ import java.time.LocalDateTime;
 @Component
 @Slf4j
 public class SensorDataListener {
+
+    // 传感器类型处理器映射
+    private final Map<String, Consumer<SensorMessageVO>> sensorProcessors = new HashMap<>();
+    
+    // 主题匹配模式
+    private static final Pattern SENSOR_TOPIC_PATTERN = Pattern.compile("^sensor/([^/]+)/([^/]+)$");
+    private static final Pattern TYPE_ID_PATTERN = Pattern.compile("^(temperature|humidity|light)_(.+)$");
+    
+    public SensorDataListener() {
+        // 初始化处理器映射
+        sensorProcessors.put("temperature", this::processTemperatureData);
+        sensorProcessors.put("humidity", this::processHumidityData);
+        sensorProcessors.put("light", this::processLightData);
+        sensorProcessors.put("movement", this::processMovementData);
+    }
 
     /**
      * 监听传感器MQTT消息
@@ -31,59 +51,169 @@ public class SensorDataListener {
         
         try {
             // 解析传感器数据
-            processSensorData(topic, payload);
+            SensorMessageVO sensorMessage = parseSensorMessage(topic, payload);
+            if (sensorMessage != null) {
+                processSensorData(sensorMessage);
+            }
         } catch (Exception e) {
             log.error("处理传感器消息失败: {}", e.getMessage(), e);
         }
     }
     
     /**
-     * 处理传感器数据
+     * 解析传感器消息
      * @param topic 主题
      * @param payload 消息内容
+     * @return 传感器消息对象
      */
-    private void processSensorData(String topic, String payload) {
-        // 解析传感器ID
-        String[] topicParts = topic.split("/");
-        if (topicParts.length >= 3) {
-            String sensorId = topicParts[1];
-            log.info("处理传感器 [{}] 数据", sensorId);
-            
-            try {
-                // 解析传感器消息
-                SensorMessageVO sensorMessage = JSON.parseObject(payload, SensorMessageVO.class);
-                
-                // 如果传感器ID为空，则使用主题中的ID
-                if (sensorMessage.getSensorId() == null || sensorMessage.getSensorId().isEmpty()) {
-                    sensorMessage.setSensorId(sensorId);
+    private SensorMessageVO parseSensorMessage(String topic, String payload) {
+        // 创建传感器消息对象
+        SensorMessageVO sensorMessage = new SensorMessageVO();
+        sensorMessage.setTimestamp(LocalDateTime.now());
+        
+        // 1. 尝试从JSON解析完整的传感器消息
+        try {
+            SensorMessageVO parsedMessage = JSON.parseObject(payload, SensorMessageVO.class);
+            if (parsedMessage != null) {
+                // 合并解析结果与默认值
+                if (parsedMessage.getSensorId() != null && !parsedMessage.getSensorId().isEmpty()) {
+                    sensorMessage.setSensorId(parsedMessage.getSensorId());
                 }
-                
-                // 如果时间戳为空，则使用当前时间
-                if (sensorMessage.getTimestamp() == null) {
-                    sensorMessage.setTimestamp(LocalDateTime.now());
+                if (parsedMessage.getSensorType() != null && !parsedMessage.getSensorType().isEmpty()) {
+                    sensorMessage.setSensorType(parsedMessage.getSensorType());
                 }
-                
-                // 这里可以根据不同的传感器类型进行不同的处理
-                switch (sensorMessage.getSensorType()) {
-                    case "temperature":
-                        processTemperatureData(sensorMessage);
-                        break;
-                    case "humidity":
-                        processHumidityData(sensorMessage);
-                        break;
-                    case "light":
-                        processLightData(sensorMessage);
-                        break;
-                    case "movement":
-                        processMovementData(sensorMessage);
-                        break;
-                    default:
-                        log.info("处理未知类型传感器数据: {}", sensorMessage);
-                        break;
+                if (parsedMessage.getValue() != null) {
+                    sensorMessage.setValue(parsedMessage.getValue());
                 }
-            } catch (Exception e) {
-                log.error("解析传感器数据失败: {}", e.getMessage(), e);
+                if (parsedMessage.getTimestamp() != null) {
+                    sensorMessage.setTimestamp(parsedMessage.getTimestamp());
+                }
             }
+        } catch (Exception e) {
+            log.debug("JSON解析为SensorMessageVO失败，尝试其他解析方式: {}", e.getMessage());
+        }
+        
+        // 2. 从主题中解析传感器ID和类型
+        extractSensorInfoFromTopic(topic, sensorMessage);
+        
+        // 3. 如果值为空，尝试从payload中解析值
+        if (sensorMessage.getValue() == null) {
+            extractValueFromPayload(payload, sensorMessage);
+        }
+        
+        // 4. 验证必要字段
+        if (sensorMessage.getSensorId() == null || sensorMessage.getSensorId().isEmpty()) {
+            sensorMessage.setSensorId("default");
+        }
+        
+        if (sensorMessage.getSensorType() == null || sensorMessage.getSensorType().isEmpty()) {
+            log.warn("无法确定传感器类型，主题: {}, 内容: {}", topic, payload);
+            return null;
+        }
+        
+        log.info("成功解析传感器数据: 类型={}, ID={}, 值={}", 
+                sensorMessage.getSensorType(), sensorMessage.getSensorId(), sensorMessage.getValue());
+        return sensorMessage;
+    }
+    
+    /**
+     * 从主题中提取传感器信息
+     * @param topic 主题
+     * @param sensorMessage 传感器消息对象
+     */
+    private void extractSensorInfoFromTopic(String topic, SensorMessageVO sensorMessage) {
+        // 1. 处理标准格式: sensor/id/type
+        Matcher sensorMatcher = SENSOR_TOPIC_PATTERN.matcher(topic);
+        if (sensorMatcher.matches()) {
+            sensorMessage.setSensorId(sensorMatcher.group(1));
+            sensorMessage.setSensorType(sensorMatcher.group(2));
+            return;
+        }
+        
+        // 2. 处理type_id格式: temperature_123, humidity_abc, light_intensity_xyz
+        Matcher typeMatcher = TYPE_ID_PATTERN.matcher(topic);
+        if (typeMatcher.matches()) {
+            sensorMessage.setSensorType(typeMatcher.group(1));
+            sensorMessage.setSensorId(typeMatcher.group(2));
+            return;
+        }
+        
+        // 3. 处理简单主题: light, temperature, humidity
+        if (topic.equals("light") || topic.equals("temperature") || topic.equals("humidity")) {
+            sensorMessage.setSensorType(topic);
+            sensorMessage.setSensorId("default");
+            return;
+        }
+        
+        // 4. 尝试从主题中推断类型
+        if (topic.contains("temp")) {
+            sensorMessage.setSensorType("temperature");
+        } else if (topic.contains("hum")) {
+            sensorMessage.setSensorType("humidity");
+        } else if (topic.contains("light")) {
+            sensorMessage.setSensorType("light");
+        }
+        
+        // 尝试从主题中提取数字作为ID
+        if (sensorMessage.getSensorId() == null || sensorMessage.getSensorId().isEmpty()) {
+            Pattern idPattern = Pattern.compile("\\d+");
+            Matcher idMatcher = idPattern.matcher(topic);
+            if (idMatcher.find()) {
+                sensorMessage.setSensorId(idMatcher.group());
+            }
+        }
+    }
+    
+    /**
+     * 从消息内容中提取传感器值
+     * @param payload 消息内容
+     * @param sensorMessage 传感器消息对象
+     */
+    private void extractValueFromPayload(String payload, SensorMessageVO sensorMessage) {
+        // 1. 尝试解析为JSON
+        try {
+            com.alibaba.fastjson2.JSONObject jsonObject = JSON.parseObject(payload);
+            
+            // 尝试从JSON中获取值
+            String sensorType = sensorMessage.getSensorType();
+            if (jsonObject.containsKey(sensorType)) {
+                sensorMessage.setValue(jsonObject.getDouble(sensorType));
+                return;
+            }
+            
+            // 尝试从常见字段中获取值
+            if (jsonObject.containsKey("value")) {
+                sensorMessage.setValue(jsonObject.getDouble("value"));
+                return;
+            }
+            
+            if (jsonObject.containsKey("intensity") && "light".equals(sensorType)) {
+                sensorMessage.setValue(jsonObject.getDouble("intensity"));
+                return;
+            }
+        } catch (Exception e) {
+            log.debug("JSON解析失败，尝试直接解析为数值: {}", e.getMessage());
+        }
+        
+        // 2. 尝试直接解析为数值
+        try {
+            sensorMessage.setValue(Double.parseDouble(payload.trim()));
+        } catch (NumberFormatException e) {
+            log.debug("无法将payload解析为数值: {}", payload);
+        }
+    }
+    
+    /**
+     * 处理传感器数据
+     * @param sensorMessage 传感器消息
+     */
+    private void processSensorData(SensorMessageVO sensorMessage) {
+        // 根据传感器类型选择对应的处理器
+        Consumer<SensorMessageVO> processor = sensorProcessors.get(sensorMessage.getSensorType());
+        if (processor != null) {
+            processor.accept(sensorMessage);
+        } else {
+            log.info("处理未知类型传感器数据: {}", sensorMessage);
         }
     }
     
