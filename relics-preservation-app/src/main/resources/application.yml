@@ -99,7 +99,12 @@ mqtt:
   username: dowithout
   password: dowithout
   topic:
-    sensor: light_intensity_1
+    sensors:
+      - ems
+      - light
+      - sensor
+
+
 
 # 传感器数据配置
 sensor:

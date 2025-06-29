@@ -1,6 +1,9 @@
 package com.ling.domain.sensor.model.valobj;
 
 import lombok.Data;
+import lombok.Builder;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -10,6 +13,9 @@ import java.time.LocalDateTime;
  * @DateTime: 2025/6/28
  **/
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class SensorMessageVO {
     
     /**
@@ -46,4 +52,16 @@ public class SensorMessageVO {
      * 文物ID
      */
     private String relicsId;
+    
+    /**
+     * 创建基本传感器消息
+     */
+    public static SensorMessageVO create(String sensorId, String sensorType, Double value) {
+        return SensorMessageVO.builder()
+                .sensorId(sensorId)
+                .sensorType(sensorType)
+                .value(value)
+                .timestamp(LocalDateTime.now())
+                .build();
+    }
 } 

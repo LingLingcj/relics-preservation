@@ -17,6 +17,9 @@ import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.integration.router.HeaderValueRouter;
 import org.springframework.messaging.MessageChannel;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * @Author: LingRJ
  * @Description: MQTT配置类
@@ -39,11 +42,14 @@ public class MqttConfig {
     @Value("${mqtt.password}")
     private String password;
 
-    @Value("${mqtt.topic.sensor}")
-    private String sensorTopic;
+    @Value("${mqtt.topic.sensors:}")
+    private String[] sensorTopics;
 
-    @Value("${mqtt.topic.alert:alert/+/+}")
-    private String alertTopic;
+    // 传感器主题前缀列表
+    private static final List<String> SENSOR_TOPIC_PREFIXES = Arrays.asList(
+            "ems", "light_intensity_", "temperature_", "humidity_", 
+            "light", "temperature", "humidity"
+    );
 
     @Bean
     public MqttPahoClientFactory mqttClientFactory() {
@@ -62,7 +68,6 @@ public class MqttConfig {
         factory.setConnectionOptions(options);
         return factory;
     }
-
 
     @Bean
     public MessageChannel mqttInputChannel() {
@@ -93,7 +98,7 @@ public class MqttConfig {
     public MessageProducer inbound() {
         MqttPahoMessageDrivenChannelAdapter adapter =
                 new MqttPahoMessageDrivenChannelAdapter(clientId + "_inbound", mqttClientFactory(), 
-                        sensorTopic, alertTopic, "sensor/#", "temperature/#", "humidity/#", "light/#");
+                        sensorTopics);
         adapter.setCompletionTimeout(5000);
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(1);
@@ -104,22 +109,14 @@ public class MqttConfig {
     @Bean
     public HeaderValueRouter mqttMessageRouter() {
         HeaderValueRouter router = new HeaderValueRouter("mqtt_receivedTopic");
-        // 标准传感器主题前缀
-        router.setChannelMapping("sensor/", "sensorChannel");
         
-        // 特定传感器主题前缀
-        router.setChannelMapping("light_intensity_", "sensorChannel");
-        router.setChannelMapping("temperature_", "sensorChannel");
-        router.setChannelMapping("humidity_", "sensorChannel");
-        
-        // 不带下划线的传感器主题
-        router.setChannelMapping("light", "sensorChannel");
-        router.setChannelMapping("temperature", "sensorChannel");
-        router.setChannelMapping("humidity", "sensorChannel");
+        // 使用循环添加所有传感器主题映射
+        for (String prefix : SENSOR_TOPIC_PREFIXES) {
+            router.setChannelMapping(prefix, "sensorChannel");
+        }
         
         // 告警主题
         router.setChannelMapping("alert/", "alertChannel");
-        
         router.setDefaultOutputChannelName("defaultChannel");
         return router;
     }

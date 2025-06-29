@@ -1,6 +1,5 @@
 package com.ling.domain.sensor.service.impl;
 
-import com.alibaba.fastjson2.JSON;
 import com.ling.domain.sensor.model.valobj.SensorMessageVO;
 import com.ling.domain.sensor.service.ISensorDataService;
 import com.ling.domain.sensor.service.ISensorMessageService;
@@ -49,16 +48,14 @@ public class SensorMessageServiceImpl implements ISensorMessageService {
     
     // 传感器数据缓存队列
     private final LinkedBlockingQueue<SensorMessageVO> dataQueue = new LinkedBlockingQueue<>();
-    
-    // 传感器最新值缓存
-    private final Map<String, SensorMessageVO> latestValueCache = new ConcurrentHashMap<>();
+
     
     // 传感器阈值配置
-    private final Map<String, Double> thresholdConfig = new ConcurrentHashMap<>();
+    private final Map<String, Double> changeThresholds = new ConcurrentHashMap<>();
     
     // 计数器，用于采样
     private int counter = 0;
-    
+
     @PostConstruct
     public void init() {
         // 初始化阈值配置
@@ -74,11 +71,11 @@ public class SensorMessageServiceImpl implements ISensorMessageService {
     private void initThresholdConfig() {
         // 这里可以从配置文件或数据库加载阈值配置
         // 温度变化超过1.5度记录
-        thresholdConfig.put("temperature", 1.5);
+        changeThresholds.put("temperature", 1.5);
         // 湿度变化超过5%记录
-        thresholdConfig.put("humidity", 5.0);
+        changeThresholds.put("humidity", 5.0);
         // 光照变化超过100lux记录
-        thresholdConfig.put("light", 100.0);
+        changeThresholds.put("light", 100.0);
     }
     
     /**
@@ -105,195 +102,43 @@ public class SensorMessageServiceImpl implements ISensorMessageService {
         log.info("传感器数据批处理线程已启动");
     }
     
-    /**
-     * 从topic解析传感器信息并创建SensorMessageVO对象
-     * @param topic 传感器主题，格式如 "light_intensity_1"
-     * @param payload 传感器数据，JSON
-     * @return 解析后的SensorMessageVO对象，如果解析失败则返回null
-     */
-    private SensorMessageVO parseSensorMessage(String topic, String payload) {
-        try {
-            // 直接尝试解析JSON格式的完整消息
-            SensorMessageVO sensorMessage = JSON.parseObject(payload, SensorMessageVO.class);
-            if (sensorMessage != null && sensorMessage.getValue() != null) {
-                // 如果已经是完整的SensorMessageVO对象，直接返回
-                return sensorMessage;
-            }
-            
-            // 如果不是完整的SensorMessageVO，创建新对象
-            sensorMessage = new SensorMessageVO();
-            
-            // 从topic中提取传感器信息 (格式为: light_intensity_1)
-            String[] topicParts = topic.split("_");
-            if (topicParts.length >= 2) {
-                // 查找最后一个下划线的位置
-                int lastUnderscoreIndex = topic.lastIndexOf("_");
-                if (lastUnderscoreIndex > 0) {
-                    // 传感器类型为最后一个下划线之前的所有内容
-                    String sensorType = topic.substring(0, lastUnderscoreIndex);
-                    sensorMessage.setSensorType(sensorType);
-                    
-                    // 传感器ID为最后一个下划线之后的内容
-                    String sensorId = topic.substring(lastUnderscoreIndex + 1);
-                    sensorMessage.setSensorId(sensorId);
-                } else {
-                    // 如果没有下划线，使用整个topic作为传感器类型
-                    sensorMessage.setSensorType(topic);
-                    sensorMessage.setSensorId("unknown");
-                }
-            } else {
-                // 如果topic格式不符合预期，使用整个topic作为传感器类型
-                sensorMessage.setSensorType(topic);
-                sensorMessage.setSensorId("unknown");
-            }
-            
-            // 解析payload中的值 - 处理类似 {"intensity": 1878} 格式
-            try {
-                com.alibaba.fastjson2.JSONObject jsonObj = JSON.parseObject(payload);
-                
-                // 检查是否包含intensity字段
-                if (jsonObj.containsKey("intensity")) {
-                    sensorMessage.setValue(jsonObj.getDouble("intensity"));
-                    log.debug("从intensity字段中解析到值: {}", sensorMessage.getValue());
-                } else {
-                    // 尝试直接解析为数值
-                    try {
-                        sensorMessage.setValue(Double.parseDouble(payload.trim()));
-                    } catch (NumberFormatException nfe) {
-                        log.warn("无法解析传感器消息值: {}", payload);
-                        return null;
-                    }
-                }
-            } catch (Exception e) {
-                log.warn("解析传感器消息时发生异常: {}", e.getMessage());
-                return null;
-            }
-            
-            // 设置时间戳（如果为空）
-            if (sensorMessage.getTimestamp() == null) {
-                sensorMessage.setTimestamp(LocalDateTime.now());
-            }
-            
-            return sensorMessage;
-        } catch (Exception e) {
-            log.warn("解析传感器消息时发生异常: {}", e.getMessage());
-            return null;
-        }
-    }
-
     @Override
-    public void processSensorMessage(String topic, String payload) {
+    public void processSensorMessages(String topic, List<SensorMessageVO> messages) {
+        if (messages == null || messages.isEmpty()) {
+            return;
+        }
+        
         try {
-            // 解析传感器消息
-            SensorMessageVO sensorMessage = parseSensorMessage(topic, payload);
-
-            if (sensorMessage == null || sensorMessage.getValue() == null) {
-                log.warn("无法解析传感器消息: {}", payload);
-                return;
+            // 处理每个传感器消息
+            for (SensorMessageVO message : messages) {
+                processSingleSensorMessage(message);
             }
-            
-            // 设置时间戳（如果为空）
-            if (sensorMessage.getTimestamp() == null) {
-                sensorMessage.setTimestamp(LocalDateTime.now());
-            }
-            
-            // 检查是否需要记录此数据（采样或阈值判断）
-            if (shouldRecordData(sensorMessage)) {
-                // 添加到队列中等待批处理
-                dataQueue.offer(sensorMessage);
-                
-                // 更新最新值缓存
-                updateLatestValueCache(sensorMessage);
-                
-                // 如果是异常数据，立即保存
-                if (isAbnormalData(sensorMessage)) {
-                    sensorDataService.saveSensorData(sensorMessage, true);
-                    log.warn("检测到异常传感器数据: 传感器={}, 类型={}, 值={}", 
-                            sensorMessage.getSensorId(), sensorMessage.getSensorType(), sensorMessage.getValue());
-                }
-                
-                // 记录日志（仅在DEBUG级别）
-                log.debug("已缓存传感器数据: 传感器={}, 类型={}, 值={}", 
-                        sensorMessage.getSensorId(), sensorMessage.getSensorType(), sensorMessage.getValue());
-            } else {
-                log.debug("跳过记录传感器数据: 传感器={}, 类型={}, 值={}", 
-                        sensorMessage.getSensorId(), sensorMessage.getSensorType(), sensorMessage.getValue());
-            }
+            log.debug("成功处理{}个传感器数据", messages.size());
         } catch (Exception e) {
-            log.error("处理传感器消息失败: {}", e.getMessage(), e);
+            log.error("批量处理传感器消息失败: {}", e.getMessage(), e);
         }
     }
     
     /**
-     * 判断是否应该记录此数据（采样或阈值判断）
-     * @param sensorMessage 传感器消息
-     * @return 是否记录
+     * 处理单个传感器消息
+     * @param sensorMessage 传感器消息对象
      */
-    private boolean shouldRecordData(SensorMessageVO sensorMessage) {
-        // 计数器递增
-        counter = (counter + 1) % sampleRate;
-        
-        // 采样记录
-        if (counter == 0) {
-            return true;
+    private void processSingleSensorMessage(SensorMessageVO sensorMessage) {
+        if (sensorMessage == null || sensorMessage.getValue() == null) {
+            return;
         }
         
-        // 阈值判断
-        if (thresholdEnabled) {
-            String cacheKey = sensorMessage.getSensorType() + ":" + sensorMessage.getSensorId();
-            SensorMessageVO lastMessage = latestValueCache.get(cacheKey);
-            
-            // 如果没有缓存的上一次值，则记录
-            if (lastMessage == null) {
-                return true;
-            }
-            
-            // 检查值变化是否超过阈值
-            Double threshold = thresholdConfig.getOrDefault(sensorMessage.getSensorType(), 0.0);
-            if (Math.abs(sensorMessage.getValue() - lastMessage.getValue()) > threshold) {
-                return true;
-            }
-            
-            // 检查时间间隔，如果超过5分钟没有记录，则记录
-            if (lastMessage.getTimestamp().until(sensorMessage.getTimestamp(), ChronoUnit.MINUTES) >= 5) {
-                return true;
-            }
+        // 设置时间戳（如果为空）
+        if (sensorMessage.getTimestamp() == null) {
+            sensorMessage.setTimestamp(LocalDateTime.now());
         }
-        
-        return false;
+
+        // 添加到队列中等待批处理
+        dataQueue.offer(sensorMessage);
+
     }
-    
-    /**
-     * 更新最新值缓存
-     * @param sensorMessage 传感器消息
-     */
-    private void updateLatestValueCache(SensorMessageVO sensorMessage) {
-        String cacheKey = sensorMessage.getSensorType() + ":" + sensorMessage.getSensorId();
-        latestValueCache.put(cacheKey, sensorMessage);
-    }
-    
-    /**
-     * 判断是否为异常数据
-     * @param sensorMessage 传感器消息
-     * @return 是否异常
-     */
-    private boolean isAbnormalData(SensorMessageVO sensorMessage) {
-        // 这里可以根据不同传感器类型判断数据是否异常
-        // 例如：温度超过30度，湿度低于20%等
-        
-        String type = sensorMessage.getSensorType();
-        double value = sensorMessage.getValue();
-        
-        if ("temperature".equals(type)) {
-            return value > 30.0 || value < 10.0;
-        } else if ("humidity".equals(type)) {
-            return value > 80.0 || value < 20.0;
-        } else if ("light".equals(type) || "light_intensity".equals(type)) {
-            return value > 2000.0 || value < 200.0;
-        }
-        
-        return false;
-    }
+
+
     
     /**
      * 处理批量数据
