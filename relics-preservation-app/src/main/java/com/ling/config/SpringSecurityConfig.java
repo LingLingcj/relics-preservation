@@ -59,13 +59,13 @@ public class SpringSecurityConfig {
                 .authorizeHttpRequests((authorize) -> {
                     authorize.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll(); // 允许所有OPTIONS请求，解决CORS预检问题
                     authorize.requestMatchers("/api/auth/**").permitAll();
+                    authorize.requestMatchers("/api/relics").permitAll();
                     authorize.requestMatchers("/api/test/public").permitAll();
                     authorize.requestMatchers("/api/test/headers").permitAll();
                     // Swagger UI 相关路径
                     authorize.requestMatchers("/swagger-ui.html").permitAll();
                     authorize.requestMatchers("/swagger-ui/**").permitAll();
                     authorize.requestMatchers("/v3/api-docs/**").permitAll();
-                    authorize.requestMatchers("/api/relics").permitAll();
                     authorize.requestMatchers("/api-docs/**").permitAll();
                     authorize.requestMatchers("/doc.html").permitAll();
                     authorize.requestMatchers("/webjars/**").permitAll();

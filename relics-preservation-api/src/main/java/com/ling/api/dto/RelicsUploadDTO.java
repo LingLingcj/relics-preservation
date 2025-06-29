@@ -13,8 +13,6 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @Builder
 public class RelicsUploadDTO {
-    /** 文物业务ID */
-    private String relicsId;
     /** 文物名称 */
     private String name;
     /** 文物详细描述 */

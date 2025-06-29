@@ -4,6 +4,7 @@ import com.ling.domain.relics.model.valobj.RelicsVO;
 import com.ling.domain.relics.model.entity.RelicsEntity;
 import com.ling.domain.relics.service.IRelicsService;
 import com.ling.domain.relics.adapter.IRelicsRepository;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,6 +18,8 @@ public class RelicsServiceImpl implements IRelicsService {
     public RelicsEntity uploadRelics(RelicsVO vo) {
         RelicsEntity entity = new RelicsEntity();
         BeanUtils.copyProperties(vo, entity);
+        String relicsId = RandomStringUtils.secure().nextAlphanumeric(10);
+        vo.setRelicsId(relicsId);
         try {
             relicsRepository.uploadRelics(vo);
             entity.setSuccess(true);
