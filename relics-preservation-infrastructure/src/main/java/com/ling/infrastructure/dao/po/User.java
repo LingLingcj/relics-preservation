@@ -1,5 +1,6 @@
 package com.ling.infrastructure.dao.po;
 
+import com.ling.domain.auth.model.valobj.RoleEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -36,7 +37,7 @@ public class User {
     // 用户状态 (1=正常, 0=禁用)
     private Byte status;
     // 角色
-    private String role;
+    private RoleEnum role;
     // 头衔/职位
     private String title;
     // 权限级别或位掩码

@@ -35,24 +35,3 @@ CREATE TABLE `relics` (
      UNIQUE KEY `uk_relics_id` (`relics_id`),
      KEY `idx_location_id` (`location_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='文物表';
-
--- ----------------------------
--- Table structure for sensor (传感器信息表)
--- ----------------------------
-DROP TABLE IF EXISTS `sensor`;
-CREATE TABLE `sensor` (
-     `id` INT NOT NULL AUTO_INCREMENT COMMENT '自增主键',
-     `sensor_id` VARCHAR(64) NOT NULL COMMENT '传感器唯一标识 (如MAC地址或序列号)',
-     `name` VARCHAR(128) NOT NULL COMMENT '设备名称 (方便识别, 如: "A展厅3号柜-温湿度计")',
-     `type` VARCHAR(32) NOT NULL COMMENT '传感器类型 (如: temperature, humidity, light, vibration)',
-     `model` VARCHAR(64) NULL DEFAULT NULL COMMENT '设备型号',
-     `location_id` INT NOT NULL COMMENT '安装位置ID，关联location表',
-     `relic_id` INT NULL DEFAULT NULL COMMENT '关联的文物ID，如果传感器是针对特定文物，关联relics表',
-     `status` TINYINT NOT NULL DEFAULT 1 COMMENT '设备状态 (0: 离线, 1: 在线, 2: 故障)',
-     `create_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-     `update_time` TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '最后更新时间',
-     PRIMARY KEY (`id`),
-     UNIQUE KEY `uk_sensor_id` (`sensor_id`),
-     KEY `idx_location_id` (`location_id`),
-     KEY `idx_relic_id` (`relic_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='传感器信息表';

@@ -1,0 +1,165 @@
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ling.infrastructure.dao.ISensorDataAggregationDao">
+    <resultMap id="SensorDataHourlyResultMap" type="com.ling.infrastructure.dao.po.SensorDataHourly">
+        <id property="id" column="id"/>
+        <result property="sensorId" column="sensor_id"/>
+        <result property="type" column="type"/>
+        <result property="minValue" column="min_value"/>
+        <result property="maxValue" column="max_value"/>
+        <result property="avgValue" column="avg_value"/>
+        <result property="stdDev" column="std_dev"/>
+        <result property="sampleCount" column="sample_count"/>
+        <result property="unit" column="unit"/>
+        <result property="locationId" column="location_id"/>
+        <result property="relicId" column="relic_id"/>
+        <result property="hourTimestamp" column="hour_timestamp"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+    
+    <resultMap id="SensorDataDailyResultMap" type="com.ling.infrastructure.dao.po.SensorDataDaily">
+        <id property="id" column="id"/>
+        <result property="sensorId" column="sensor_id"/>
+        <result property="type" column="type"/>
+        <result property="minValue" column="min_value"/>
+        <result property="maxValue" column="max_value"/>
+        <result property="avgValue" column="avg_value"/>
+        <result property="stdDev" column="std_dev"/>
+        <result property="sampleCount" column="sample_count"/>
+        <result property="unit" column="unit"/>
+        <result property="locationId" column="location_id"/>
+        <result property="relicId" column="relic_id"/>
+        <result property="dayTimestamp" column="day_timestamp"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+    
+    <!-- 插入小时聚合数据 -->
+    <insert id="insertHourlyData" parameterType="com.ling.infrastructure.dao.po.SensorDataHourly">
+        INSERT INTO sensor_data_hourly
+        (sensor_id, type, min_value, max_value, avg_value, std_dev, sample_count, 
+         unit, location_id, relic_id, hour_timestamp)
+        VALUES
+        (#{sensorId}, #{type}, #{minValue}, #{maxValue}, #{avgValue}, #{stdDev}, #{sampleCount},
+         #{unit}, #{locationId}, #{relicId}, #{hourTimestamp})
+        ON DUPLICATE KEY UPDATE
+        min_value = #{minValue},
+        max_value = #{maxValue},
+        avg_value = #{avgValue},
+        std_dev = #{stdDev},
+        sample_count = #{sampleCount}
+    </insert>
+    
+    <!-- 插入日聚合数据 -->
+    <insert id="insertDailyData" parameterType="com.ling.infrastructure.dao.po.SensorDataDaily">
+        INSERT INTO sensor_data_daily
+        (sensor_id, type, min_value, max_value, avg_value, std_dev, sample_count, 
+         unit, location_id, relic_id, day_timestamp)
+        VALUES
+        (#{sensorId}, #{type}, #{minValue}, #{maxValue}, #{avgValue}, #{stdDev}, #{sampleCount},
+         #{unit}, #{locationId}, #{relicId}, #{dayTimestamp})
+        ON DUPLICATE KEY UPDATE
+        min_value = #{minValue},
+        max_value = #{maxValue},
+        avg_value = #{avgValue},
+        std_dev = #{stdDev},
+        sample_count = #{sampleCount}
+    </insert>
+    
+    <!-- 查询小时聚合数据 -->
+    <select id="queryHourlyData" resultMap="SensorDataHourlyResultMap">
+        SELECT * FROM sensor_data_hourly
+        <where>
+            <if test="sensorId != null and sensorId != ''">
+                AND sensor_id = #{sensorId}
+            </if>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+            <if test="startTime != null">
+                AND hour_timestamp &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND hour_timestamp &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY hour_timestamp DESC
+    </select>
+    
+    <!-- 查询日聚合数据 -->
+    <select id="queryDailyData" resultMap="SensorDataDailyResultMap">
+        SELECT * FROM sensor_data_daily
+        <where>
+            <if test="sensorId != null and sensorId != ''">
+                AND sensor_id = #{sensorId}
+            </if>
+            <if test="type != null and type != ''">
+                AND type = #{type}
+            </if>
+            <if test="startTime != null">
+                AND day_timestamp &gt;= #{startTime}
+            </if>
+            <if test="endTime != null">
+                AND day_timestamp &lt;= #{endTime}
+            </if>
+        </where>
+        ORDER BY day_timestamp DESC
+    </select>
+    
+    <!-- 根据原始数据计算并插入小时聚合数据 -->
+    <insert id="aggregateHourlyData">
+        INSERT INTO sensor_data_hourly
+        (sensor_id, type, min_value, max_value, avg_value, std_dev, sample_count, 
+         unit, location_id, relic_id, hour_timestamp)
+        SELECT 
+            sensor_id,
+            type,
+            MIN(value) as min_value,
+            MAX(value) as max_value,
+            AVG(value) as avg_value,
+            STDDEV_POP(value) as std_dev,
+            COUNT(*) as sample_count,
+            MAX(unit) as unit,
+            MAX(location_id) as location_id,
+            MAX(relic_id) as relic_id,
+            DATE_FORMAT(#{hour}, '%Y-%m-%d %H:00:00') as hour_timestamp
+        FROM sensor_data
+        WHERE timestamp &gt;= #{hour}
+        AND timestamp &lt; DATE_ADD(#{hour}, INTERVAL 1 HOUR)
+        GROUP BY sensor_id, type
+        ON DUPLICATE KEY UPDATE
+        min_value = VALUES(min_value),
+        max_value = VALUES(max_value),
+        avg_value = VALUES(avg_value),
+        std_dev = VALUES(std_dev),
+        sample_count = VALUES(sample_count)
+    </insert>
+    
+    <!-- 根据小时聚合数据计算并插入日聚合数据 -->
+    <insert id="aggregateDailyData">
+        INSERT INTO sensor_data_daily
+        (sensor_id, type, min_value, max_value, avg_value, std_dev, sample_count, 
+         unit, location_id, relic_id, day_timestamp)
+        SELECT 
+            sensor_id,
+            type,
+            MIN(min_value) as min_value,
+            MAX(max_value) as max_value,
+            AVG(avg_value) as avg_value,
+            SQRT(AVG(POWER(std_dev, 2))) as std_dev,
+            SUM(sample_count) as sample_count,
+            MAX(unit) as unit,
+            MAX(location_id) as location_id,
+            MAX(relic_id) as relic_id,
+            DATE(#{day}) as day_timestamp
+        FROM sensor_data_hourly
+        WHERE DATE(hour_timestamp) = DATE(#{day})
+        GROUP BY sensor_id, type
+        ON DUPLICATE KEY UPDATE
+        min_value = VALUES(min_value),
+        max_value = VALUES(max_value),
+        avg_value = VALUES(avg_value),
+        std_dev = VALUES(std_dev),
+        sample_count = VALUES(sample_count)
+    </insert>
+</mapper> 

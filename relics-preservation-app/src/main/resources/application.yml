@@ -69,8 +69,10 @@ jwt:
 # 日志配置
 logging:
   level:
-    com.ling: INFO
-    org.springframework.security: DEBUG
+    root: INFO
+    com.ling.trigger.listener: INFO
+    com.ling.domain.sensor: INFO
+    org.springframework.integration.mqtt: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
 
@@ -98,3 +100,18 @@ mqtt:
   password: dowithout
   topic:
     sensor: light_intensity_1
+
+# 传感器数据配置
+sensor:
+  data:
+    # 批量处理大小
+    batch:
+      size: 100
+      # 批处理间隔(毫秒)
+      interval: 30000
+    # 采样率(每N条数据采样1条)
+    sample:
+      rate: 10
+    # 阈值判断
+    threshold:
+      enabled: true
