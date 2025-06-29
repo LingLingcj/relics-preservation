@@ -91,10 +91,10 @@ springdoc:
 # MQTT配置
 mqtt:
   broker:
-    url: tcp://localhost:1883
+    url: tcp://117.72.63.151:1883
   client:
     id: relics-preservation-client
-  username: mqtt_user
-  password: mqtt_password
+  username: dowithout
+  password: dowithout
   topic:
     sensor: sensor/+/data

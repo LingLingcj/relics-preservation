@@ -12,6 +12,7 @@ import org.springframework.integration.dsl.IntegrationFlow;
 import org.springframework.integration.mqtt.core.DefaultMqttPahoClientFactory;
 import org.springframework.integration.mqtt.core.MqttPahoClientFactory;
 import org.springframework.integration.mqtt.inbound.MqttPahoMessageDrivenChannelAdapter;
+import org.springframework.integration.mqtt.outbound.MqttPahoMessageHandler;
 import org.springframework.integration.mqtt.support.DefaultPahoMessageConverter;
 import org.springframework.integration.router.HeaderValueRouter;
 import org.springframework.messaging.MessageChannel;
@@ -23,7 +24,7 @@ import org.springframework.messaging.MessageChannel;
  **/
 @Configuration
 @EnableIntegration
-@IntegrationComponentScan("com.ling.trigger.listener")
+@IntegrationComponentScan({"com.ling.trigger.listener", "com.ling.trigger.gateway"})
 public class MqttConfig {
 
     @Value("${mqtt.broker.url:tcp://localhost:1883}")
@@ -62,6 +63,7 @@ public class MqttConfig {
         return factory;
     }
 
+
     @Bean
     public MessageChannel mqttInputChannel() {
         return new DirectChannel();
@@ -81,6 +83,11 @@ public class MqttConfig {
     public MessageChannel defaultChannel() {
         return new DirectChannel();
     }
+    
+    @Bean
+    public MessageChannel mqttOutboundChannel() {
+        return new DirectChannel();
+    }
 
     @Bean
     public MessageProducer inbound() {
@@ -93,7 +100,7 @@ public class MqttConfig {
         adapter.setOutputChannel(mqttInputChannel());
         return adapter;
     }
-    
+
     @Bean
     public HeaderValueRouter mqttMessageRouter() {
         HeaderValueRouter router = new HeaderValueRouter("mqtt_receivedTopic");
@@ -110,4 +117,20 @@ public class MqttConfig {
                 .route(mqttMessageRouter())
                 .get();
     }
-} 
+    
+    @Bean
+    public MqttPahoMessageHandler mqttOutbound() {
+        MqttPahoMessageHandler messageHandler = new MqttPahoMessageHandler(clientId + "_outbound", mqttClientFactory());
+        messageHandler.setAsync(true);
+        messageHandler.setDefaultQos(1);
+        return messageHandler;
+    }
+    
+    @Bean
+    public IntegrationFlow mqttOutFlow() {
+        return IntegrationFlow
+                .from(mqttOutboundChannel())
+                .handle(mqttOutbound())
+                .get();
+    }
+}
