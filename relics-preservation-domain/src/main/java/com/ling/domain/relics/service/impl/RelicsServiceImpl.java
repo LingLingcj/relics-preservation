@@ -4,12 +4,12 @@ import com.ling.domain.relics.model.valobj.RelicsVO;
 import com.ling.domain.relics.model.entity.RelicsEntity;
 import com.ling.domain.relics.service.IRelicsService;
 import com.ling.domain.relics.adapter.IRelicsRepository;
-import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class RelicsServiceImpl implements IRelicsService {
@@ -20,7 +20,11 @@ public class RelicsServiceImpl implements IRelicsService {
     public RelicsEntity uploadRelics(RelicsVO vo) {
         RelicsEntity entity = new RelicsEntity();
         BeanUtils.copyProperties(vo, entity);
-        Long relicsId = Long.parseLong(RandomStringUtils.secure().nextNumeric(1000000));
+        
+        // 使用UUID的最后12位数字（去掉所有非数字字符后）转为Long类型
+        String uuid = UUID.randomUUID().toString().replaceAll("[^0-9]", "");
+        Long relicsId = Long.parseLong(uuid.substring(0, Math.min(uuid.length(), 18)));
+        
         vo.setRelicsId(relicsId);
         try {
             relicsRepository.uploadRelics(vo);
