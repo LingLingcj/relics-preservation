@@ -22,7 +22,12 @@ public class SensorMessageVO {
      * 传感器ID
      */
     private String sensorId;
-    
+
+    /**
+     * 状态
+     */
+    private Integer status;
+
     /**
      * 传感器类型
      */
@@ -63,5 +68,28 @@ public class SensorMessageVO {
                 .value(value)
                 .timestamp(LocalDateTime.now())
                 .build();
+    }
+
+    /**
+     * 获取status
+     */
+    public void validateStatus() {
+        switch (this.sensorType) {
+            case "gas":
+                if (this.value > 1000) {
+                    this.status = 1;
+                }
+                break;
+            case "temp":
+                if (this.value > 30 || this.value < 10) {
+                    this.status = 1;
+                }
+                break;
+            case "hum":
+                if (this.value > 100 || this.value < 10) {
+                    this.status = 1;
+                }
+                break;
+        }
     }
 } 

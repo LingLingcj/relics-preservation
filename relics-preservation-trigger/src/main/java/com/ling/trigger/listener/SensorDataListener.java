@@ -41,13 +41,13 @@ public class SensorDataListener {
     public void handleMessage(Message<?> message) {
         String topic = message.getHeaders().get("mqtt_receivedTopic").toString();
         String payload = message.getPayload().toString();
-        
+
         // 增加消息计数
         int count = messageCounter.incrementAndGet();
-        
+
         // 仅在DEBUG级别记录详细消息内容
         log.debug("接收到传感器消息，主题: {}, 内容: {}", topic, payload);
-        
+
         try {
             // 解析传感器数据
             List<SensorMessageVO> sensorMessages = parseSensorMessages(topic, payload);
@@ -92,10 +92,19 @@ public class SensorDataListener {
     private List<SensorMessageVO> parseSensorMessages(String topic, String payload) {
         List<SensorMessageVO> result = new ArrayList<>();
         String sensorId = extractSensorIdFromTopic(topic);
+        boolean isAbnormal = false;
         
         // 尝试解析JSON格式
         try {
             JSONObject jsonObj = JSON.parseObject(payload);
+            if (jsonObj.containsKey("stat")) {
+                int stat = jsonObj.getIntValue("stat");
+                if (stat > 0) {
+                    isAbnormal = true;
+                    log.warn("传感器发出警报，状态紧急程度：{}", stat);
+                }
+                jsonObj.remove("stat");
+            }
             
             jsonObj.forEach((key, value) -> {
                 // 只处理数值类型字段
@@ -107,6 +116,7 @@ public class SensorDataListener {
                     ));
                 }
             });
+
             
             return result;
         } 

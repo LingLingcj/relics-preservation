@@ -65,6 +65,8 @@ public class MqttConfig {
         }
         
         options.setCleanSession(true);
+        // 开启自动重连
+        options.setAutomaticReconnect(true);
         factory.setConnectionOptions(options);
         return factory;
     }
@@ -76,11 +78,6 @@ public class MqttConfig {
 
     @Bean
     public MessageChannel sensorChannel() {
-        return new DirectChannel();
-    }
-
-    @Bean
-    public MessageChannel alertChannel() {
         return new DirectChannel();
     }
 

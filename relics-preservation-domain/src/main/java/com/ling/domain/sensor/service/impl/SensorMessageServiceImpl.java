@@ -11,7 +11,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -182,21 +181,6 @@ public class SensorMessageServiceImpl implements ISensorMessageService {
             log.info("执行日数据聚合完成: {}条记录, 日期: {}", count, yesterday);
         } catch (Exception e) {
             log.error("执行日数据聚合失败: {}", e.getMessage(), e);
-        }
-    }
-    
-    /**
-     * 定时清理历史数据（每月1日凌晨1:00执行）
-     */
-    @Scheduled(cron = "0 0 1 1 * ?")
-    public void scheduleDataCleanup() {
-        try {
-            // 清理3个月前的数据
-            LocalDateTime beforeTime = LocalDateTime.now().minusMonths(3);
-            int count = sensorDataService.cleanHistoricalData(beforeTime);
-            log.info("清理历史数据完成: {}条记录, 删除{}之前的数据", count, beforeTime);
-        } catch (Exception e) {
-            log.error("清理历史数据失败: {}", e.getMessage(), e);
         }
     }
 } 
