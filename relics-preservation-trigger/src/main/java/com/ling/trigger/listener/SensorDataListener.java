@@ -3,14 +3,14 @@ package com.ling.trigger.listener;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.ling.domain.sensor.model.valobj.SensorMessageVO;
-import com.ling.domain.sensor.service.ISensorMessageService;
+import com.ling.domain.sensor.service.sensor.ISensorMessageService;
+import com.ling.domain.sensor.service.validation.ISensorValidator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -109,11 +109,13 @@ public class SensorDataListener {
             jsonObj.forEach((key, value) -> {
                 // 只处理数值类型字段
                 if (value instanceof Number) {
-                    result.add(SensorMessageVO.create(
-                        sensorId, 
-                        key, 
-                        ((Number) value).doubleValue()
-                    ));
+                    SensorMessageVO sensorMessageVO = SensorMessageVO.create(
+                            sensorId,
+                            key,
+                            ((Number) value).doubleValue());
+
+                    result.add(sensorMessageVO);
+
                 }
             });
 
@@ -137,4 +139,4 @@ public class SensorDataListener {
         return lastUnderscoreIndex > 0 ? 
                topic.substring(lastUnderscoreIndex + 1) : topic;
     }
-} 
+}

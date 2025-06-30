@@ -24,3 +24,4 @@ public class AlertController {
 //    public Response<Boolean> saveAlertRule(@RequestBody AlertRuleVO ruleVO);
 
 }
+

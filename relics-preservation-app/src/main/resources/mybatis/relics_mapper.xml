@@ -17,6 +17,9 @@
         <result property="createTime" column="create_time"/>
         <result property="updateTime" column="update_time"/>
     </resultMap>
+    <select id="selectByEra" resultType="com.ling.infrastructure.dao.po.Relics" resultMap="RelicsResultMap">
+        select * from relics where era = #{era}
+    </select>
 
 
 </mapper>

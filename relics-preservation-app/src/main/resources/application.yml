@@ -44,6 +44,8 @@ spring:
 
 mybatis-plus:
   mapper-locations: classpath:/mybatis/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
 
 # Redis
 redis:

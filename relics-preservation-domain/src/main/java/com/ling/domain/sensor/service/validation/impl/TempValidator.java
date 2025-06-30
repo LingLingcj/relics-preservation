@@ -21,3 +21,4 @@ public class TempValidator implements ISensorValidator {
         return 0;
     }
 }
+

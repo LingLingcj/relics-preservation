@@ -73,23 +73,5 @@ public class SensorMessageVO {
     /**
      * 获取status
      */
-    public void validateStatus() {
-        switch (this.sensorType) {
-            case "gas":
-                if (this.value > 1000) {
-                    this.status = 1;
-                }
-                break;
-            case "temp":
-                if (this.value > 30 || this.value < 10) {
-                    this.status = 1;
-                }
-                break;
-            case "hum":
-                if (this.value > 100 || this.value < 10) {
-                    this.status = 1;
-                }
-                break;
-        }
-    }
+
 } 

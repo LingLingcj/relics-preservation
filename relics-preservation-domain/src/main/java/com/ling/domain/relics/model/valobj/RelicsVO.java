@@ -17,10 +17,8 @@ public class RelicsVO {
     private String era;
     private String material;
     private String imageUrl;
-    private   Integer status;
+    private Integer status;
     private Integer locationId;
-    private Date createTime;
-    private Date updateTime;
     // 上传结果
     private boolean success;
     private String message;

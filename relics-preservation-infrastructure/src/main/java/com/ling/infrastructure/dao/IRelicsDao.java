@@ -21,6 +21,5 @@ public interface IRelicsDao {
     @SelectKey(statement = "SELECT LAST_INSERT_ID()", keyProperty = "relics.id", before = false, resultType = int.class)
     int insertRelics(@Param("relics") Relics relics);
 
-    @Select("SELECT * FROM relics WHERE era = #{era}")
     List<Relics> selectByEra(@Param("era") String era);
 }
