@@ -16,12 +16,15 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * @Author: LingRJ
- * @Description: 文物基本信息���理接口
+ * @Description: 文物基本信息
  * @DateTime: 2025/6/28 0:01
  **/
-@Tag(name = "文物管理", description = "文物基本信��管理接口")
+@Tag(name = "文物管理", description = "文物基本信息管理接口")
 @RestController
 @RequestMapping("/api/relics")
 public class RelicsController {
@@ -46,7 +49,33 @@ public class RelicsController {
                 .data("上传数据库失败")
                 .build();
     }
-//
+
+    @Operation(summary = "按朝代搜索文物", description = "根据朝代名称搜索文物信息")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "搜索成功", content = @Content(schema = @Schema(implementation = RelicsVO.class))),
+            @ApiResponse(responseCode = "404", description = "未找到文物", content = @Content)
+    })
+    @GetMapping("/era/{era}")
+    public Response<List<RelicsVO>> getRelicsByEra(@Parameter(description = "朝代名称", required = true) @PathVariable("era") String era) {
+        List<RelicsEntity> relicsEntities = relicsService.getRelicsByEra(era);
+        if (relicsEntities.isEmpty()) {
+            return Response.<List<RelicsVO>>builder()
+                    .code(ResponseCode.RELICS_NOT_FOUND.getCode())
+                    .info("未找到指定朝代的文物")
+                    .build();
+        }
+        List<RelicsVO> relicsVOs = relicsEntities.stream().map(entity -> {
+            RelicsVO vo = new RelicsVO();
+            org.springframework.beans.BeanUtils.copyProperties(entity, vo);
+            return vo;
+        }).collect(Collectors.toList());
+        return Response.<List<RelicsVO>>builder()
+                .code(ResponseCode.SUCCESS.getCode())
+                .info("查询成功")
+                .data(relicsVOs)
+                .build();
+    }
+
 //    // 获取文物详情
 //    @GetMapping("/{id}")
 //    public Response<RelicsInfo> getRelicsById(@PathVariable Long id);

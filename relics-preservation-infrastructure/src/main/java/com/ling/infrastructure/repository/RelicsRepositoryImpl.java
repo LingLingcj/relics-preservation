@@ -9,6 +9,9 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 @Repository
 public class RelicsRepositoryImpl implements IRelicsRepository {
     @Autowired
@@ -44,5 +47,15 @@ public class RelicsRepositoryImpl implements IRelicsRepository {
     public boolean updateRelics(RelicsEntity relicsEntity) {
         // TODO: 需要实现更新逻辑
         return false;
+    }
+
+    @Override
+    public List<RelicsEntity> findByEra(String era) {
+        List<Relics> relicsList = relicsDao.selectByEra(era);
+        return relicsList.stream().map(relics -> {
+            RelicsEntity relicsEntity = new RelicsEntity();
+            BeanUtils.copyProperties(relics, relicsEntity);
+            return relicsEntity;
+        }).collect(Collectors.toList());
     }
 }

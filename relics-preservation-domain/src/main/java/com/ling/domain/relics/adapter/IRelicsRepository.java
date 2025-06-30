@@ -3,6 +3,8 @@ package com.ling.domain.relics.adapter;
 import com.ling.domain.relics.model.entity.RelicsEntity;
 import com.ling.domain.relics.model.valobj.RelicsVO;
 
+import java.util.List;
+
 /**
  * 文物仓储接口
  */
@@ -40,5 +42,12 @@ public interface IRelicsRepository {
      * @return 更新结果
      */
     boolean updateRelics(RelicsEntity relicsEntity);
+
+    /**
+     * 根据年代查找文物
+     * @param era 年代
+     * @return 文物实体列表
+     */
+    List<RelicsEntity> findByEra(String era);
 }
 
