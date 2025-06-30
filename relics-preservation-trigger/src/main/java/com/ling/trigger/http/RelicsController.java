@@ -32,10 +32,6 @@ public class RelicsController {
     private IRelicsService relicsService;
 
     @Operation(summary = "添加文物", description = "添加文物信息，返回文物ID和上传结果")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "添加成功", content = @Content(schema = @Schema(implementation = RelicsVO.class))),
-            @ApiResponse(responseCode = "400", description = "参数错误", content = @Content)
-    })
     @PostMapping
     public Response<String> addRelics(@Parameter(description = "文物上传信息", required = true)
                                         @RequestBody RelicsUploadDTO relicsUploadDTO) {
@@ -51,12 +47,8 @@ public class RelicsController {
     }
 
     @Operation(summary = "按朝代搜索文物", description = "根据朝代名称搜索文物信息")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "搜索成功", content = @Content(schema = @Schema(implementation = RelicsVO.class))),
-            @ApiResponse(responseCode = "404", description = "未找到文物", content = @Content)
-    })
-    @GetMapping("/era/{era}")
-    public Response<List<RelicsVO>> getRelicsByEra(@Parameter(description = "朝代名称", required = true) @PathVariable("era") String era) {
+    @GetMapping("/era")
+    public Response<List<RelicsVO>> getRelicsByEra(@Parameter(description = "朝代名称", required = true) @RequestBody String era) {
         List<RelicsEntity> relicsEntities = relicsService.getRelicsByEra(era);
         if (relicsEntities.isEmpty()) {
             return Response.<List<RelicsVO>>builder()
