@@ -20,7 +20,7 @@ public class Relics {
     /** 自增主键 */
     private Integer id;
     /** 文物业务ID */
-    private String relicsId;
+    private Long relicsId;
     /** 文物名称 */
     private String name;
     /** 文物详细描述 */

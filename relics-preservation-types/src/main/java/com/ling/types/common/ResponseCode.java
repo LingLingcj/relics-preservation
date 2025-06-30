@@ -30,8 +30,10 @@ public enum ResponseCode {
     WRONG_ROLE("1015", "身份错误"),
 
     // 文物相关错误码
-    RELICS_NOT_FOUND("2001", "未找到指定文物")
-;
+    RELICS_NOT_FOUND("2001", "未找到指定文物"),
+
+    // 评论相关错误码
+    FORBIDDEN("2101", "没有权限");
     private final String code;
     private final String info;
 } 

@@ -55,7 +55,7 @@ public class AlertMessageVO {
     /**
      * 文物ID
      */
-    private String relicsId;
+    private Long relicsId;
     
     /**
      * 当前读数

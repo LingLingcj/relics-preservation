@@ -56,7 +56,7 @@ public class SensorMessageVO {
     /**
      * 文物ID
      */
-    private String relicsId;
+    private Long relicsId;
     
     /**
      * 创建基本传感器消息

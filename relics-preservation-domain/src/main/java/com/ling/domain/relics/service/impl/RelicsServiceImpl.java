@@ -20,7 +20,7 @@ public class RelicsServiceImpl implements IRelicsService {
     public RelicsEntity uploadRelics(RelicsVO vo) {
         RelicsEntity entity = new RelicsEntity();
         BeanUtils.copyProperties(vo, entity);
-        String relicsId = RandomStringUtils.secure().nextAlphanumeric(10);
+        Long relicsId = Long.parseLong(RandomStringUtils.secure().nextNumeric(1000000));
         vo.setRelicsId(relicsId);
         try {
             relicsRepository.uploadRelics(vo);

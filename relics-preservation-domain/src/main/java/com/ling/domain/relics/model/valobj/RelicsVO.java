@@ -9,7 +9,7 @@ import java.util.Date;
 @Data
 public class RelicsVO {
     private Integer id;
-    private String relicsId;
+    private Long relicsId;
     private String name;
     private String description;
     private Integer preservation;
