@@ -1,8 +1,10 @@
 package com.ling.trigger.http;
 
-import com.ling.api.dto.ChangePasswordDTO;
-import com.ling.api.dto.LoginDTO;
-import com.ling.api.dto.RegisterDTO;
+import com.ling.api.dto.request.ChangePasswordDTO;
+import com.ling.api.dto.request.LoginDTO;
+import com.ling.api.dto.request.RegisterDTO;
+import com.ling.api.dto.response.AuthResponseDTO;
+import com.ling.api.dto.response.MessageResponseDTO;
 import com.ling.domain.auth.model.valobj.ChangePasswordVO;
 import com.ling.domain.auth.model.valobj.LoginVO;
 import com.ling.domain.auth.model.valobj.RegisterVO;
@@ -13,14 +15,9 @@ import com.ling.types.common.ResponseCode;
 import com.ling.types.jwt.JwtTokenProvider;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.ServletResponse;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,9 +25,6 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * @Author: LingRJ
@@ -60,12 +54,12 @@ public class AuthController {
      */
     @PostMapping("/register")
     @Operation(summary = "用户注册", description = "创建新用户并返回JWT令牌")
-    public Response<Map<String, String>> register(
+    public Response<AuthResponseDTO> register(
             @Parameter(description = "注册信息", required = true)
             @RequestBody RegisterDTO registerDTO) {
         // 校验密码是否一致
         if (!registerDTO.getPassword().equals(registerDTO.getConfirmPassword())) {
-            return Response.<Map<String, String>>builder()
+            return Response.<AuthResponseDTO>builder()
                     .code(ResponseCode.PASSWORD_CONFIRM_ERROR.getCode())
                     .info(ResponseCode.PASSWORD_CONFIRM_ERROR.getInfo())
                     .build();
@@ -82,7 +76,7 @@ public class AuthController {
         
         // 处理注册结果
         if (!userInfo.isSuccess()) {
-            return Response.<Map<String, String>>builder()
+            return Response.<AuthResponseDTO>builder()
                     .code(getErrorCodeByMessage(userInfo.getMessage()))
                     .info(userInfo.getMessage())
                     .build();
@@ -103,7 +97,7 @@ public class AuthController {
      */
     @PostMapping("/login")
     @Operation(summary = "用户登录", description = "验证用户凭据并返回JWT令牌")
-    public Response<Map<String, String>> login(
+    public Response<AuthResponseDTO> login(
             @Parameter(description = "登录信息", required = true)
             @RequestBody LoginDTO loginDTO) {
         LoginVO loginVO = new LoginVO();
@@ -114,7 +108,7 @@ public class AuthController {
         
         // 处理登录结果
         if (!userInfo.isSuccess()) {
-            return Response.<Map<String, String>>builder()
+            return Response.<AuthResponseDTO>builder()
                     .code(ResponseCode.LOGIN_ERROR.getCode())
                     .info(ResponseCode.LOGIN_ERROR.getInfo())
                     .build();
@@ -136,12 +130,13 @@ public class AuthController {
     }
 
     // 令牌响应
-    private Response<Map<String, String>> buildTokenResponse(String token, String message) {
-        Map<String, String> response = new HashMap<>();
-        response.put("token", token);
-        response.put("message", message);
+    private Response<AuthResponseDTO> buildTokenResponse(String token, String message) {
+        AuthResponseDTO response = AuthResponseDTO.builder()
+                .token(token)
+                .message(message)
+                .build();
 
-        return Response.<Map<String, String>>builder()
+        return Response.<AuthResponseDTO>builder()
                 .code(ResponseCode.SUCCESS.getCode())
                 .info(ResponseCode.SUCCESS.getInfo())
                 .data(response)
@@ -156,7 +151,7 @@ public class AuthController {
     @PostMapping("/change-password")
     @Operation(summary = "修改密码", description = "修改当前登录用户的密码")
     @SecurityRequirement(name = "JWT")
-    public Response<String> changePassword(
+    public Response<MessageResponseDTO> changePassword(
             @Parameter(description = "密码修改信息", required = true)
             @RequestBody ChangePasswordDTO changePasswordDTO) {
         // 获取当前登录用户
@@ -165,7 +160,7 @@ public class AuthController {
         
         // 校验新密码和确认密码
         if (!changePasswordDTO.getNewPassword().equals(changePasswordDTO.getConfirmPassword())) {
-            return Response.<String>builder()
+            return Response.<MessageResponseDTO>builder()
                     .code(ResponseCode.PASSWORD_CONFIRM_ERROR.getCode())
                     .info(ResponseCode.PASSWORD_CONFIRM_ERROR.getInfo())
                     .build();
@@ -178,16 +173,20 @@ public class AuthController {
         boolean success = userAuthService.changePassword(changePasswordVO, username);
         
         if (!success) {
-            return Response.<String>builder()
+            return Response.<MessageResponseDTO>builder()
                     .code(ResponseCode.OLD_PASSWORD_ERROR.getCode())
                     .info(ResponseCode.OLD_PASSWORD_ERROR.getInfo())
                     .build();
         }
         
-        return Response.<String>builder()
+        MessageResponseDTO messageResponseDTO = MessageResponseDTO.builder()
+                .message("密码修改成功")
+                .build();
+                
+        return Response.<MessageResponseDTO>builder()
                 .code(ResponseCode.SUCCESS.getCode())
                 .info(ResponseCode.SUCCESS.getInfo())
-                .data("密码修改成功")
+                .data(messageResponseDTO)
                 .build();
     }
     

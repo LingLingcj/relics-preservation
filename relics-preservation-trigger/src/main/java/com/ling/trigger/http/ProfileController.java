@@ -1,6 +1,7 @@
 package com.ling.trigger.http;
 
-import com.ling.api.dto.ProfileUpdateDTO;
+import com.ling.api.dto.request.ProfileUpdateDTO;
+import com.ling.api.dto.response.UserInfoResponseDTO;
 import com.ling.domain.auth.model.valobj.ProfileUpdateVO;
 import com.ling.domain.auth.model.valobj.UserInfoVO;
 import com.ling.domain.auth.service.IUserProfileService;
@@ -8,10 +9,6 @@ import com.ling.types.common.Response;
 import com.ling.types.common.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import org.springframework.beans.BeanUtils;
@@ -40,7 +37,7 @@ public class ProfileController {
      */
     @GetMapping
     @Operation(summary = "获取用户信息", description = "获取当前登录用户的详细个人信息")
-    public Response<UserInfoVO> getUserProfile(
+    public Response<UserInfoResponseDTO> getUserProfile(
             @Parameter(description = "JWT令牌", required = true)
             @RequestHeader(value = "Authorization", required = true) String token) {
         // 从Spring Security上下文获取当前登录用户
@@ -60,7 +57,7 @@ public class ProfileController {
      */
     @PutMapping
     @Operation(summary = "更新用户信息", description = "更新当前登录用户的个人信息")
-    public Response<UserInfoVO> updateUserProfile(
+    public Response<UserInfoResponseDTO> updateUserProfile(
             @Parameter(description = "用户信息更新数据", required = true)
             @RequestBody ProfileUpdateDTO profileUpdateDTO,
             @Parameter(description = "JWT令牌", required = true)
@@ -84,22 +81,30 @@ public class ProfileController {
      * @param userInfoVO 用户信息
      * @return 响应信息
      */
-    private Response<UserInfoVO> responseUserInfo(UserInfoVO userInfoVO) {
+    private Response<UserInfoResponseDTO> responseUserInfo(UserInfoVO userInfoVO) {
         // 处理结果
         if (!userInfoVO.isSuccess()) {
-            return Response.<UserInfoVO>builder()
+            return Response.<UserInfoResponseDTO>builder()
                     .code(getErrorCodeByMessage(userInfoVO.getMessage()))
                     .info(userInfoVO.getMessage())
                     .build();
         }
 
-        // 敏感信息处理，清除密码字段
-        userInfoVO.setPassword(null);
+        UserInfoResponseDTO userInfoResponseDTO = UserInfoResponseDTO.builder()
+                .username(userInfoVO.getUsername())
+                .nickname(userInfoVO.getNickname())
+                .title(userInfoVO.getTitle())
+                .email(userInfoVO.getEmail())
+                .avatarUrl(userInfoVO.getAvatarUrl())
+                .role(userInfoVO.getRole())
+                .fullName(userInfoVO.getFullName())
+                .phoneNumber(userInfoVO.getPhoneNumber())
+                .build();
 
-        return Response.<UserInfoVO>builder()
+        return Response.<UserInfoResponseDTO>builder()
                 .code(ResponseCode.SUCCESS.getCode())
                 .info(ResponseCode.SUCCESS.getInfo())
-                .data(userInfoVO)
+                .data(userInfoResponseDTO)
                 .build();
     }
     

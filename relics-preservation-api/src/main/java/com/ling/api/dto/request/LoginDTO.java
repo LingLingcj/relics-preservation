@@ -1,6 +1,5 @@
-package com.ling.api.dto;
+package com.ling.api.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import com.ling.domain.auth.model.valobj.RoleEnum;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

@@ -112,9 +112,7 @@ public class MqttConfig {
             router.setChannelMapping(prefix, "sensorChannel");
         }
         
-        // 告警主题
-        router.setChannelMapping("alert/", "alertChannel");
-        router.setDefaultOutputChannelName("defaultChannel");
+        // 告警主题 TODO
         return router;
     }
     

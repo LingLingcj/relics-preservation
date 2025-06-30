@@ -1,6 +1,5 @@
-package com.ling.api.dto;
+package com.ling.api.dto.request;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

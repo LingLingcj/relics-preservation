@@ -1,4 +1,4 @@
-package com.ling.api.dto;
+package com.ling.api.dto.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

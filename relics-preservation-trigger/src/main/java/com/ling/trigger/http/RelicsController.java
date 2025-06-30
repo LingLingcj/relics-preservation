@@ -1,6 +1,8 @@
 package com.ling.trigger.http;
 
-import com.ling.api.dto.RelicsUploadDTO;
+import com.ling.api.dto.request.RelicsUploadDTO;
+import com.ling.api.dto.response.RelicsResponseDTO;
+import com.ling.api.dto.response.RelicsUploadResponseDTO;
 import com.ling.domain.relics.model.entity.RelicsEntity;
 import com.ling.domain.relics.model.valobj.RelicsVO;
 import com.ling.domain.relics.service.IRelicsService;
@@ -30,39 +32,58 @@ public class RelicsController {
 
     @Operation(summary = "添加文物", description = "添加文物信息，返回文物ID和上传结果")
     @PostMapping
-    public Response<String> addRelics(@Parameter(description = "文物上传信息", required = true)
+    public Response<RelicsUploadResponseDTO> addRelics(@Parameter(description = "文物上传信息", required = true)
                                         @RequestBody RelicsUploadDTO relicsUploadDTO) {
         // DTO转VO
         RelicsVO vo = new RelicsVO();
         org.springframework.beans.BeanUtils.copyProperties(relicsUploadDTO, vo);
         RelicsEntity result = relicsService.uploadRelics(vo);
-        return Response.<String>builder()
+        
+        // 构建响应DTO
+        RelicsUploadResponseDTO responseDTO = RelicsUploadResponseDTO.builder()
+                .success(result.isSuccess())
+                .message(result.getMessage())
+                .build();
+        
+        return Response.<RelicsUploadResponseDTO>builder()
                 .code(result.isSuccess() ? ResponseCode.SUCCESS.getCode() : ResponseCode.SYSTEM_ERROR.getCode())
                 .info(result.getMessage())
-                .data(result.getMessage())
+                .data(responseDTO)
                 .build();
     }
 
     @Operation(summary = "按朝代搜索文物", description = "根据朝代名称搜索文物信息")
     @GetMapping("/era")
-    public Response<List<RelicsVO>> getRelicsByEra(@Parameter(description = "朝代名称", required = true) @RequestBody Map<String, String> body) {
+    public Response<List<RelicsResponseDTO>> getRelicsByEra(@Parameter(description = "朝代名称", required = true) @RequestBody Map<String, String> body) {
         String era = body.get("era");
         List<RelicsEntity> relicsEntities = relicsService.getRelicsByEra(era);
         if (relicsEntities.isEmpty()) {
-            return Response.<List<RelicsVO>>builder()
+            return Response.<List<RelicsResponseDTO>>builder()
                     .code(ResponseCode.RELICS_NOT_FOUND.getCode())
                     .info("未找到指定朝代的文物")
                     .build();
         }
-        List<RelicsVO> relicsVOs = relicsEntities.stream().map(entity -> {
-            RelicsVO vo = new RelicsVO();
-            org.springframework.beans.BeanUtils.copyProperties(entity, vo);
-            return vo;
+        
+        // 转换为DTO
+        List<RelicsResponseDTO> relicsDTOs = relicsEntities.stream().map(entity -> {
+            RelicsResponseDTO dto = RelicsResponseDTO.builder()
+                    .name(entity.getName())
+                    .description(entity.getDescription())
+                    .preservation(entity.getPreservation())
+                    .category(entity.getCategory())
+                    .era(entity.getEra())
+                    .material(entity.getMaterial())
+                    .imageUrl(entity.getImageUrl())
+                    .status(entity.getStatus())
+                    .locationId(entity.getLocationId())
+                    .build();
+            return dto;
         }).collect(Collectors.toList());
-        return Response.<List<RelicsVO>>builder()
+        
+        return Response.<List<RelicsResponseDTO>>builder()
                 .code(ResponseCode.SUCCESS.getCode())
                 .info("查询成功")
-                .data(relicsVOs)
+                .data(relicsDTOs)
                 .build();
     }
 
