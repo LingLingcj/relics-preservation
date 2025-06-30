@@ -23,17 +23,14 @@ public class ValidatorMessageParser implements IMessageParser {
 
     @Override
     public List<SensorMessageVO> parse(String topic, String payload) {
-
-
         // 处理json字符串
         List<SensorMessageVO> sensorMessageVOList = messageParser.parse(topic, payload);
-
 
         sensorMessageVOList.forEach(message -> {
             ISensorValidator validator = ValidatorFactory.getValidator(message.getSensorType());
             if (validator != null) {
                 message.setStatus(validator.validateStatus(message.getValue()));
-                log.info("传感器类型：{}，传感器状态：{}", message.getSensorType(), message.getStatus());
+                log.info("传感器类型：{}，传感器值：{}，传感器状态：{}", message.getSensorType(), message.getValue(), message.getStatus());
             }
         });
 

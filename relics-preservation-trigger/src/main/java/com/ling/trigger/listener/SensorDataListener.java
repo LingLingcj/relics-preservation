@@ -2,7 +2,6 @@ package com.ling.trigger.listener;
 
 import com.ling.domain.sensor.model.valobj.SensorMessageVO;
 import com.ling.domain.sensor.service.message.parser.IMessageParser;
-import com.ling.domain.sensor.service.sensordata.ISensorMessageService;
 import com.ling.domain.sensor.service.pattern.subject.ISensorDataSubject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
