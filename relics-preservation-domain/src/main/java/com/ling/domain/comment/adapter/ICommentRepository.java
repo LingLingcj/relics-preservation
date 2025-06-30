@@ -5,7 +5,9 @@ import com.ling.domain.comment.model.entity.CommentEntity;
 import java.util.List;
 
 /**
+ * @Author: LingRJ
  * @Description: 评论仓储接口
+ * @DateTime: 2025/6/30 23:52
  */
 public interface ICommentRepository {
     

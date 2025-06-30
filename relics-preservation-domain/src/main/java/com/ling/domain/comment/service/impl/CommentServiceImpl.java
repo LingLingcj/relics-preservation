@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * @Author: LingRJ
  * @Description: 文物评论服务实现
  */
 @Slf4j
@@ -30,7 +31,8 @@ public class CommentServiceImpl implements ICommentService {
         BeanUtils.copyProperties(commentVO, commentEntity);
         
         // 设置初始状态和时间
-        commentEntity.setStatus(0); // 0-正常
+        // 0-正常
+        commentEntity.setStatus(0);
         LocalDateTime now = LocalDateTime.now();
         commentEntity.setCreateTime(now);
         commentEntity.setUpdateTime(now);

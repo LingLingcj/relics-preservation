@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
+ * @Author: LingRJ
  * @Description: 文物评论值对象
  */
 @Data

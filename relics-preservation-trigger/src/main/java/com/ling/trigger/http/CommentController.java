@@ -24,7 +24,9 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
+ * @Author: LingRJ
  * @Description: 文物评论控制器
+ * @DateTime: 2025/6/30 23:51
  */
 @Tag(name = "文物评论", description = "文物评论相关接口")
 @RestController

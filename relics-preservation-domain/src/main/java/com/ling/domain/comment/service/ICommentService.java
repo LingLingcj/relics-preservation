@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
+ * @Author: LingRJ
  * @Description: 文物评论服务接口
  */
 public interface ICommentService {
