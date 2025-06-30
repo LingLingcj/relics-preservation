@@ -42,7 +42,7 @@ public class MqttConfig {
     @Value("${mqtt.password}")
     private String password;
 
-    @Value("${mqtt.topic.sensors:}")
+    @Value("${mqtt.topics}")
     private String[] sensorTopics;
 
     // 传感器主题前缀列表
@@ -98,8 +98,7 @@ public class MqttConfig {
     public MessageProducer inbound() {
         MqttPahoMessageDrivenChannelAdapter adapter =
                 new MqttPahoMessageDrivenChannelAdapter(clientId + "_inbound", mqttClientFactory(),
-                        "ems", "light_intensity_", "temperature_", "humidity_",
-                        "light", "temperature", "humidity");
+                        sensorTopics);
         adapter.setCompletionTimeout(5000);
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(1);

@@ -98,11 +98,13 @@ mqtt:
     id: relics-preservation-client
   username: dowithout
   password: dowithout
-  topic:
-    sensors:
-      - ems
-      - light
-      - sensor
+  topics:
+    ems,
+    light_intensity_sensor,
+    temperature_sensor,
+    humidity_sensor,
+    light_sensor,
+    alert/system
 
 
 
