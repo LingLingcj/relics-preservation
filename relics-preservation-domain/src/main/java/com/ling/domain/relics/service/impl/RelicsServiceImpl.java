@@ -9,6 +9,8 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 public class RelicsServiceImpl implements IRelicsService {
     @Autowired
@@ -29,5 +31,10 @@ public class RelicsServiceImpl implements IRelicsService {
             entity.setMessage("上传失败: " + e.getMessage());
         }
         return entity;
+    }
+
+    @Override
+    public List<RelicsEntity> getRelicsByEra(String era) {
+        return relicsRepository.findByEra(era);
     }
 }

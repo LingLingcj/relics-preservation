@@ -4,7 +4,10 @@ import com.ling.infrastructure.dao.po.Relics;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Select;
 import org.apache.ibatis.annotations.SelectKey;
+
+import java.util.List;
 
 /**
  * @Author: LingRJ
@@ -17,4 +20,7 @@ public interface IRelicsDao {
             "VALUES (#{relics.relicsId}, #{relics.name}, #{relics.description}, #{relics.preservation}, #{relics.category}, #{relics.era}, #{relics.material}, #{relics.imageUrl}, #{relics.status}, #{relics.locationId}, NOW(), NOW())")
     @SelectKey(statement = "SELECT LAST_INSERT_ID()", keyProperty = "relics.id", before = false, resultType = int.class)
     int insertRelics(@Param("relics") Relics relics);
+
+    @Select("SELECT * FROM relics WHERE era = #{era}")
+    List<Relics> selectByEra(@Param("era") String era);
 }
