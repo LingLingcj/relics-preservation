@@ -1,8 +1,8 @@
-package com.ling.domain.sensor.service.sensor.impl;
+package com.ling.domain.sensor.service.core.impl;
 
 import com.ling.domain.sensor.adapter.ISensorDataRepository;
 import com.ling.domain.sensor.model.valobj.SensorMessageVO;
-import com.ling.domain.sensor.service.sensor.ISensorDataService;
+import com.ling.domain.sensor.service.core.ISensorDataService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;

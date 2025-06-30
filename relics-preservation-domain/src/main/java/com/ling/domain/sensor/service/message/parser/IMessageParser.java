@@ -1,4 +1,4 @@
-package com.ling.domain.sensor.service.parser;
+package com.ling.domain.sensor.service.message.parser;
 
 import com.ling.domain.sensor.model.valobj.SensorMessageVO;
 

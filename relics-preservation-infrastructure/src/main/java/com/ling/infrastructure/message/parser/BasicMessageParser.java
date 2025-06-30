@@ -3,7 +3,7 @@ package com.ling.infrastructure.message.parser;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.ling.domain.sensor.model.valobj.SensorMessageVO;
-import com.ling.domain.sensor.service.parser.IMessageParser;
+import com.ling.domain.sensor.service.message.parser.IMessageParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 

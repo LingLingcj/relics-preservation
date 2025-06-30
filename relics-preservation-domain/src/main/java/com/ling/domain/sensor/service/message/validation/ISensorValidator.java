@@ -1,4 +1,4 @@
-package com.ling.domain.sensor.service.validation;
+package com.ling.domain.sensor.service.message.validation;
 
 /**
  * @Author: LingRJ

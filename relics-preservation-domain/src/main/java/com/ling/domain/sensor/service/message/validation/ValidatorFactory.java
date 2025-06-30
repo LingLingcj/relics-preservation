@@ -1,9 +1,8 @@
-package com.ling.domain.sensor.service.validation;
+package com.ling.domain.sensor.service.message.validation;
 
-import com.ling.domain.sensor.model.valobj.SensorMessageVO;
-import com.ling.domain.sensor.service.validation.impl.GasValidator;
-import com.ling.domain.sensor.service.validation.impl.HumValidator;
-import com.ling.domain.sensor.service.validation.impl.TempValidator;
+import com.ling.domain.sensor.service.message.validation.impl.GasValidator;
+import com.ling.domain.sensor.service.message.validation.impl.HumValidator;
+import com.ling.domain.sensor.service.message.validation.impl.TempValidator;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;

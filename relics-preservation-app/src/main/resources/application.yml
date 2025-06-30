@@ -101,12 +101,7 @@ mqtt:
   username: dowithout
   password: dowithout
   topics:
-    ems,
-    light_intensity_sensor,
-    temperature_sensor,
-    humidity_sensor,
-    light_sensor,
-    alert/system
+    ems
 
 
 

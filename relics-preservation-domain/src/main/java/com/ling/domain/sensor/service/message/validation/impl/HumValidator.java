@@ -1,6 +1,6 @@
-package com.ling.domain.sensor.service.validation.impl;
+package com.ling.domain.sensor.service.message.validation.impl;
 
-import com.ling.domain.sensor.service.validation.ISensorValidator;
+import com.ling.domain.sensor.service.message.validation.ISensorValidator;
 
 /**
  * @Author: LingRJ

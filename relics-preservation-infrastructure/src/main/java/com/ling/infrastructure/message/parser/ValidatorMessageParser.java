@@ -1,9 +1,9 @@
 package com.ling.infrastructure.message.parser;
 
 import com.ling.domain.sensor.model.valobj.SensorMessageVO;
-import com.ling.domain.sensor.service.parser.IMessageParser;
-import com.ling.domain.sensor.service.validation.ISensorValidator;
-import com.ling.domain.sensor.service.validation.ValidatorFactory;
+import com.ling.domain.sensor.service.message.parser.IMessageParser;
+import com.ling.domain.sensor.service.message.validation.ISensorValidator;
+import com.ling.domain.sensor.service.message.validation.ValidatorFactory;
 import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;

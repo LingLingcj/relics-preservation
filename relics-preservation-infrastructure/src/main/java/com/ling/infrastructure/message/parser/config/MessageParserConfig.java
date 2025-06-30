@@ -1,7 +1,6 @@
 package com.ling.infrastructure.message.parser.config;
 
-import com.ling.domain.sensor.service.parser.IMessageParser;
-import com.ling.domain.sensor.service.validation.ISensorValidator;
+import com.ling.domain.sensor.service.message.parser.IMessageParser;
 import com.ling.infrastructure.message.parser.BasicMessageParser;
 import com.ling.infrastructure.message.parser.ValidatorMessageParser;
 import org.springframework.context.annotation.Bean;

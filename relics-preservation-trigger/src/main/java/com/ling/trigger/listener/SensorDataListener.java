@@ -1,19 +1,15 @@
 package com.ling.trigger.listener;
 
-import com.alibaba.fastjson2.JSON;
-import com.alibaba.fastjson2.JSONObject;
 import com.ling.domain.sensor.model.valobj.SensorMessageVO;
-import com.ling.domain.sensor.service.parser.IMessageParser;
-import com.ling.domain.sensor.service.sensor.ISensorMessageService;
-import com.ling.domain.sensor.service.validation.ISensorValidator;
-import com.ling.domain.sensor.service.validation.ValidatorFactory;
+import com.ling.domain.sensor.service.message.parser.IMessageParser;
+import com.ling.domain.sensor.service.sensordata.ISensorMessageService;
+import com.ling.domain.sensor.service.pattern.subject.ISensorDataSubject;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.messaging.Message;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -27,7 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SensorDataListener {
 
     @Autowired
-    private ISensorMessageService sensorMessageService;
+    private ISensorDataSubject sensorDataSubject;
     @Autowired
     private IMessageParser messageParser;
     
@@ -54,14 +50,11 @@ public class SensorDataListener {
 
         try {
             // 使用装饰后的parser
-            List<SensorMessageVO> sensorMessages = messageParser.parse(
-                    topic,
-                    payload
-            );
+            List<SensorMessageVO> sensorMessages = messageParser.parse(topic, payload);
             
             // 处理有效数据
             if (!sensorMessages.isEmpty()) {
-                sensorMessageService.processSensorMessages(topic, sensorMessages);
+                sensorDataSubject.notifyObserver(sensorMessages);
                 log.debug("成功处理{}个传感器数据字段", sensorMessages.size());
             }
             
