@@ -69,9 +69,4 @@ public class SensorMessageVO {
                 .timestamp(LocalDateTime.now())
                 .build();
     }
-
-    /**
-     * 获取status
-     */
-
 } 

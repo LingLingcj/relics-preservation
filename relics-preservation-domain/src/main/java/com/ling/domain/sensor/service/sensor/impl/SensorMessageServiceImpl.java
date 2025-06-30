@@ -48,33 +48,10 @@ public class SensorMessageServiceImpl implements ISensorMessageService {
     // 传感器数据缓存队列
     private final LinkedBlockingQueue<SensorMessageVO> dataQueue = new LinkedBlockingQueue<>();
 
-    
-    // 传感器阈值配置
-    private final Map<String, Double> changeThresholds = new ConcurrentHashMap<>();
-    
-    // 计数器，用于采样
-    private int counter = 0;
-
     @PostConstruct
     public void init() {
-        // 初始化阈值配置
-        initThresholdConfig();
-        
         // 启动批处理线程
         startBatchProcessThread();
-    }
-    
-    /**
-     * 初始化阈值配置
-     */
-    private void initThresholdConfig() {
-        // 这里可以从配置文件或数据库加载阈值配置
-        // 温度变化超过1.5度记录
-        changeThresholds.put("temperature", 1.5);
-        // 湿度变化超过5%记录
-        changeThresholds.put("humidity", 5.0);
-        // 光照变化超过100lux记录
-        changeThresholds.put("light", 100.0);
     }
     
     /**

@@ -3,8 +3,10 @@ package com.ling.trigger.listener;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.ling.domain.sensor.model.valobj.SensorMessageVO;
+import com.ling.domain.sensor.service.parser.IMessageParser;
 import com.ling.domain.sensor.service.sensor.ISensorMessageService;
 import com.ling.domain.sensor.service.validation.ISensorValidator;
+import com.ling.domain.sensor.service.validation.ValidatorFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -26,6 +28,8 @@ public class SensorDataListener {
 
     @Autowired
     private ISensorMessageService sensorMessageService;
+    @Autowired
+    private IMessageParser messageParser;
     
     // 消息统计
     private final AtomicInteger messageCounter = new AtomicInteger(0);
@@ -49,8 +53,11 @@ public class SensorDataListener {
         log.debug("接收到传感器消息，主题: {}, 内容: {}", topic, payload);
 
         try {
-            // 解析传感器数据
-            List<SensorMessageVO> sensorMessages = parseSensorMessages(topic, payload);
+            // 使用装饰后的parser
+            List<SensorMessageVO> sensorMessages = messageParser.parse(
+                    topic,
+                    payload
+            );
             
             // 处理有效数据
             if (!sensorMessages.isEmpty()) {
@@ -82,61 +89,5 @@ public class SensorDataListener {
             lastLogTime = currentTime;
         }
     }
-    
-    /**
-     * 解析传感器消息，提取所有数值字段
-     * @param topic 主题
-     * @param payload 消息内容
-     * @return 传感器消息对象列表
-     */
-    private List<SensorMessageVO> parseSensorMessages(String topic, String payload) {
-        List<SensorMessageVO> result = new ArrayList<>();
-        String sensorId = extractSensorIdFromTopic(topic);
-        boolean isAbnormal = false;
-        
-        // 尝试解析JSON格式
-        try {
-            JSONObject jsonObj = JSON.parseObject(payload);
-            if (jsonObj.containsKey("stat")) {
-                int stat = jsonObj.getIntValue("stat");
-                if (stat > 0) {
-                    isAbnormal = true;
-                    log.warn("传感器发出警报，状态紧急程度：{}", stat);
-                }
-                jsonObj.remove("stat");
-            }
-            
-            jsonObj.forEach((key, value) -> {
-                // 只处理数值类型字段
-                if (value instanceof Number) {
-                    SensorMessageVO sensorMessageVO = SensorMessageVO.create(
-                            sensorId,
-                            key,
-                            ((Number) value).doubleValue());
 
-                    result.add(sensorMessageVO);
-
-                }
-            });
-
-            
-            return result;
-        } 
-        // 尝试解析为单一数值
-        catch (Exception e) {
-            log.warn("无法解析传感器消息值: {}", payload);
-            return result;
-        }
-    }
-    
-    /**
-     * 从主题中提取传感器ID
-     * @param topic 主题
-     * @return 传感器ID
-     */
-    private String extractSensorIdFromTopic(String topic) {
-        int lastUnderscoreIndex = topic.lastIndexOf("_");
-        return lastUnderscoreIndex > 0 ? 
-               topic.substring(lastUnderscoreIndex + 1) : topic;
-    }
 }

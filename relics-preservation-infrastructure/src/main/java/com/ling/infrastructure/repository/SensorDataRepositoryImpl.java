@@ -49,7 +49,7 @@ public class SensorDataRepositoryImpl implements ISensorDataRepository {
     public int batchSaveSensorData(List<SensorMessageVO> sensorMessages) {
         try {
             List<SensorData> dataList = sensorMessages.stream()
-                    .map(message -> convertToSensorData(message, false))
+                    .map(message -> convertToSensorData(message, !message.getStatus().equals(0)))
                     .collect(Collectors.toList());
             return sensorDataDao.batchInsert(dataList);
         } catch (Exception e) {
@@ -129,24 +129,6 @@ public class SensorDataRepositoryImpl implements ISensorDataRepository {
         sensorData.setType(sensorMessage.getSensorType());
         sensorData.setValue(sensorMessage.getValue());
         sensorData.setUnit(sensorMessage.getUnit());
-        
-        // 转换位置ID和文物ID（如果存在）
-        if (sensorMessage.getLocationId() != null && !sensorMessage.getLocationId().isEmpty()) {
-            try {
-                sensorData.setLocationId(Integer.parseInt(sensorMessage.getLocationId()));
-            } catch (NumberFormatException e) {
-                log.warn("位置ID格式不正确: {}", sensorMessage.getLocationId());
-            }
-        }
-        
-        if (sensorMessage.getRelicsId() != null && !sensorMessage.getRelicsId().isEmpty()) {
-            try {
-                sensorData.setRelicId(Integer.parseInt(sensorMessage.getRelicsId()));
-            } catch (NumberFormatException e) {
-                log.warn("文物ID格式不正确: {}", sensorMessage.getRelicsId());
-            }
-        }
-        
         // 转换时间戳
         sensorData.setTimestamp(Date.from(sensorMessage.getTimestamp().atZone(ZoneId.systemDefault()).toInstant()));
         sensorData.setIsAbnormal(isAbnormal);
@@ -165,15 +147,6 @@ public class SensorDataRepositoryImpl implements ISensorDataRepository {
         sensorMessage.setSensorType(sensorData.getType());
         sensorMessage.setValue(sensorData.getValue());
         sensorMessage.setUnit(sensorData.getUnit());
-        
-        // 转换位置ID和文物ID（如果存在）
-        if (sensorData.getLocationId() != null) {
-            sensorMessage.setLocationId(sensorData.getLocationId().toString());
-        }
-        
-        if (sensorData.getRelicId() != null) {
-            sensorMessage.setRelicsId(sensorData.getRelicId().toString());
-        }
         
         // 转换时间戳
         sensorMessage.setTimestamp(sensorData.getTimestamp().toInstant()
