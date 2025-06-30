@@ -30,10 +30,10 @@ import java.util.List;
 @IntegrationComponentScan({"com.ling.trigger.listener", "com.ling.trigger.gateway"})
 public class MqttConfig {
 
-    @Value("${mqtt.broker.url:tcp://localhost:1883}")
+    @Value("${mqtt.broker.url}")
     private String brokerUrl;
 
-    @Value("${mqtt.client.id:relics-preservation-client}")
+    @Value("${mqtt.client.id:}")
     private String clientId;
 
     @Value("${mqtt.username}")
@@ -97,8 +97,9 @@ public class MqttConfig {
     @Bean
     public MessageProducer inbound() {
         MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter(clientId + "_inbound", mqttClientFactory(), 
-                        sensorTopics);
+                new MqttPahoMessageDrivenChannelAdapter(clientId + "_inbound", mqttClientFactory(),
+                        "ems", "light_intensity_", "temperature_", "humidity_",
+                        "light", "temperature", "humidity");
         adapter.setCompletionTimeout(5000);
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(1);

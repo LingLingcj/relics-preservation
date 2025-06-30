@@ -63,7 +63,7 @@ redis:
 # JWT配置
 jwt:
   # 使用长度至少为32个字符的密钥（256位）
-  secret:
+  secret: dsafasdfasdfasf
   expiration: 86400 # 24小时
 
 # 日志配置
