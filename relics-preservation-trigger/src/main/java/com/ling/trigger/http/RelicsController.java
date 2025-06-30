@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -42,13 +43,14 @@ public class RelicsController {
         return Response.<String>builder()
                 .code(result.isSuccess() ? ResponseCode.SUCCESS.getCode() : ResponseCode.SYSTEM_ERROR.getCode())
                 .info(result.getMessage())
-                .data("上传数据库失败")
+                .data(result.getMessage())
                 .build();
     }
 
     @Operation(summary = "按朝代搜索文物", description = "根据朝代名称搜索文物信息")
     @GetMapping("/era")
-    public Response<List<RelicsVO>> getRelicsByEra(@Parameter(description = "朝代名称", required = true) @RequestBody String era) {
+    public Response<List<RelicsVO>> getRelicsByEra(@Parameter(description = "朝代名称", required = true) @RequestBody Map<String, String> body) {
+        String era = body.get("era");
         List<RelicsEntity> relicsEntities = relicsService.getRelicsByEra(era);
         if (relicsEntities.isEmpty()) {
             return Response.<List<RelicsVO>>builder()
