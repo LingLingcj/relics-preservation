@@ -67,7 +67,7 @@ public class CommentController {
 
     @Operation(summary = "查询评论", description = "分页查询文物评论")
     @GetMapping
-    public Response<Map<String, Object>> getComments(@Valid CommentQueryDTO queryDTO) {
+    public Response<Map<String, Object>> getComments(@RequestBody CommentQueryDTO queryDTO) {
         // 获取当前登录用户
         String currentUsername = getCurrentUsername();
         
