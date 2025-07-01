@@ -3,7 +3,7 @@ package com.ling.infrastructure.message.parser;
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.ling.domain.sensor.model.valobj.SensorMessageVO;
-import com.ling.domain.sensor.service.message.parser.IMessageParser;
+import com.ling.domain.sensor.service.parser.MessageParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -16,9 +16,8 @@ import java.util.List;
  * @DateTime: 2025/6/30 15:59
  **/
 @Slf4j
-@Component
-// 基础解析器
-public class BasicMessageParser implements IMessageParser {
+@Component("default")
+public class BasicMessageParser implements MessageParser {
     @Override
     public List<SensorMessageVO> parse(String topic, String payload) {
         List<SensorMessageVO> result = new ArrayList<>();
@@ -33,7 +32,6 @@ public class BasicMessageParser implements IMessageParser {
                 }
                 jsonObj.remove("stat");
             }
-
 
             jsonObj.forEach((key, value) -> {
                 if (value instanceof Number) {

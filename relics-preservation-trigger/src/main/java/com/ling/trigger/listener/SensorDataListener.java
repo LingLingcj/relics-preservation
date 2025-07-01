@@ -1,8 +1,8 @@
 package com.ling.trigger.listener;
 
 import com.ling.domain.sensor.model.valobj.SensorMessageVO;
-import com.ling.domain.sensor.service.message.parser.IMessageParser;
-import com.ling.domain.sensor.service.pattern.subject.ISensorDataSubject;
+import com.ling.domain.sensor.service.event.SensorEventPublisher;
+import com.ling.domain.sensor.service.parser.MessageParserManager;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.integration.annotation.ServiceActivator;
@@ -22,9 +22,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class SensorDataListener {
 
     @Autowired
-    private ISensorDataSubject sensorDataSubject;
+    private MessageParserManager messageParser;
+    
     @Autowired
-    private IMessageParser messageParser;
+    private SensorEventPublisher eventPublisher;
     
     // 消息统计
     private final AtomicInteger messageCounter = new AtomicInteger(0);
@@ -48,12 +49,12 @@ public class SensorDataListener {
         log.debug("接收到传感器消息，主题: {}, 内容: {}", topic, payload);
 
         try {
-            // 使用装饰后的parser
+            // 解析消息
             List<SensorMessageVO> sensorMessages = messageParser.parse(topic, payload);
             
             // 处理有效数据
             if (!sensorMessages.isEmpty()) {
-                sensorDataSubject.notifyObserver(sensorMessages);
+                eventPublisher.publishSensorDataBatch(sensorMessages);
                 log.debug("成功处理{}个传感器数据字段", sensorMessages.size());
             }
             
@@ -81,5 +82,4 @@ public class SensorDataListener {
             lastLogTime = currentTime;
         }
     }
-
 }

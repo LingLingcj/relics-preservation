@@ -1,96 +1,79 @@
-package com.ling.domain.sensor.service.pattern.observer.impl;
+package com.ling.domain.sensor.service.handler;
 
 import com.ling.domain.sensor.model.valobj.SensorMessageVO;
-import com.ling.domain.sensor.service.pattern.observer.ISensorDataObserver;
 import com.ling.domain.sensor.service.core.ISensorDataService;
-import jakarta.annotation.PostConstruct;
+import com.ling.domain.sensor.service.event.SensorDataEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.event.EventListener;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 /**
  * @Author: LingRJ
- * @Description: 消息接收观察者
- * @DateTime: 2025/6/30 20:58
+ * @Description: 传感器数据持久化处理器
+ * @DateTime: 2025/6/30
  **/
+@Component
 @Slf4j
-public class SensorDataPersistenceObserver implements ISensorDataObserver {
-
+public class SensorDataPersistenceHandler {
     @Autowired
     private ISensorDataService sensorDataService;
-
-    private final LinkedBlockingQueue<SensorMessageVO> dataQueue = new LinkedBlockingQueue<>();
-
+    
+    private final ConcurrentLinkedQueue<SensorMessageVO> dataQueue = new ConcurrentLinkedQueue<>();
+    
     @Value("${sensor.data.batch.size:100}")
-    // 批处理的最大数据量，默认为100条。如果未配置，则使用默认值。
     private int batchSize;
-
+    
     @Value("${sensor.data.batch.interval:30000}")
-    // 批处理的时间间隔（毫秒），默认为30000毫秒（30秒）。如果未配置，则使用默认值。
     private long batchIntervalMs;
-
-    @PostConstruct
-    public void init() {
-        // 启动批处理线程
-        startBatchProcessThread();
-    }
-
-    @Override
-    public void update(SensorMessageVO sensorMessageVO) {
-        if (sensorMessageVO == null || sensorMessageVO.getValue() == null) {
+    
+    @EventListener
+    @Async
+    public void handleSensorData(SensorDataEvent event) {
+        SensorMessageVO data = event.getSensorData();
+        if (data == null || data.getValue() == null) {
             return;
         }
-
-        if (sensorMessageVO.getTimestamp() == null) {
-            sensorMessageVO.setTimestamp(LocalDateTime.now());
+        
+        if (data.getTimestamp() == null) {
+            data.setTimestamp(LocalDateTime.now());
         }
-
-        dataQueue.offer(sensorMessageVO);
+        
+        dataQueue.offer(data);
+        
+        // 当队列达到一定大小时批量处理
+        if (dataQueue.size() >= batchSize) {
+            processBatch();
+        }
     }
-
-    /**
-     * 批处理线程
-     */
-    private void startBatchProcessThread() {
-        Thread thread = new Thread(() -> {
-            while (true) {
-                try {
-
-                    Thread.sleep(batchIntervalMs);
-                } catch (InterruptedException e) {
-                    log.error("批处理线程处理中断：{}", e.getMessage(), e);
-                    Thread.currentThread().interrupt();
-                } catch (Exception e) {
-                    log.error("批处理线程处理失败：{}", e.getMessage(), e);
-                }
-            }
-        });
-        thread.setDaemon(true);
-        thread.setName("batch-process-thread");
-        thread.start();
-    }
-
-    private void processBatch() {
+    
+    // 定时批处理方法
+    @Scheduled(fixedDelayString = "${sensor.data.batch.interval:30000}")
+    public void processBatch() {
         if (dataQueue.isEmpty()) {
             return;
         }
-
+        
         List<SensorMessageVO> batch = new ArrayList<>();
-        dataQueue.drainTo(batch);
-
+        SensorMessageVO data;
+        while ((data = dataQueue.poll()) != null) {
+            batch.add(data);
+        }
+        
         if (!batch.isEmpty()) {
             sensorDataService.batchSaveSensorData(batch);
             log.info("批量保存传感器数据 {} 条", batch.size());
         }
-
     }
-
+    
     /**
      * 定时执行小时聚合（每小时执行一次）
      */
@@ -118,5 +101,4 @@ public class SensorDataPersistenceObserver implements ISensorDataObserver {
             log.error("执行日数据聚合失败: {}", e.getMessage(), e);
         }
     }
-
-}
+} 
