@@ -1,9 +1,9 @@
-package com.ling.infrastructure.message.parser;
+package com.ling.domain.sensor.service.parser.impl;
 
 import com.alibaba.fastjson2.JSON;
 import com.alibaba.fastjson2.JSONObject;
 import com.ling.domain.sensor.model.valobj.SensorMessageVO;
-import com.ling.domain.sensor.service.parser.MessageParser;
+import com.ling.domain.sensor.service.parser.IMessageParser;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +17,7 @@ import java.util.List;
  **/
 @Slf4j
 @Component("default")
-public class BasicMessageParser implements MessageParser {
+public class BasicMessageParser implements IMessageParser {
     @Override
     public List<SensorMessageVO> parse(String topic, String payload) {
         List<SensorMessageVO> result = new ArrayList<>();

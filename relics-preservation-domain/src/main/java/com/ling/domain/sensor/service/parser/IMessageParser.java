@@ -9,7 +9,7 @@ import java.util.List;
  * @Description: 消息解析器接口
  * @DateTime: 2025/6/30
  **/
-public interface MessageParser {
+public interface IMessageParser {
     /**
      * 解析消息
      * @param topic 主题

@@ -1,8 +1,6 @@
 package com.ling.domain.sensor.service.parser;
 
 import com.ling.domain.sensor.model.valobj.SensorMessageVO;
-import com.ling.domain.sensor.service.message.validation.ISensorValidator;
-import com.ling.domain.sensor.service.message.validation.ValidatorFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -17,10 +15,10 @@ import java.util.Map;
 @Component
 @Slf4j
 public class MessageParserManager {
-    private final Map<String, MessageParser> parsers;
-    private final MessageParser defaultParser;
+    private final Map<String, IMessageParser> parsers;
+    private final IMessageParser defaultParser;
     
-    public MessageParserManager(Map<String, MessageParser> parsers) {
+    public MessageParserManager(Map<String, IMessageParser> parsers) {
         this.parsers = parsers;
         this.defaultParser = parsers.getOrDefault("default", parsers.values().stream().findFirst().orElse(null));
         
@@ -32,31 +30,15 @@ public class MessageParserManager {
     public List<SensorMessageVO> parse(String topic, String payload) {
         // 根据topic前缀选择合适的解析器
         String parserType = determineParserType(topic);
-        MessageParser parser = parsers.getOrDefault(parserType, defaultParser);
+        IMessageParser parser = parsers.getOrDefault(parserType, defaultParser);
         
-        // 解析消息
-        List<SensorMessageVO> messages = parser.parse(topic, payload);
-        
-        // 对所有消息进行验证
-        validateMessages(messages);
-        
-        return messages;
-    }
-    
-    private void validateMessages(List<SensorMessageVO> messages) {
-        messages.forEach(message -> {
-            ISensorValidator validator = ValidatorFactory.getValidator(message.getSensorType());
-            if (validator != null) {
-                message.setStatus(validator.validateStatus(message.getValue()));
-                log.debug("传感器类型：{}，传感器值：{}，传感器状态：{}", 
-                        message.getSensorType(), message.getValue(), message.getStatus());
-            }
-        });
+        // 解析消息并返回
+        return parser.parse(topic, payload);
     }
     
     private String determineParserType(String topic) {
         // 根据topic确定解析器类型
-        // 这里可以根据实际需求实现不同的选择逻辑
+        // 可以根据实际需求实现不同的选择逻辑
         return "default";
     }
 } 
