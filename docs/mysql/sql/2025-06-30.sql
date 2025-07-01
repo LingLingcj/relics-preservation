@@ -14,4 +14,17 @@ CREATE TABLE `relics_comment` (
 
 -- 添加外键约束（可选，根据实际需求决定是否添加）
 -- ALTER TABLE `relics_comment` ADD CONSTRAINT `fk_relics_comment_relics` FOREIGN KEY (`relics_id`) REFERENCES `relics` (`id`);
--- ALTER TABLE `relics_comment` ADD CONSTRAINT `fk_relics_comment_user` FOREIGN KEY (`username`) REFERENCES `user` (`username`); 
+-- ALTER TABLE `relics_comment` ADD CONSTRAINT `fk_relics_comment_user` FOREIGN KEY (`username`) REFERENCES `user` (`username`);
+
+-- 创建文物收藏表
+CREATE TABLE IF NOT EXISTS `favorites` (
+    `id` BIGINT NOT NULL AUTO_INCREMENT COMMENT '自增主键',
+    `relics_id` BIGINT NOT NULL COMMENT '文物ID',
+    `username` VARCHAR(32) NOT NULL COMMENT '用户名',
+    `create_time` DATETIME NOT NULL COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    INDEX `idx_username` (`username`),
+    INDEX `idx_relics_id` (`relics_id`),
+    UNIQUE INDEX `uk_username_relics` (`username`, `relics_id`) COMMENT '确保用户对同一文物只能收藏一次',
+    CONSTRAINT `fk_favorites_username` FOREIGN KEY (`username`) REFERENCES `users`(`username`) ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='文物收藏表'; 

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ling.infrastructure.dao.IFavoriteDao">
+    <resultMap id="FavoriteResultMap" type="com.ling.infrastructure.dao.po.Favorite">
+        <id property="id" column="id"/>
+        <result property="relicsId" column="relics_id"/>
+        <result property="username" column="username"/>
+        <result property="createTime" column="create_time"/>
+    </resultMap>
+    
+    <insert id="insertFavorite" parameterType="com.ling.infrastructure.dao.po.Favorite">
+        INSERT INTO favorites (relics_id, username, create_time)
+        VALUES (#{relicsId}, #{username}, #{createTime})
+    </insert>
+    
+    <delete id="deleteFavorite">
+        DELETE FROM favorites
+        WHERE username = #{username} AND relics_id = #{relicsId}
+    </delete>
+    
+    <select id="findByUsernameAndRelicsId" resultMap="FavoriteResultMap">
+        SELECT *
+        FROM favorites
+        WHERE username = #{username} AND relics_id = #{relicsId}
+        LIMIT 1
+    </select>
+    
+    <select id="findByUsername" resultMap="FavoriteResultMap">
+        SELECT f.*, r.name as relics_name, r.description as relics_description, r.image_url as relics_image_url
+        FROM favorites f
+        LEFT JOIN relics r ON f.relics_id = r.relics_id
+        WHERE f.username = #{username}
+        ORDER BY f.create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+    
+    <select id="countByUsername" resultType="int">
+        SELECT COUNT(*)
+        FROM favorites
+        WHERE username = #{username}
+    </select>
+</mapper> 
