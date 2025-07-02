@@ -80,11 +80,6 @@ public class MqttConfig {
     public MessageChannel sensorChannel() {
         return new DirectChannel();
     }
-
-    @Bean
-    public MessageChannel defaultChannel() {
-        return new DirectChannel();
-    }
     
     @Bean
     public MessageChannel mqttOutboundChannel() {

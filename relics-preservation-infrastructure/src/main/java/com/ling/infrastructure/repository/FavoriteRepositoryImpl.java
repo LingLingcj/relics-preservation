@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 
 /**
  * 收藏仓储实现类
+ * @author 31229
  */
 @Repository
 public class FavoriteRepositoryImpl implements IFavoriteRepository {

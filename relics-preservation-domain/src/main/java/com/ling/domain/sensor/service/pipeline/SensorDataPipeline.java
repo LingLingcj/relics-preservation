@@ -124,8 +124,9 @@ public class SensorDataPipeline {
     }
     
     private String generateAlertMessage(SensorMessageVO data, Integer severity) {
-        return String.format("传感器 %s 检测到异常值: %s %s, 告警级别: %s", 
-                data.getSensorId(), 
+        return String.format("传感器 %s 检测到 %s 异常值: %s %s, 告警级别: %s",
+                data.getSensorId(),
+                data.getSensorType(),
                 data.getValue(), 
                 data.getUnit() != null ? data.getUnit() : "", 
                 data.getStatus());
@@ -149,34 +150,6 @@ public class SensorDataPipeline {
         if (!batch.isEmpty()) {
             sensorDataService.batchSaveSensorData(batch);
             log.info("批量保存传感器数据 {} 条", batch.size());
-        }
-    }
-    
-    /**
-     * 定时执行小时聚合（每小时执行一次）
-     */
-    @Scheduled(cron = "0 0 1/1 * * ?")
-    public void scheduleHourlyAggregation() {
-        try {
-            LocalDateTime lastHour = LocalDateTime.now().minusHours(1).withMinute(0).withSecond(0).withNano(0);
-            int count = sensorDataService.aggregateHourlyData(lastHour);
-            log.info("执行小时数据聚合完成: {}条记录, 时间: {}", count, lastHour);
-        } catch (Exception e) {
-            log.error("执行小时数据聚合失败: {}", e.getMessage(), e);
-        }
-    }
-
-    /**
-     * 定时执行日聚合（每天凌晨0:10执行）
-     */
-    @Scheduled(cron = "0 10 0 * * ?")
-    public void scheduleDailyAggregation() {
-        try {
-            LocalDateTime yesterday = LocalDateTime.now().minusDays(1).withHour(0).withMinute(0).withSecond(0).withNano(0);
-            int count = sensorDataService.aggregateDailyData(yesterday);
-            log.info("执行日数据聚合完成: {}条记录, 日期: {}", count, yesterday);
-        } catch (Exception e) {
-            log.error("执行日数据聚合失败: {}", e.getMessage(), e);
         }
     }
 } 

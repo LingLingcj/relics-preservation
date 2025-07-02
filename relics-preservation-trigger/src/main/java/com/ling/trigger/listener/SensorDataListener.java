@@ -42,6 +42,18 @@ public class SensorDataListener {
         String topic = message.getHeaders().get("mqtt_receivedTopic").toString();
         String payload = message.getPayload().toString();
 
+        // 如果为重复消息，则不处理
+        try {
+            Object duplicate =  message.getHeaders().get("mqtt_duplicate");
+            if (Boolean.TRUE.equals(duplicate)) {
+                log.debug("重复消息，忽略处理");
+                return;
+            }
+        }
+        catch (Exception e) {
+            log.warn("无法判断消息是否重复：{}，错误信息：{}", message.getHeaders().get("mqtt_duplicate"), e.getMessage(), e);
+        }
+
         // 增加消息计数
         int count = messageCounter.incrementAndGet();
 
