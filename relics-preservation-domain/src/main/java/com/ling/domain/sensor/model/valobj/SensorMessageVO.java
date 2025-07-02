@@ -51,7 +51,7 @@ public class SensorMessageVO {
     /**
      * 位置ID
      */
-    private String locationId;
+    private Long locationId;
     
     /**
      * 文物ID

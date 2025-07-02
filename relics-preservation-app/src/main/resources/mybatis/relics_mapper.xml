@@ -27,4 +27,9 @@
         ORDER BY RAND() 
         LIMIT #{limit}
     </select>
+    <select id="selectRelicById" resultType="com.ling.infrastructure.dao.po.Relics" resultMap="RelicsResultMap">
+        select * From relics
+        where relics_id = #{id}
+        LIMIT 1
+    </select>
 </mapper>

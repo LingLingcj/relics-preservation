@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文物保护系统 - 传感器数据实时监控</title>
+    <!-- 引入SockJS和STOMP库 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <!-- 引入Chart.js库 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 20px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .status-indicator {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            background-color: #ccc;
+        }
+        .status-connected { background-color: #4CAF50; }
+        .status-disconnected { background-color: #F44336; }
+        .status-connecting { background-color: #FFC107; }
+        
+        .controls {
+            margin-bottom: 20px;
+        }
+        
+        button {
+            padding: 8px 15px;
+            margin-right: 10px;
+            background-color: #3498db;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        .chart-container {
+            margin-bottom: 30px;
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 4px;
+        }
+        
+        .chart-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            border: 1px solid transparent;
+        }
+        
+        .tab.active {
+            border: 1px solid #ddd;
+            border-bottom-color: white;
+            border-radius: 4px 4px 0 0;
+            margin-bottom: -1px;
+            background-color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>传感器数据实时监控</h1>
+            <div>
+                <span class="status-indicator" id="statusIndicator"></span>
+                <span id="connectionStatus">未连接</span>
+            </div>
+        </header>
+        
+        <div class="controls">
+            <button id="connectBtn">连接</button>
+            <button id="disconnectBtn" disabled>断开连接</button>
+            <button id="clearChartsBtn">清空数据</button>
+        </div>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="all">所有数据</div>
+            <div class="tab" data-tab="temperature">温度</div>
+            <div class="tab" data-tab="humidity">湿度</div>
+            <div class="tab" data-tab="gas">气体</div>
+        </div>
+        
+        <div id="all" class="tab-content active">
+            <div class="chart-container">
+                <div class="chart-title">实时传感器数据总览</div>
+                <canvas id="allDataChart"></canvas>
+            </div>
+        </div>
+        
+        <div id="temperature" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-title">温度传感器数据</div>
+                <canvas id="temperatureChart"></canvas>
+            </div>
+        </div>
+        
+        <div id="humidity" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-title">湿度传感器数据</div>
+                <canvas id="humidityChart"></canvas>
+            </div>
+        </div>
+        
+        <div id="gas" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-title">气体传感器数据</div>
+                <canvas id="gasChart"></canvas>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // WebSocket连接
+        let stompClient = null;
+        
+        // 图表对象
+        let charts = {};
+        
+        // 图表数据
+        const chartData = {
+            temperature: {
+                labels: [],
+                datasets: []
+            },
+            humidity: {
+                labels: [],
+                datasets: []
+            },
+            gas: {
+                labels: [],
+                datasets: []
+            },
+            all: {
+                labels: [],
+                datasets: []
+            }
+        };
+        
+        // 传感器颜色映射
+        const sensorColors = {};
+        const colorPalette = [
+            '#3498db', '#e74c3c', '#2ecc71', '#f39c12', '#9b59b6',
+            '#1abc9c', '#d35400', '#34495e', '#7f8c8d', '#c0392b'
+        ];
+        
+        // DOM元素
+        const statusIndicator = document.getElementById('statusIndicator');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const clearChartsBtn = document.getElementById('clearChartsBtn');
+        
+        // 初始化图表
+        function initCharts() {
+            const temperatureCtx = document.getElementById('temperatureChart').getContext('2d');
+            const humidityCtx = document.getElementById('humidityChart').getContext('2d');
+            const gasCtx = document.getElementById('gasChart').getContext('2d');
+            const allDataCtx = document.getElementById('allDataChart').getContext('2d');
+            
+            const commonOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 0 // 关闭动画，提高性能
+                },
+                scales: {
+                    x: {
+                        type: 'time',
+                        time: {
+                            unit: 'minute',
+                            displayFormats: {
+                                minute: 'HH:mm:ss'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: '时间'
+                        }
+                    },
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: '数值'
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    }
+                }
+            };
+            
+            charts.temperature = new Chart(temperatureCtx, {
+                type: 'line',
+                data: chartData.temperature,
+                options: {...commonOptions, 
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            title: {display: true, text: '温度 (°C)'}
+                        }
+                    }
+                }
+            });
+            
+            charts.humidity = new Chart(humidityCtx, {
+                type: 'line',
+                data: chartData.humidity,
+                options: {...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            title: {display: true, text: '湿度 (%)'}
+                        }
+                    }
+                }
+            });
+            
+            charts.gas = new Chart(gasCtx, {
+                type: 'line',
+                data: chartData.gas,
+                options: {...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            title: {display: true, text: '浓度 (ppm)'}
+                        }
+                    }
+                }
+            });
+            
+            charts.all = new Chart(allDataCtx, {
+                type: 'line',
+                data: chartData.all,
+                options: commonOptions
+            });
+        }
+        
+        // 连接WebSocket
+        function connect() {
+            statusIndicator.className = 'status-indicator status-connecting';
+            connectionStatus.textContent = '正在连接...';
+            connectBtn.disabled = true;
+            
+            // 创建SockJS连接
+            const socket = new SockJS('http://localhost:8080/ws');
+            // 禁用凭证发送
+            socket._transportClose = socket._transportClose || socket.close;
+            socket.close = function() {
+                if (this._transport) this._transport.withCredentials = false;
+                this._transportClose();
+            };
+            
+            stompClient = Stomp.over(socket);
+            
+            // 禁用调试日志
+            stompClient.debug = null;
+            
+            stompClient.connect({}, function(frame) {
+                statusIndicator.className = 'status-indicator status-connected';
+                connectionStatus.textContent = '已连接';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                
+                console.log('Connected: ' + frame);
+                
+                // 订阅所有传感器数据
+                stompClient.subscribe('/topic/sensor-data/all', function(message) {
+                    const sensorData = JSON.parse(message.body);
+                    handleSensorData(sensorData, 'all');
+                });
+                
+                // 订阅温度传感器数据
+                stompClient.subscribe('/topic/sensor-data/temperature', function(message) {
+                    const sensorData = JSON.parse(message.body);
+                    handleSensorData(sensorData, 'temperature');
+                });
+                
+                // 订阅湿度传感器数据
+                stompClient.subscribe('/topic/sensor-data/humidity', function(message) {
+                    const sensorData = JSON.parse(message.body);
+                    handleSensorData(sensorData, 'humidity');
+                });
+                
+                // 订阅气体传感器数据
+                stompClient.subscribe('/topic/sensor-data/gas', function(message) {
+                    const sensorData = JSON.parse(message.body);
+                    handleSensorData(sensorData, 'gas');
+                });
+                
+                // 发送订阅确认消息
+                stompClient.send("/app/subscribe-sensor-data", {}, JSON.stringify({action: "subscribe"}));
+            }, function(error) {
+                statusIndicator.className = 'status-indicator status-disconnected';
+                connectionStatus.textContent = '连接失败: ' + error;
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                console.error('连接错误: ', error);
+            });
+        }
+        
+        // 断开WebSocket连接
+        function disconnect() {
+            if (stompClient !== null) {
+                stompClient.disconnect();
+                stompClient = null;
+                
+                statusIndicator.className = 'status-indicator status-disconnected';
+                connectionStatus.textContent = '已断开连接';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+            }
+        }
+        
+        // 处理传感器数据
+        function handleSensorData(data, chartType) {
+            console.log(`收到${chartType}传感器数据:`, data);
+            
+            // 获取或创建传感器的颜色
+            if (!sensorColors[data.sensorId]) {
+                sensorColors[data.sensorId] = colorPalette[Object.keys(sensorColors).length % colorPalette.length];
+            }
+            
+            // 获取当前时间作为X轴标签
+            const timestamp = data.timestamp ? new Date(data.timestamp) : new Date();
+            
+            // 更新时间标签
+            updateChartLabels(chartType, timestamp);
+            
+            // 更新或添加数据集
+            updateChartDataset(chartType, data, timestamp);
+            
+            // 更新全局数据图表(除非当前图表已经是全局图表)
+            if (chartType !== 'all') {
+                updateChartLabels('all', timestamp);
+                updateChartDataset('all', data, timestamp);
+            }
+            
+            // 限制数据点数量，防止内存过大
+            limitDataPoints(chartType);
+            if (chartType !== 'all') {
+                limitDataPoints('all');
+            }
+            
+            // 更新图表
+            charts[chartType].update();
+            if (chartType !== 'all') {
+                charts.all.update();
+            }
+        }
+        
+        // 更新图表标签
+        function updateChartLabels(chartType, timestamp) {
+            // 添加新时间标签
+            chartData[chartType].labels.push(timestamp);
+            
+            // 限制标签数量
+            if (chartData[chartType].labels.length > 50) {
+                chartData[chartType].labels.shift();
+            }
+        }
+        
+        // 更新图表数据集
+        function updateChartDataset(chartType, data, timestamp) {
+            // 构建数据集ID
+            const datasetId = `${data.sensorId}_${data.sensorType}`;
+            
+            // 查找现有数据集
+            let dataset = chartData[chartType].datasets.find(ds => ds.id === datasetId);
+            
+            // 如果数据集不存在，创建新数据集
+            if (!dataset) {
+                dataset = {
+                    id: datasetId,
+                    label: `${data.sensorType} (传感器 ${data.sensorId})`,
+                    data: [],
+                    borderColor: sensorColors[data.sensorId],
+                    backgroundColor: `${sensorColors[data.sensorId]}33`,
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    tension: 0.2
+                };
+                chartData[chartType].datasets.push(dataset);
+            }
+            
+            // 添加数据点
+            dataset.data.push({
+                x: timestamp,
+                y: data.value
+            });
+            
+            // 限制数据点数量
+            if (dataset.data.length > 50) {
+                dataset.data.shift();
+            }
+        }
+        
+        // 限制数据点数量
+        function limitDataPoints(chartType) {
+            const MAX_POINTS = 50; // 最大数据点数
+            
+            // 限制标签数量
+            if (chartData[chartType].labels.length > MAX_POINTS) {
+                chartData[chartType].labels = chartData[chartType].labels.slice(-MAX_POINTS);
+            }
+            
+            // 限制各数据集的数据点数量
+            chartData[chartType].datasets.forEach(dataset => {
+                if (dataset.data.length > MAX_POINTS) {
+                    dataset.data = dataset.data.slice(-MAX_POINTS);
+                }
+            });
+        }
+        
+        // 清空图表数据
+        function clearCharts() {
+            Object.keys(chartData).forEach(key => {
+                chartData[key].labels = [];
+                chartData[key].datasets = [];
+                charts[key].update();
+            });
+        }
+        
+        // 初始化标签页功能
+        function initTabs() {
+            const tabs = document.querySelectorAll('.tab');
+            const tabContents = document.querySelectorAll('.tab-content');
+            
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    // 移除所有active类
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tabContents.forEach(c => c.classList.remove('active'));
+                    
+                    // 添加active类到点击的标签和对应内容
+                    tab.classList.add('active');
+                    const tabId = tab.getAttribute('data-tab');
+                    document.getElementById(tabId).classList.add('active');
+                });
+            });
+        }
+        
+        // 当页面加载完成时初始化
+        window.addEventListener('DOMContentLoaded', () => {
+            initCharts();
+            initTabs();
+            
+            // 添加事件监听
+            connectBtn.addEventListener('click', connect);
+            disconnectBtn.addEventListener('click', disconnect);
+            clearChartsBtn.addEventListener('click', clearCharts);
+            
+            // 页面卸载前断开连接
+            window.addEventListener('beforeunload', disconnect);
+        });
+    </script>
+</body>
+</html> 

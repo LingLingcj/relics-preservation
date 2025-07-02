@@ -5,10 +5,13 @@ import com.ling.domain.sensor.model.valobj.SensorMessageVO;
 import com.ling.domain.sensor.service.core.ISensorDataService;
 import com.ling.domain.sensor.service.message.validation.ISensorValidator;
 import com.ling.domain.sensor.service.message.validation.ValidatorFactory;
-import com.ling.domain.sensor.service.notification.AlertNotificationService;
+import com.ling.domain.sensor.service.notification.NotificationService;
 import com.ling.domain.sensor.service.notification.model.AlertNotification;
+import com.ling.domain.sensor.service.notification.impl.WebSocketAlertNotificationService;
+import com.ling.domain.sensor.service.notification.model.SensorNotification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -34,7 +37,12 @@ public class SensorDataPipeline {
     private ISensorDataService sensorDataService;
     
     @Autowired
-    private AlertNotificationService alertNotificationService;
+    @Qualifier("webSocketAlertNotificationService")
+    private NotificationService<AlertNotification> alertNotificationService;
+    
+    @Autowired
+    @Qualifier("webSocketSensorDataService")
+    private NotificationService<SensorNotification> sensorDataNotificationService;
     
     private final ConcurrentLinkedQueue<SensorMessageVO> dataQueue = new ConcurrentLinkedQueue<>();
     
@@ -66,11 +74,14 @@ public class SensorDataPipeline {
                     processAlert(message);
                 }
                 
-                // 3. 将数据放入持久化队列
+                // 3. 发送WebSocket传感器数据通知
+                sendSensorDataNotification(message);
+                
+                // 4. 将数据放入持久化队列
                 dataQueue.offer(message);
             }
             
-            // 4. 达到批次大小时立即处理
+            // 5. 达到批次大小时立即处理
             if (dataQueue.size() >= batchSize) {
                 processBatch();
             }
@@ -105,10 +116,25 @@ public class SensorDataPipeline {
         
         // 处理告警
         // 1. 转换告警消息为通知
-        AlertNotification notification = alertNotificationService.convertFromAlertMessage(alert);
+        AlertNotification notification = ((WebSocketAlertNotificationService)alertNotificationService).convertFromAlertMessage(alert);
         
         // 2. 发送WebSocket通知
-        alertNotificationService.sendAlertNotification(notification);
+        alertNotificationService.send(notification);
+    }
+    
+    /**
+     * 发送传感器数据通知到WebSocket
+     */
+    private void sendSensorDataNotification(SensorMessageVO data) {
+        SensorNotification notification = new SensorNotification(
+                data.getLocationId(),
+                data.getSensorType(),
+                data.getValue(),
+                data.getTimestamp(),
+                null
+        );
+        
+        sensorDataNotificationService.send(notification);
     }
     
     /**

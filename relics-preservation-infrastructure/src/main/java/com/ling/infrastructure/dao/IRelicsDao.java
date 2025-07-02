@@ -29,4 +29,6 @@ public interface IRelicsDao {
      * @return 文物列表
      */
     List<Relics> selectRandomRelics(@Param("limit") int limit);
+
+    Relics selectRelicById(@Param("id") Long id);
 }

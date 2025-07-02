@@ -26,8 +26,10 @@ public class RelicsRepositoryImpl implements IRelicsRepository {
 
     @Override
     public RelicsEntity findById(Long id) {
-        // TODO: 需要实现根据ID查询PO并转为Entity
-        return null;
+        Relics relics = relicsDao.selectRelicById(id);
+        RelicsEntity relicsEntity = new RelicsEntity();
+        BeanUtils.copyProperties(relics, relicsEntity);
+        return relicsEntity;
     }
 
     @Override

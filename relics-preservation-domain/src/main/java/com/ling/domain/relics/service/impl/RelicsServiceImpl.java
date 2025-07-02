@@ -46,4 +46,9 @@ public class RelicsServiceImpl implements IRelicsService {
     public List<RelicsEntity> getRandomRelics(int count) {
         return relicsRepository.findRandomRelics(count);
     }
+
+    @Override
+    public RelicsEntity getRelicsById(Long id) {
+        return relicsRepository.findById(id);
+    }
 }

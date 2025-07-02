@@ -26,4 +26,6 @@ public interface IRelicsService {
      * @return 文物实体列表
      */
     List<RelicsEntity> getRandomRelics(int count);
+
+    RelicsEntity getRelicsById(Long id);
 }

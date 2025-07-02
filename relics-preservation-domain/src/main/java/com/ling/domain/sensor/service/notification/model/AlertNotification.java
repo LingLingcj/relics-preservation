@@ -19,10 +19,12 @@ import java.time.LocalDateTime;
 public class AlertNotification {
     private String sensorId;
     private Long relicsId;
-    private String alertType; // TEMPERATURE, HUMIDITY, GAS
+    // TEMPERATURE, HUMIDITY, GAS
+    private String alertType;
     private String message;
     private double value;
     private double threshold;
-    private String status; // ACTIVE, RESOLVED
+    // ACTIVE, RESOLVED
+    private String status;
     private LocalDateTime timestamp;
 } 

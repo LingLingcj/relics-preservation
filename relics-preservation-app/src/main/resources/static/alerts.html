@@ -72,8 +72,15 @@
             connectionStatus.textContent = '正在连接...';
             connectBtn.disabled = true;
             
-            // 创建SockJS连接 - 使用相对路径避免跨域问题
+            // 创建SockJS连接
             const socket = new SockJS('http://localhost:8080/ws');
+            // 禁用凭证发送
+            socket._transportClose = socket._transportClose || socket.close;
+            socket.close = function() {
+                if (this._transport) this._transport.withCredentials = false;
+                this._transportClose();
+            };
+            
             stompClient = Stomp.over(socket);
             
             // 禁用调试日志

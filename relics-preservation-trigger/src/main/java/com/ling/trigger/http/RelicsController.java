@@ -14,6 +14,7 @@ import com.ling.types.common.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
@@ -21,6 +22,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
  * @Description: 文物基本信息
  * @DateTime: 2025/6/28 0:01
  **/
+@Slf4j
 @Tag(name = "文物管理", description = "文物基本信息管理接口")
 @RestController
 @RequestMapping("/api/relics")
@@ -64,15 +67,19 @@ public class RelicsController {
 
     @Operation(summary = "按朝代搜索文物", description = "根据朝代名称搜索文物信息")
     @GetMapping("/era")
-    public Response<List<RelicsResponseDTO>> getRelicsByEra(@Parameter(description = "朝代名称", required = true) @RequestBody Map<String, String> body) {
-        String era = body.get("era");
+    public Response<Map<String, Object>> getRelicsByEra(@Parameter(description = "朝代名称", required = true )@RequestParam String era) {
+        log.info(era);
         List<RelicsEntity> relicsEntities = relicsService.getRelicsByEra(era);
         if (relicsEntities.isEmpty()) {
-            return Response.<List<RelicsResponseDTO>>builder()
+            return Response.<Map<String, Object>>builder()
                     .code(ResponseCode.RELICS_NOT_FOUND.getCode())
                     .info("未找到指定朝代的文物")
                     .build();
         }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("total", relicsEntities.size());
+
         
         // 转换为DTO
         List<RelicsResponseDTO> relicsDTOs = relicsEntities.stream().map(entity -> RelicsResponseDTO.builder()
@@ -87,11 +94,28 @@ public class RelicsController {
             .status(entity.getStatus())
             .locationId(entity.getLocationId())
             .build()).collect(Collectors.toList());
+        result.put("list", relicsDTOs);
+
+        log.info("{}", result);
         
-        return Response.<List<RelicsResponseDTO>>builder()
+        return Response.<Map<String, Object>>builder()
                 .code(ResponseCode.SUCCESS.getCode())
                 .info("查询成功")
-                .data(relicsDTOs)
+                .data(result)
+                .build();
+    }
+
+    @Operation(summary = "按Id搜索文物", description = "根据Id搜索文物信息")
+    @GetMapping("/id")
+    public Response<RelicsResponseDTO> getRelics(@RequestParam Long id) {
+        RelicsEntity relicsEntity = relicsService.getRelicsById(id);
+        RelicsResponseDTO relicsResponseDTO = new RelicsResponseDTO();
+        BeanUtils.copyProperties(relicsEntity, relicsResponseDTO);
+
+        return Response.<RelicsResponseDTO>builder()
+                .code(ResponseCode.SUCCESS.getCode())
+                .info("获取成功")
+                .data(relicsResponseDTO)
                 .build();
     }
 
