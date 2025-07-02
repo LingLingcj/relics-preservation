@@ -77,6 +77,7 @@ public class RelicsController {
         // 转换为DTO
         List<RelicsResponseDTO> relicsDTOs = relicsEntities.stream().map(entity -> RelicsResponseDTO.builder()
             .name(entity.getName())
+                .relicsId(entity.getRelicsId())
             .description(entity.getDescription())
             .preservation(entity.getPreservation())
             .category(entity.getCategory())

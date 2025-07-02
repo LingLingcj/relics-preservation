@@ -41,4 +41,9 @@ public class RelicsServiceImpl implements IRelicsService {
     public List<RelicsEntity> getRelicsByEra(String era) {
         return relicsRepository.findByEra(era);
     }
+    
+    @Override
+    public List<RelicsEntity> getRandomRelics(int count) {
+        return relicsRepository.findRandomRelics(count);
+    }
 }

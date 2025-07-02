@@ -66,4 +66,12 @@ public class AlertMessageVO {
      * 阈值
      */
     private Double threshold;
+    
+    /**
+     * 获取当前值（兼容方法，用于通知服务）
+     * @return 当前读数
+     */
+    public Double getCurrentValue() {
+        return this.currentReading;
+    }
 } 

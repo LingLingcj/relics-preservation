@@ -59,4 +59,15 @@ public class RelicsRepositoryImpl implements IRelicsRepository {
             return relicsEntity;
         }).collect(Collectors.toList());
     }
+    
+    @Override
+    public List<RelicsEntity> findRandomRelics(int limit) {
+        List<Relics> relicsList = relicsDao.selectRandomRelics(limit);
+        return relicsList.stream().map(relics -> {
+            RelicsEntity relicsEntity = new RelicsEntity();
+            BeanUtils.copyProperties(relics, relicsEntity);
+            relicsEntity.setSuccess(true);
+            return relicsEntity;
+        }).collect(Collectors.toList());
+    }
 }

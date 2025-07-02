@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>文物保护系统 - 警报测试</title>
+    <!-- 引入SockJS和STOMP库 -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            margin: 0;
+            padding: 10px;
+        }
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+            background-color: #ccc;
+        }
+        .status-connected { background-color: #4CAF50; }
+        .status-disconnected { background-color: #F44336; }
+        .status-connecting { background-color: #FFC107; }
+        
+        button {
+            padding: 5px 10px;
+            margin-right: 5px;
+        }
+        
+        .alert-notification {
+            margin-top: 5px;
+            padding: 5px;
+            border-left: 3px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <h2>WebSocket警报测试</h2>
+    
+    <div>
+        <span class="status-indicator" id="statusIndicator"></span>
+        <span id="connectionStatus">未连接</span>
+        <button id="connectBtn">连接</button>
+        <button id="disconnectBtn" disabled>断开连接</button>
+        <button id="clearAlertsBtn">清空</button>
+    </div>
+    
+    <div>收到警报数: <span id="alertCount">0</span></div>
+    
+    <div id="alertsContainer"></div>
+    
+    <script>
+        // WebSocket连接
+        let stompClient = null;
+        let alertCount = 0;
+        
+        // DOM元素
+        const statusIndicator = document.getElementById('statusIndicator');
+        const connectionStatus = document.getElementById('connectionStatus');
+        const connectBtn = document.getElementById('connectBtn');
+        const disconnectBtn = document.getElementById('disconnectBtn');
+        const alertsContainer = document.getElementById('alertsContainer');
+        const alertCountElem = document.getElementById('alertCount');
+        const clearAlertsBtn = document.getElementById('clearAlertsBtn');
+        
+        // 连接WebSocket
+        function connect() {
+            statusIndicator.className = 'status-indicator status-connecting';
+            connectionStatus.textContent = '正在连接...';
+            connectBtn.disabled = true;
+            
+            // 创建SockJS连接 - 使用相对路径避免跨域问题
+            const socket = new SockJS('http://localhost:8080/ws');
+            stompClient = Stomp.over(socket);
+            
+            // 禁用调试日志
+            stompClient.debug = null;
+            
+            stompClient.connect({}, function(frame) {
+                statusIndicator.className = 'status-indicator status-connected';
+                connectionStatus.textContent = '已连接';
+                connectBtn.disabled = true;
+                disconnectBtn.disabled = false;
+                
+                console.log('Connected: ' + frame);
+                
+                // 订阅报警通知主题
+                stompClient.subscribe('/topic/alerts', function(message) {
+                    const alertNotification = JSON.parse(message.body);
+                    handleAlertNotification(alertNotification);
+                });
+            }, function(error) {
+                statusIndicator.className = 'status-indicator status-disconnected';
+                connectionStatus.textContent = '连接失败: ' + error;
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                console.error('连接错误: ', error);
+            });
+        }
+        
+        // 断开WebSocket连接
+        function disconnect() {
+            if (stompClient !== null) {
+                stompClient.disconnect();
+                stompClient = null;
+                
+                statusIndicator.className = 'status-indicator status-disconnected';
+                connectionStatus.textContent = '已断开连接';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+            }
+        }
+        
+        // 处理报警通知
+        function handleAlertNotification(notification) {
+            console.log('收到报警通知:', notification);
+            
+            // 更新报警计数
+            alertCount++;
+            alertCountElem.textContent = alertCount;
+            
+            // 创建报警元素
+            const alertElem = document.createElement('div');
+            alertElem.className = 'alert-notification';
+            
+            alertElem.innerHTML = `
+                <p><strong>${notification.alertType}</strong>: ${notification.message}</p>
+                <p>传感器: ${notification.sensorId}, 文物: ${notification.relicsId}</p>
+                <p>值: ${notification.value} (阈值: ${notification.threshold})</p>
+            `;
+            
+            // 添加到容器
+            alertsContainer.insertBefore(alertElem, alertsContainer.firstChild);
+        }
+        
+        // 清空所有报警
+        function clearAlerts() {
+            alertsContainer.innerHTML = '';
+            alertCount = 0;
+            alertCountElem.textContent = '0';
+        }
+        
+        // 事件监听
+        connectBtn.addEventListener('click', connect);
+        disconnectBtn.addEventListener('click', disconnect);
+        clearAlertsBtn.addEventListener('click', clearAlerts);
+        
+        // 页面卸载前断开连接
+        window.addEventListener('beforeunload', disconnect);
+    </script>
+</body>
+</html>

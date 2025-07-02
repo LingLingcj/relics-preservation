@@ -21,5 +21,10 @@
         select * from relics where era = #{era}
     </select>
 
-
+    <select id="selectRandomRelics" resultType="com.ling.infrastructure.dao.po.Relics" resultMap="RelicsResultMap">
+        SELECT * FROM relics 
+        WHERE status = 1
+        ORDER BY RAND() 
+        LIMIT #{limit}
+    </select>
 </mapper>

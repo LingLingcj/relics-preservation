@@ -5,6 +5,8 @@ import com.ling.domain.sensor.model.valobj.SensorMessageVO;
 import com.ling.domain.sensor.service.core.ISensorDataService;
 import com.ling.domain.sensor.service.message.validation.ISensorValidator;
 import com.ling.domain.sensor.service.message.validation.ValidatorFactory;
+import com.ling.domain.sensor.service.notification.AlertNotificationService;
+import com.ling.domain.sensor.service.notification.model.AlertNotification;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +32,9 @@ public class SensorDataPipeline {
     
     @Autowired
     private ISensorDataService sensorDataService;
+    
+    @Autowired
+    private AlertNotificationService alertNotificationService;
     
     private final ConcurrentLinkedQueue<SensorMessageVO> dataQueue = new ConcurrentLinkedQueue<>();
     
@@ -98,10 +103,12 @@ public class SensorDataPipeline {
         AlertMessageVO alert = createAlert(data, data.getStatus());
         log.warn("生成告警: [{}] {}", alert.getSeverity(), alert.getMessage());
         
-        // 这里可以添加告警处理逻辑，如：
-        // 1. 保存到数据库
-        // 2. 发送通知
-        // 3. 触发其他业务流程
+        // 处理告警
+        // 1. 转换告警消息为通知
+        AlertNotification notification = alertNotificationService.convertFromAlertMessage(alert);
+        
+        // 2. 发送WebSocket通知
+        alertNotificationService.sendAlertNotification(notification);
     }
     
     /**
@@ -119,6 +126,15 @@ public class SensorDataPipeline {
         alert.setLocationId(data.getLocationId());
         alert.setRelicsId(data.getRelicsId());
         alert.setCurrentReading(data.getValue());
+        
+        // 添加阈值信息（需要从验证器获取）
+        ISensorValidator validator = ValidatorFactory.getValidator(data.getSensorType());
+        if (validator != null) {
+            // 假设验证器有提供获取阈值的方法
+            // 如果没有，可以添加该接口方法或使用配置值
+            double threshold = 0.0; // 默认值，实际项目中应该从验证器获取
+            alert.setThreshold(threshold);
+        }
         
         return alert;
     }

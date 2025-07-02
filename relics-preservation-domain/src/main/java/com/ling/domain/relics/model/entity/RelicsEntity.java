@@ -20,6 +20,8 @@ public class RelicsEntity implements Serializable {
     private String location;
     private String imageUrl;
 
+    private Long relicsId;
+
     /** 保护等级 */
     private Integer preservation;
     /** 类别 */

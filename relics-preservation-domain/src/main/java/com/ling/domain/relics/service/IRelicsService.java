@@ -19,4 +19,11 @@ public interface IRelicsService {
      * @return 文物实体列表
      */
     List<RelicsEntity> getRelicsByEra(String era);
+    
+    /**
+     * 随机获取指定数量的文物
+     * @param count 获取数量
+     * @return 文物实体列表
+     */
+    List<RelicsEntity> getRandomRelics(int count);
 }

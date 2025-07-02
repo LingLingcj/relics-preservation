@@ -20,6 +20,9 @@ public class RelicsResponseDTO {
 
     @Schema(description = "文物名称")
     private String name;
+
+    @Schema(description = "文物Id")
+    private Long relicsId;
     
     @Schema(description = "文物详细描述")
     private String description;

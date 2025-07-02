@@ -49,5 +49,12 @@ public interface IRelicsRepository {
      * @return 文物实体列表
      */
     List<RelicsEntity> findByEra(String era);
+
+    /**
+     * 随机获取文物列表
+     * @param limit 获取数量
+     * @return 文物实体列表
+     */
+    List<RelicsEntity> findRandomRelics(int limit);
 }
 

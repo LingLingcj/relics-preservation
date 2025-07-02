@@ -22,4 +22,11 @@ public interface IRelicsDao {
     int insertRelics(@Param("relics") Relics relics);
 
     List<Relics> selectByEra(@Param("era") String era);
+    
+    /**
+     * 随机获取指定数量的文物记录
+     * @param limit 获取数量
+     * @return 文物列表
+     */
+    List<Relics> selectRandomRelics(@Param("limit") int limit);
 }

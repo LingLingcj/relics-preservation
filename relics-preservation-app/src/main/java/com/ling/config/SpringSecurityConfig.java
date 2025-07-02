@@ -60,8 +60,13 @@ public class SpringSecurityConfig {
                     authorize.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll(); // 允许所有OPTIONS请求，解决CORS预检问题
                     authorize.requestMatchers("/api/auth/**").permitAll();
                     authorize.requestMatchers("/api/relics").permitAll();
+                    authorize.requestMatchers("api/index/**").permitAll();
                     authorize.requestMatchers("/api/test/public").permitAll();
                     authorize.requestMatchers("/api/test/headers").permitAll();
+                    authorize.requestMatchers("/api/knowledge/rag").permitAll();
+                    authorize.requestMatchers("/api/relics/era/**").permitAll();
+                    // WebSocket端点
+                    authorize.requestMatchers("/ws/**").permitAll();
                     // Swagger UI 相关路径
                     authorize.requestMatchers("/swagger-ui.html").permitAll();
                     authorize.requestMatchers("/swagger-ui/**").permitAll();
@@ -69,8 +74,6 @@ public class SpringSecurityConfig {
                     authorize.requestMatchers("/api-docs/**").permitAll();
                     authorize.requestMatchers("/doc.html").permitAll();
                     authorize.requestMatchers("/webjars/**").permitAll();
-                    authorize.requestMatchers("/api/knowledge/rag").permitAll();
-                    authorize.requestMatchers("/api/relics/era/**").permitAll();
                     authorize.anyRequest().authenticated();
                     log.debug("已配置请求授权规则");
                 })
@@ -98,10 +101,24 @@ public class SpringSecurityConfig {
     @Bean
     CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
-        configuration.setAllowedOrigins(Arrays.asList("*"));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("Authorization", "Content-Type", "X-Requested-With"));
         configuration.setExposedHeaders(Arrays.asList("Authorization"));
+
+        // 允许所有来源
+        configuration.addAllowedOriginPattern("*");
+
+        // 允许所有方法
+        configuration.addAllowedMethod("*");
+
+        // 允许所有头部
+        configuration.addAllowedHeader("*");
+
+        // 允许携带凭证
+        configuration.setAllowCredentials(true);
+
+        // 预检请求缓存时间
+        configuration.setMaxAge(3600L);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         log.debug("配置CORS");
