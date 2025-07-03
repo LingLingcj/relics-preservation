@@ -31,4 +31,11 @@ public interface IRelicsDao {
     List<Relics> selectRandomRelics(@Param("limit") int limit);
 
     Relics selectRelicById(@Param("id") Long id);
+    
+    /**
+     * 获取除指定朝代外的所有文物
+     * @param excludeEras 要排除的朝代列表
+     * @return 文物列表
+     */
+    List<Relics> selectRelicsExceptEras(@Param("excludeEras") List<String> excludeEras);
 }

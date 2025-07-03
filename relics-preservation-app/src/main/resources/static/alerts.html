@@ -4,9 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文物保护系统 - 警报测试</title>
-    <!-- 引入SockJS和STOMP库 -->
-    <script src="https://cdn.bootcdn.net/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <!-- 移除SockJS和STOMP库引用 -->
     <style>
         body {
             font-family: 'Microsoft YaHei', Arial, sans-serif;
@@ -54,7 +52,7 @@
     
     <script>
         // WebSocket连接
-        let stompClient = null;
+        let socket = null;
         let alertCount = 0;
         
         // DOM元素
@@ -72,52 +70,55 @@
             connectionStatus.textContent = '正在连接...';
             connectBtn.disabled = true;
             
-            // 创建SockJS连接
-            const socket = new SockJS('http://localhost:8080/ws');
-            // 禁用凭证发送
-            socket._transportClose = socket._transportClose || socket.close;
-            socket.close = function() {
-                if (this._transport) this._transport.withCredentials = false;
-                this._transportClose();
-            };
+            // 创建原生WebSocket连接
+            socket = new WebSocket('ws://sj.frp.one:40098/ws?topic=alerts');
             
-            stompClient = Stomp.over(socket);
-            
-            // 禁用调试日志
-            stompClient.debug = null;
-            
-            stompClient.connect({}, function(frame) {
+            // 连接建立时的回调
+            socket.onopen = function(event) {
                 statusIndicator.className = 'status-indicator status-connected';
                 connectionStatus.textContent = '已连接';
                 connectBtn.disabled = true;
                 disconnectBtn.disabled = false;
                 
-                console.log('Connected: ' + frame);
-                
-                // 订阅报警通知主题
-                stompClient.subscribe('/topic/alerts', function(message) {
-                    const alertNotification = JSON.parse(message.body);
+                console.log('WebSocket连接已建立');
+            };
+            
+            // 接收消息的回调
+            socket.onmessage = function(event) {
+                try {
+                    const alertNotification = JSON.parse(event.data);
                     handleAlertNotification(alertNotification);
-                });
-            }, function(error) {
+                } catch (e) {
+                    console.error('解析消息失败:', e);
+                }
+            };
+            
+            // 连接关闭的回调
+            socket.onclose = function(event) {
                 statusIndicator.className = 'status-indicator status-disconnected';
-                connectionStatus.textContent = '连接失败: ' + error;
+                connectionStatus.textContent = '连接已关闭';
                 connectBtn.disabled = false;
                 disconnectBtn.disabled = true;
-                console.error('连接错误: ', error);
-            });
+                
+                console.log('WebSocket连接已关闭:', event);
+            };
+            
+            // 连接错误的回调
+            socket.onerror = function(error) {
+                statusIndicator.className = 'status-indicator status-disconnected';
+                connectionStatus.textContent = '连接错误';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                
+                console.error('WebSocket错误:', error);
+            };
         }
         
         // 断开WebSocket连接
         function disconnect() {
-            if (stompClient !== null) {
-                stompClient.disconnect();
-                stompClient = null;
-                
-                statusIndicator.className = 'status-indicator status-disconnected';
-                connectionStatus.textContent = '已断开连接';
-                connectBtn.disabled = false;
-                disconnectBtn.disabled = true;
+            if (socket !== null && socket.readyState === WebSocket.OPEN) {
+                socket.close();
+                socket = null;
             }
         }
         

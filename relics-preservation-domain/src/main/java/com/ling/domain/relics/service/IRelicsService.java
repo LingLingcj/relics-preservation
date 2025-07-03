@@ -27,5 +27,17 @@ public interface IRelicsService {
      */
     List<RelicsEntity> getRandomRelics(int count);
 
+    /**
+     * 根据ID获取文物
+     * @param id 文物ID
+     * @return 文物实体
+     */
     RelicsEntity getRelicsById(Long id);
+    
+    /**
+     * 获取除指定朝代外的所有文物
+     * @param excludeEras 要排除的朝代列表
+     * @return 文物实体列表
+     */
+    List<RelicsEntity> getRelicsExceptEras(List<String> excludeEras);
 }

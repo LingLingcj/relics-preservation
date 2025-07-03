@@ -47,7 +47,7 @@ public class MqttConfig {
 
     // 传感器主题前缀列表
     private static final List<String> SENSOR_TOPIC_PREFIXES = Arrays.asList(
-            "ems", "light_intensity_", "temperature_", "humidity_", 
+            "ems", "light_intensity_1", "temperature_", "humidity_",
             "light", "temperature", "humidity"
     );
 
@@ -64,9 +64,17 @@ public class MqttConfig {
             options.setPassword(password.toCharArray());
         }
         
-        options.setCleanSession(true);
+        options.setCleanSession(false);
         // 开启自动重连
         options.setAutomaticReconnect(true);
+        // 更进一步减小心跳间隔，防止连接断开
+        options.setKeepAliveInterval(5);
+        // 设置连接超时时间
+        options.setConnectionTimeout(30);
+        // 设置最大重连间隔
+        options.setMaxReconnectDelay(1000);
+        // 设置遗嘱消息，帮助检测断开连接
+        options.setWill("mqtt/disconnect", ("Client " + clientId + " disconnected").getBytes(), 1, false);
         factory.setConnectionOptions(options);
         return factory;
     }
@@ -91,9 +99,11 @@ public class MqttConfig {
         MqttPahoMessageDrivenChannelAdapter adapter =
                 new MqttPahoMessageDrivenChannelAdapter(clientId + "_inbound", mqttClientFactory(),
                         sensorTopics);
-        adapter.setCompletionTimeout(5000);
+        // 增加完成超时时间
+        adapter.setCompletionTimeout(10000);
         adapter.setConverter(new DefaultPahoMessageConverter());
-        adapter.setQos(1);
+        // 提高QoS级别
+        adapter.setQos(2);
         adapter.setOutputChannel(mqttInputChannel());
         return adapter;
     }

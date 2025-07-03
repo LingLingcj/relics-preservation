@@ -49,6 +49,28 @@ public class RelicsServiceImpl implements IRelicsService {
 
     @Override
     public RelicsEntity getRelicsById(Long id) {
-        return relicsRepository.findById(id);
+        try {
+            RelicsEntity entity = relicsRepository.findById(id);
+            if (entity != null) {
+                entity.setSuccess(true);
+                entity.setMessage("查询成功");
+            }
+            return entity;
+        } catch (Exception e) {
+            RelicsEntity errorEntity = new RelicsEntity();
+            errorEntity.setSuccess(false);
+            errorEntity.setMessage("查询文物失败: " + e.getMessage());
+            return errorEntity;
+        }
+    }
+    
+    @Override
+    public List<RelicsEntity> getRelicsExceptEras(List<String> excludeEras) {
+        try {
+            return relicsRepository.findRelicsExceptEras(excludeEras);
+        } catch (Exception e) {
+            // 记录异常并返回空列表
+            return List.of();
+        }
     }
 }

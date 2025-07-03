@@ -27,6 +27,9 @@ public class RelicsRepositoryImpl implements IRelicsRepository {
     @Override
     public RelicsEntity findById(Long id) {
         Relics relics = relicsDao.selectRelicById(id);
+        if (relics == null) {
+            return null; // 返回null表示文物不存在
+        }
         RelicsEntity relicsEntity = new RelicsEntity();
         BeanUtils.copyProperties(relics, relicsEntity);
         return relicsEntity;
@@ -65,6 +68,17 @@ public class RelicsRepositoryImpl implements IRelicsRepository {
     @Override
     public List<RelicsEntity> findRandomRelics(int limit) {
         List<Relics> relicsList = relicsDao.selectRandomRelics(limit);
+        return relicsList.stream().map(relics -> {
+            RelicsEntity relicsEntity = new RelicsEntity();
+            BeanUtils.copyProperties(relics, relicsEntity);
+            relicsEntity.setSuccess(true);
+            return relicsEntity;
+        }).collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<RelicsEntity> findRelicsExceptEras(List<String> excludeEras) {
+        List<Relics> relicsList = relicsDao.selectRelicsExceptEras(excludeEras);
         return relicsList.stream().map(relics -> {
             RelicsEntity relicsEntity = new RelicsEntity();
             BeanUtils.copyProperties(relics, relicsEntity);

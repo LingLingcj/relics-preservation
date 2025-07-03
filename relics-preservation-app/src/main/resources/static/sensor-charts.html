@@ -129,6 +129,7 @@
             <div class="tab" data-tab="temperature">温度</div>
             <div class="tab" data-tab="humidity">湿度</div>
             <div class="tab" data-tab="gas">气体</div>
+            <div class="tab" data-tab="intensity">光照强度</div>
         </div>
         
         <div id="all" class="tab-content active">
@@ -158,15 +159,22 @@
                 <canvas id="gasChart"></canvas>
             </div>
         </div>
+
+        <div id="intensity" class="tab-content">
+            <div class="chart-container">
+                <div class="chart-title">光照强度传感器数据</div>
+                <canvas id="intensityChart"></canvas>
+            </div>
+        </div>
     </div>
     
     <script>
         // WebSocket连接
         let stompClient = null;
-        
+
         // 图表对象
         let charts = {};
-        
+
         // 图表数据
         const chartData = {
             temperature: {
@@ -178,6 +186,10 @@
                 datasets: []
             },
             gas: {
+                labels: [],
+                datasets: []
+            },
+            intensity: {
                 labels: [],
                 datasets: []
             },
@@ -200,14 +212,16 @@
         const connectBtn = document.getElementById('connectBtn');
         const disconnectBtn = document.getElementById('disconnectBtn');
         const clearChartsBtn = document.getElementById('clearChartsBtn');
-        
+
         // 初始化图表
         function initCharts() {
             const temperatureCtx = document.getElementById('temperatureChart').getContext('2d');
             const humidityCtx = document.getElementById('humidityChart').getContext('2d');
             const gasCtx = document.getElementById('gasChart').getContext('2d');
+            const intensityCtx = document.getElementById('intensityChart').getContext('2d');
             const allDataCtx = document.getElementById('allDataChart').getContext('2d');
-            
+
+
             const commonOptions = {
                 responsive: true,
                 maintainAspectRatio: false,
@@ -242,11 +256,11 @@
                     }
                 }
             };
-            
+
             charts.temperature = new Chart(temperatureCtx, {
                 type: 'line',
                 data: chartData.temperature,
-                options: {...commonOptions, 
+                options: {...commonOptions,
                     scales: {
                         ...commonOptions.scales,
                         y: {
@@ -256,7 +270,7 @@
                     }
                 }
             });
-            
+
             charts.humidity = new Chart(humidityCtx, {
                 type: 'line',
                 data: chartData.humidity,
@@ -270,7 +284,7 @@
                     }
                 }
             });
-            
+
             charts.gas = new Chart(gasCtx, {
                 type: 'line',
                 data: chartData.gas,
@@ -284,7 +298,20 @@
                     }
                 }
             });
-            
+            charts.intensity = new Chart(intensityCtx, {
+                type: 'line',
+                data: chartData.intensity,
+                options: {...commonOptions,
+                    scales: {
+                        ...commonOptions.scales,
+                        y: {
+                            ...commonOptions.scales.y,
+                            title: {display: true, text: '光照强度'}
+                        }
+                    }
+                }
+            });
+
             charts.all = new Chart(allDataCtx, {
                 type: 'line',
                 data: chartData.all,
@@ -299,7 +326,7 @@
             connectBtn.disabled = true;
             
             // 创建SockJS连接
-            const socket = new SockJS('http://localhost:8080/ws');
+            const socket = new WebSocket('ws://localhost:8080/ws');
             // 禁用凭证发送
             socket._transportClose = socket._transportClose || socket.close;
             socket.close = function() {
@@ -343,6 +370,12 @@
                     const sensorData = JSON.parse(message.body);
                     handleSensorData(sensorData, 'gas');
                 });
+                // 订阅光照传感器数据
+                stompClient.subscribe('/topic/sensor-data/intensity', function(message) {
+                    const sensorData = JSON.parse(message.body);
+                    handleSensorData(sensorData, 'light_intensity');
+                    // console.log(sensorData);
+                });
                 
                 // 发送订阅确认消息
                 stompClient.send("/app/subscribe-sensor-data", {}, JSON.stringify({action: "subscribe"}));
@@ -372,6 +405,11 @@
         function handleSensorData(data, chartType) {
             console.log(`收到${chartType}传感器数据:`, data);
             
+            // 将light_intensity映射到intensity
+            if (chartType === 'light_intensity') {
+                chartType = 'intensity';
+            }
+
             // 获取或创建传感器的颜色
             const sensorId = data.locationId || "unknown";
             if (!sensorColors[sensorId]) {
@@ -513,4 +551,4 @@
         });
     </script>
 </body>
-</html> 
+</html>

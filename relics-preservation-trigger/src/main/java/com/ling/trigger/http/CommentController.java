@@ -67,13 +67,13 @@ public class CommentController {
 
     @Operation(summary = "查询评论", description = "分页查询文物评论")
     @GetMapping
-    public Response<Map<String, Object>> getComments(@RequestBody CommentQueryDTO queryDTO) {
+    public Response<Map<String, Object>> getComments(@RequestParam Long relicsId) {
         // 获取当前登录用户
         String currentUsername = getCurrentUsername();
         
         // 调用服务查询评论
         Map<String, Object> result = commentService.getCommentsByPage(
-                queryDTO.getRelicsId(), queryDTO.getPage(), queryDTO.getSize());
+                relicsId, 1, 40);
         
         // 转换响应
         List<CommentEntity> commentEntities = (List<CommentEntity>) result.get("list");

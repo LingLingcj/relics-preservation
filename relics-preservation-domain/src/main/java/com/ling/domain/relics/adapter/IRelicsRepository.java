@@ -56,5 +56,12 @@ public interface IRelicsRepository {
      * @return 文物实体列表
      */
     List<RelicsEntity> findRandomRelics(int limit);
+
+    /**
+     * 获取除指定朝代外的所有文物
+     * @param excludeEras 要排除的朝代列表
+     * @return 文物实体列表
+     */
+    List<RelicsEntity> findRelicsExceptEras(List<String> excludeEras);
 }
 

@@ -2,6 +2,7 @@ package com.ling.domain.sensor.service.message.validation;
 
 import com.ling.domain.sensor.service.message.validation.impl.GasValidator;
 import com.ling.domain.sensor.service.message.validation.impl.HumValidator;
+import com.ling.domain.sensor.service.message.validation.impl.IntensityValidator;
 import com.ling.domain.sensor.service.message.validation.impl.TempValidator;
 import org.springframework.stereotype.Component;
 
@@ -17,7 +18,8 @@ public class ValidatorFactory {
     private static final Map<String, ISensorValidator> VALIDATORS = Map.of(
             "gas", new GasValidator(1000,1200),
             "temp", new TempValidator(10, 30),
-            "hum", new HumValidator(40,60)
+            "hum", new HumValidator(40,60),
+            "intensity", new IntensityValidator()
     );
 
     public static ISensorValidator getValidator(String sensorType) {

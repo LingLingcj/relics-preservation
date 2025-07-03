@@ -32,4 +32,13 @@
         where relics_id = #{id}
         LIMIT 1
     </select>
+    
+    <select id="selectRelicsExceptEras" resultType="com.ling.infrastructure.dao.po.Relics" resultMap="RelicsResultMap">
+        SELECT * FROM relics 
+        WHERE era NOT IN 
+        <foreach item="era" collection="excludeEras" open="(" separator="," close=")">
+            #{era}
+        </foreach>
+        AND status = 1
+    </select>
 </mapper>
