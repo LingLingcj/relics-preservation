@@ -14,7 +14,6 @@ spring:
         url: jdbc:postgresql://localhost:5433/springai
         username: postgres
         password: postgres
-
     openai:
       base-url: https://api.chatanywhere.tech
       api-key: sk-
@@ -103,6 +102,9 @@ mqtt:
   topics:
     ems,light_intensity_1
 
+mcp:
+  server:
+    url:
 
 
 # 传感器数据配置

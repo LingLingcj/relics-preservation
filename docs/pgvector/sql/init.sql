@@ -1,10 +1,12 @@
-  -- 删除旧的表（如果存在）
-  DROP TABLE IF EXISTS public.vector_store;
+CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS hstore;
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
-  -- 创建新的表，使用UUID作为主键
-  CREATE TABLE public.vector_store (
-      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-      content TEXT NOT NULL,
-      metadata JSONB,
-     embedding VECTOR(1536)
-  );
+CREATE TABLE IF NOT EXISTS vector_store (
+   id uuid default gen_random_uuid() PRIMARY KEY,
+   content text,
+   metadata jsonb,
+   embedding vector(1536)
+);
+
+CREATE INDEX ON vector_store USING HNSW (embedding vector_cosine_ops);

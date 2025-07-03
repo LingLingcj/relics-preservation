@@ -25,6 +25,13 @@
             <artifactId>spring-boot-starter-security</artifactId>
         </dependency>
 
+        <!-- mcp -->
+        <dependency>
+            <groupId>io.modelcontextprotocol.sdk</groupId>
+            <artifactId>mcp</artifactId>
+            <version>0.7.0</version>
+        </dependency>
+
         <!-- JWT 相关依赖 -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>

@@ -108,13 +108,10 @@ public class SpringSecurityConfig {
 
         // 允许所有来源
         configuration.addAllowedOriginPattern("*");
-
         // 允许所有方法
         configuration.addAllowedMethod("*");
-
         // 允许所有头部
         configuration.addAllowedHeader("*");
-
         // 允许携带凭证
         configuration.setAllowCredentials(true);
 
