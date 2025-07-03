@@ -117,12 +117,12 @@ public class FavoriteController {
     @Operation(summary = "获取收藏列表", description = "分页获取用户的收藏文物列表")
     @GetMapping
     @PreAuthorize("isAuthenticated()")
-    public Response<Map<String, Object>> getUserFavorites(FavoriteQueryDTO queryDTO) {
+    public Response<Map<String, Object>> getUserFavorites() {
         String username = getCurrentUsername();
         
         // 获取收藏列表
         List<FavoriteEntity> favorites = favoriteService.getUserFavorites(
-                username, queryDTO.getPage(), queryDTO.getSize());
+                username, 1, 100);
         
         // 获取总数
         int total = favoriteService.countUserFavorites(username);

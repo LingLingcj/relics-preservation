@@ -9,8 +9,10 @@ import org.redisson.api.RList;
 import org.redisson.api.RedissonClient;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
+import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.document.Document;
@@ -19,9 +21,9 @@ import org.springframework.ai.reader.tika.TikaDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SearchRequest;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
-import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.stringtemplate.v4.ST;
 import reactor.core.publisher.Flux;
 
 import java.util.ArrayList;
@@ -74,8 +76,17 @@ public class KnowledgeController {
                 .build();
     };
 
-    @RequestMapping(value = "/ai", method = RequestMethod.GET)
-    public Flux<ChatResponse> generateStreamRag(@RequestParam String message, @RequestParam(required = false) String ragTag) {
+    @RequestMapping(value = "/ai", method = RequestMethod.POST)
+    public Response<String> generateResponse(@RequestBody String message, @RequestBody(required = false) String ragTag) {
+        // 检查message参数是否为空
+        if (message == null || message.trim().isEmpty()) {
+            log.error("消息内容不能为空");
+            return Response.<String>builder()
+                    .code(ResponseCode.SYSTEM_ERROR.getCode())
+                    .info("消息不能为空")
+                    .data(null)
+                    .build();
+        }
 
         String SYSTEM_PROMPT = """
                 Use the information from the DOCUMENTS section to provide accurate answers but act as if you knew this information innately.
@@ -87,10 +98,10 @@ public class KnowledgeController {
 
         // 构建搜索请求
         SearchRequest.Builder requestBuilder = SearchRequest.builder().query(message).topK(5);
-        
+
         // 如果指定了ragTag，则添加过滤条件
         if (ragTag != null && !ragTag.isEmpty()) {
-            requestBuilder.filter(Map.of("tag", ragTag));
+            requestBuilder.filterExpression("tag == '" + ragTag + "'");
             log.info("使用指定知识库标签进行查询: {}", ragTag);
         } else {
             // 如果没有指定ragTag，查询所有可用标签的内容（不添加过滤器）
@@ -104,17 +115,33 @@ public class KnowledgeController {
 
         List<Document> documents = pgVectorStore.similaritySearch(request);
         log.info("找到相关文档数量: {}", documents.size());
-        
-        String documentCollectors = documents.stream().map(Document::getText).collect(Collectors.joining());
-        Message ragMessage = new SystemPromptTemplate(SYSTEM_PROMPT).createMessage(Map.of("documents", documentCollectors));
 
         List<Message> messages = new ArrayList<>();
-        messages.add(new UserMessage(message));
-        messages.add(ragMessage);
+        // 确保使用trim后的消息
+        messages.add(new UserMessage(message.trim()));
+
+        // 检查是否找到了文档
+        if (documents.isEmpty()) {
+            // 如果没有找到文档，添加一个默认的系统消息
+            messages.add(new SystemMessage(
+                    "我的知识库中没有关于这个问题的具体信息。我将尝试根据一般知识回答您的问题。"));
+            log.info("未找到相关文档，使用默认提示");
+        } else {
+            // 找到了文档，使用文档内容创建消息
+            String documentCollectors = documents.stream().map(Document::getText).collect(Collectors.joining("\n\n"));
+            Message ragMessage = new SystemPromptTemplate(SYSTEM_PROMPT).createMessage(Map.of("documents", documentCollectors));
+            messages.add(ragMessage);
+            log.info("使用找到的文档创建提示");
+        }
 
         // 创建并返回流式响应
         Prompt prompt = new Prompt(messages, OpenAiChatOptions.builder().streamUsage(true).build());
-        return chatClient.prompt(prompt).stream().chatResponse();
+        log.info("prompt: {}", prompt);
+        return Response.<String>builder()
+                .code(ResponseCode.SUCCESS.getCode())
+                .info(ResponseCode.SUCCESS.getInfo())
+                .data(chatClient.prompt(prompt).user(message).call().content())
+                .build();
     }
 
 

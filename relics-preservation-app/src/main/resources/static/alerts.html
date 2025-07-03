@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>文物保护系统 - 警报测试</title>
-    <!-- 移除SockJS和STOMP库引用 -->
+    <!-- 添加SockJS和STOMP库引用 -->
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stomp/stompjs@7.0.0/bundles/stomp.umd.min.js"></script>
     <style>
         body {
             font-family: 'Microsoft YaHei', Arial, sans-serif;
@@ -51,8 +53,8 @@
     <div id="alertsContainer"></div>
     
     <script>
-        // WebSocket连接
-        let socket = null;
+        // SockJS和STOMP连接
+        let stompClient = null;
         let alertCount = 0;
         
         // DOM元素
@@ -64,61 +66,75 @@
         const alertCountElem = document.getElementById('alertCount');
         const clearAlertsBtn = document.getElementById('clearAlertsBtn');
         
-        // 连接WebSocket
+        // 连接SockJS
         function connect() {
             statusIndicator.className = 'status-indicator status-connecting';
             connectionStatus.textContent = '正在连接...';
             connectBtn.disabled = true;
             
-            // 创建原生WebSocket连接
-            socket = new WebSocket('ws://sj.frp.one:40098/ws?topic=alerts');
-            
+            // 创建SockJS连接
+            const socket = new SockJS('http://sj.frp.one:40098/ws');
+            stompClient = new StompJs.Client({
+                webSocketFactory: () => socket,
+                connectHeaders: {},
+                debug: function (str) {
+                    console.log('STOMP Debug: ' + str);
+                },
+                reconnectDelay: 5000,
+                heartbeatIncoming: 4000,
+                heartbeatOutgoing: 4000,
+            });
+
             // 连接建立时的回调
-            socket.onopen = function(event) {
+            stompClient.onConnect = function(frame) {
                 statusIndicator.className = 'status-indicator status-connected';
                 connectionStatus.textContent = '已连接';
                 connectBtn.disabled = true;
                 disconnectBtn.disabled = false;
                 
-                console.log('WebSocket连接已建立');
-            };
-            
-            // 接收消息的回调
-            socket.onmessage = function(event) {
-                try {
-                    const alertNotification = JSON.parse(event.data);
-                    handleAlertNotification(alertNotification);
-                } catch (e) {
-                    console.error('解析消息失败:', e);
-                }
-            };
-            
-            // 连接关闭的回调
-            socket.onclose = function(event) {
-                statusIndicator.className = 'status-indicator status-disconnected';
-                connectionStatus.textContent = '连接已关闭';
-                connectBtn.disabled = false;
-                disconnectBtn.disabled = true;
-                
-                console.log('WebSocket连接已关闭:', event);
+                console.log('SockJS连接已建立:', frame);
+
+                // 订阅警报主题
+                stompClient.subscribe('/topic/alerts', function(message) {
+                    try {
+                        const alertNotification = JSON.parse(message.body);
+                        handleAlertNotification(alertNotification);
+                    } catch (e) {
+                        console.error('解析消息失败:', e);
+                    }
+                });
             };
             
             // 连接错误的回调
-            socket.onerror = function(error) {
+            stompClient.onStompError = function(frame) {
                 statusIndicator.className = 'status-indicator status-disconnected';
                 connectionStatus.textContent = '连接错误';
                 connectBtn.disabled = false;
                 disconnectBtn.disabled = true;
                 
-                console.error('WebSocket错误:', error);
+                console.error('STOMP错误:', frame.headers['message']);
+                console.error('详细信息:', frame.body);
             };
+            
+            // 连接关闭的回调
+            stompClient.onDisconnect = function() {
+                statusIndicator.className = 'status-indicator status-disconnected';
+                connectionStatus.textContent = '连接已关闭';
+                connectBtn.disabled = false;
+                disconnectBtn.disabled = true;
+                
+                console.log('SockJS连接已关闭');
+            };
+
+            // 激活连接
+            stompClient.activate();
         }
         
-        // 断开WebSocket连接
+        // 断开SockJS连接
         function disconnect() {
-            if (socket !== null && socket.readyState === WebSocket.OPEN) {
-                socket.close();
-                socket = null;
+            if (stompClient !== null) {
+                stompClient.deactivate();
+                stompClient = null;
             }
         }
         
@@ -138,6 +154,7 @@
                 <p><strong>${notification.alertType}</strong>: ${notification.message}</p>
                 <p>传感器: ${notification.sensorId}, 文物: ${notification.relicsId}</p>
                 <p>值: ${notification.value} (阈值: ${notification.threshold})</p>
+                <p><small>时间: ${new Date().toLocaleString()}</small></p>
             `;
             
             // 添加到容器

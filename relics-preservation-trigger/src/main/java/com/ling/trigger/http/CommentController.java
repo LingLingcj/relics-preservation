@@ -73,7 +73,7 @@ public class CommentController {
         
         // 调用服务查询评论
         Map<String, Object> result = commentService.getCommentsByPage(
-                relicsId, 1, 40);
+                relicsId, 1, 100);
         
         // 转换响应
         List<CommentEntity> commentEntities = (List<CommentEntity>) result.get("list");
