@@ -113,8 +113,8 @@ public class KnowledgeController {
         messages.add(ragMessage);
 
         // 创建并返回流式响应
-        Prompt prompt = new Prompt(messages, OpenAiChatOptions.builder().withStreaming(true).build());
-        return chatClient.stream(prompt);
+        Prompt prompt = new Prompt(messages, OpenAiChatOptions.builder().streamUsage(true).build());
+        return chatClient.prompt(prompt).stream().chatResponse();
     }
 
 
