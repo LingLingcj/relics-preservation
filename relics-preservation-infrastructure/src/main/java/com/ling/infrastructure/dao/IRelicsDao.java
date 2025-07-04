@@ -38,4 +38,17 @@ public interface IRelicsDao {
      * @return 文物列表
      */
     List<Relics> selectRelicsExceptEras(@Param("excludeEras") List<String> excludeEras);
+    
+    /**
+     * 根据名称模糊查询文物
+     * @param name 名称关键词
+     * @return 文物列表
+     */
+    List<Relics> selectByNameContaining(@Param("name") String name);
+    
+    /**
+     * 获取所有文物
+     * @return 文物列表
+     */
+    List<Relics> selectAll();
 }

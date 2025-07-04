@@ -1,0 +1,12 @@
+{
+    "mcpServers": {
+    "my_mysql_db": {
+        "command": "uvx",
+            "args": ["--from", "mcp-alchemy==2025.6.19.201831", "--with", "pymysql",
+            "--refresh-package", "mcp-alchemy", "mcp-alchemy"],
+            "env": {
+            "DB_URL": "mysql+pymysql://root:123456@localhost:3309/relics"
+        }
+    }
+}
+}

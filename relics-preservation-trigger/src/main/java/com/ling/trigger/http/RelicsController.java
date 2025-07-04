@@ -104,6 +104,49 @@ public class RelicsController {
                 .data(result)
                 .build();
     }
+    
+    @Operation(summary = "按名称搜索文物", description = "根据文物名称关键词搜索文物信息")
+    @GetMapping("/name")
+    public Response<Map<String, Object>> getRelicsByName(
+            @Parameter(description = "文物名称关键词", required = true) @RequestParam String name) {
+        log.info("按名称搜索文物，关键词: {}", name);
+        
+        // 参数验证
+        if (name == null || name.trim().isEmpty()) {
+            return Response.<Map<String, Object>>builder()
+                    .code(ResponseCode.INVALID_PARAM.getCode())
+                    .info("搜索关键词不能为空")
+                    .build();
+        }
+        
+        List<RelicsEntity> relicsEntities = relicsService.getRelicsByName(name);
+        if (relicsEntities.isEmpty()) {
+            log.info("未找到符合条件的文物，关键词: {}", name);
+            return Response.<Map<String, Object>>builder()
+                    .code(ResponseCode.RELICS_NOT_FOUND.getCode())
+                    .info("未找到匹配的文物")
+                    .build();
+        }
+        
+        // 构建响应数据
+        Map<String, Object> result = new HashMap<>();
+        result.put("total", relicsEntities.size());
+        
+        // 转换为DTO
+        List<RelicsResponseDTO> relicsDTOs = relicsEntities.stream().map(entity -> {
+            RelicsResponseDTO dto = new RelicsResponseDTO();
+            BeanUtils.copyProperties(entity, dto);
+            return dto;
+        }).collect(Collectors.toList());
+        result.put("list", relicsDTOs);
+        
+        log.info("按名称搜索成功，关键词: {}, 找到{}条记录", name, relicsEntities.size());
+        return Response.<Map<String, Object>>builder()
+                .code(ResponseCode.SUCCESS.getCode())
+                .info("搜索成功")
+                .data(result)
+                .build();
+    }
 
     @Operation(summary = "按Id搜索文物", description = "根据Id搜索文物信息")
     @GetMapping("/id")
@@ -232,15 +275,4 @@ public class RelicsController {
                 .build();
     }
 
-//    // 获取文物详情
-//    @GetMapping("/{id}")
-//    public Response<RelicsInfo> getRelicsById(@PathVariable Long id);
-//
-//    // 文物列表查询
-//    @GetMapping
-//    public Response<PageResult<RelicsInfo>> listRelics(RelicsQueryParam param);
-//
-//    // 更新文物信息
-//    @PutMapping("/{id}")
-//    public Response<Boolean> updateRelics(@PathVariable Long id, @RequestBody RelicsUpdateVO updateVO);
 }

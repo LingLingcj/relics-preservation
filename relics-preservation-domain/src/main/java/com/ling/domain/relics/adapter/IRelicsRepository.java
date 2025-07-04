@@ -63,5 +63,18 @@ public interface IRelicsRepository {
      * @return 文物实体列表
      */
     List<RelicsEntity> findRelicsExceptEras(List<String> excludeEras);
+    
+    /**
+     * 根据名称模糊查询文物
+     * @param name 文物名称关键词
+     * @return 文物实体列表
+     */
+    List<RelicsEntity> findByNameContaining(String name);
+    
+    /**
+     * 获取所有文物
+     * @return 文物实体列表
+     */
+    List<RelicsEntity> findAll();
 }
 

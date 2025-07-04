@@ -41,4 +41,14 @@
         </foreach>
         AND status = 1
     </select>
+    
+    <select id="selectByNameContaining" resultType="com.ling.infrastructure.dao.po.Relics" resultMap="RelicsResultMap">
+        SELECT * FROM relics 
+        WHERE name LIKE CONCAT('%', #{name}, '%')
+        AND status = 1
+    </select>
+
+    <select id="selectAll" resultType="com.ling.infrastructure.dao.po.Relics" resultMap="RelicsResultMap">
+        SELECT * FROM relics
+    </select>
 </mapper>

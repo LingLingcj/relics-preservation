@@ -33,7 +33,13 @@ public enum ResponseCode {
     RELICS_NOT_FOUND("2001", "未找到指定文物"),
 
     // 评论相关错误码
-    FORBIDDEN("2101", "没有权限");
+    FORBIDDEN("2101", "没有权限"),
+
+    INVALID_PARAM("3001", "参数错误")
+
+    ;
+
+
     private final String code;
     private final String info;
 } 

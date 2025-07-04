@@ -15,15 +15,19 @@ spring:
         username: postgres
         password: postgres
     openai:
-      base-url: https://api.chatanywhere.tech
-      api-key: sk-
+
       chat:
         options:
-          model: gpt-4.1-mini
+          model: gemini-2.5-pro
+#          model: gpt-4.1-mini
       embedding:
         options:
           num-batch: 1536
           model: text-embedding-3-small
+    mcp:
+      client:
+        stdio:
+          servers-configuration: classpath:/mcpserver/mcp-server-sql.json
   # Jackson JSON序列化配置
   jackson:
     # 日期格式化
@@ -102,11 +106,6 @@ mqtt:
   topics:
     ems,light_intensity_1
 
-mcp:
-  server:
-    url:
-
-
 # 传感器数据配置
 sensor:
   data:
@@ -121,3 +120,24 @@ sensor:
     # 阈值判断
     threshold:
       enabled: true
+
+# elasticsearch配置
+elasticsearch:
+  # 自定义属性---设置是否开启ES,false表不开窍ES
+  open: true
+  # es集群名称,如果下载es设置了集群名称,则使用配置的集群名称
+  clusterName:
+  hosts: localhost:9200
+  # es 请求方式
+  scheme: http
+  # es 连接超时时间
+  connectTimeOut: 1000
+  # es socket 连接超时时间
+  socketTimeOut: 30000
+  # es 请求超时时间
+  connectionRequestTimeOut: 500
+  # es 最大连接数
+  maxConnectNum: 100
+  # es 每个路由的最大连接数
+  maxConnectNumPerRoute: 100
+

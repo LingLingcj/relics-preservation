@@ -3,7 +3,9 @@ package com.ling.domain.relics.service.impl;
 import com.ling.domain.relics.model.valobj.RelicsVO;
 import com.ling.domain.relics.model.entity.RelicsEntity;
 import com.ling.domain.relics.service.IRelicsService;
+import com.ling.domain.relics.service.IRelicsSearchService;
 import com.ling.domain.relics.adapter.IRelicsRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,10 +13,14 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 import java.util.UUID;
 
+@Slf4j
 @Service
 public class RelicsServiceImpl implements IRelicsService {
     @Autowired
     private IRelicsRepository relicsRepository;
+    
+    @Autowired
+    private IRelicsSearchService relicsSearchService;
 
     @Override
     public RelicsEntity uploadRelics(RelicsVO vo) {
@@ -30,6 +36,16 @@ public class RelicsServiceImpl implements IRelicsService {
             relicsRepository.uploadRelics(vo);
             entity.setSuccess(true);
             entity.setMessage("上传成功");
+            
+            // 同步到ES
+            entity.setRelicsId(relicsId);
+            try {
+                relicsSearchService.syncRelicsToEs(entity);
+                log.info("文物数据已同步到ES: {}", vo.getName());
+            } catch (Exception e) {
+                log.error("文物数据同步到ES失败: {}", e.getMessage(), e);
+                // 即使同步ES失败，不影响主流程
+            }
         } catch (Exception e) {
             entity.setSuccess(false);
             entity.setMessage("上传失败: " + e.getMessage());
@@ -70,6 +86,16 @@ public class RelicsServiceImpl implements IRelicsService {
             return relicsRepository.findRelicsExceptEras(excludeEras);
         } catch (Exception e) {
             // 记录异常并返回空列表
+            return List.of();
+        }
+    }
+    
+    @Override
+    public List<RelicsEntity> getRelicsByName(String name) {
+        try {
+            return relicsRepository.findByNameContaining(name);
+        } catch (Exception e) {
+            // 返回空列表
             return List.of();
         }
     }

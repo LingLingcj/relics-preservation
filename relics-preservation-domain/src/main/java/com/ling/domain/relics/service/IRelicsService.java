@@ -40,4 +40,11 @@ public interface IRelicsService {
      * @return 文物实体列表
      */
     List<RelicsEntity> getRelicsExceptEras(List<String> excludeEras);
+    
+    /**
+     * 根据名称搜索文物
+     * @param name 文物名称关键词
+     * @return 文物实体列表
+     */
+    List<RelicsEntity> getRelicsByName(String name);
 }

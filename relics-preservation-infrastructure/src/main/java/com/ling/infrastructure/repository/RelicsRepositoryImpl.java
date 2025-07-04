@@ -86,4 +86,26 @@ public class RelicsRepositoryImpl implements IRelicsRepository {
             return relicsEntity;
         }).collect(Collectors.toList());
     }
+    
+    @Override
+    public List<RelicsEntity> findByNameContaining(String name) {
+        List<Relics> relicsList = relicsDao.selectByNameContaining(name);
+        return relicsList.stream().map(relics -> {
+            RelicsEntity relicsEntity = new RelicsEntity();
+            BeanUtils.copyProperties(relics, relicsEntity);
+            relicsEntity.setSuccess(true);
+            return relicsEntity;
+        }).collect(Collectors.toList());
+    }
+    
+    @Override
+    public List<RelicsEntity> findAll() {
+        List<Relics> relicsList = relicsDao.selectAll();
+        return relicsList.stream().map(relics -> {
+            RelicsEntity relicsEntity = new RelicsEntity();
+            BeanUtils.copyProperties(relics, relicsEntity);
+            relicsEntity.setSuccess(true);
+            return relicsEntity;
+        }).collect(Collectors.toList());
+    }
 }
