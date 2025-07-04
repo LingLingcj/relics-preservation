@@ -103,7 +103,7 @@ public class MqttConfig {
         adapter.setCompletionTimeout(10000);
         adapter.setConverter(new DefaultPahoMessageConverter());
         // 提高QoS级别
-        adapter.setQos(2);
+        adapter.setQos(0);
         adapter.setOutputChannel(mqttInputChannel());
         return adapter;
     }

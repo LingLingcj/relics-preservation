@@ -29,7 +29,7 @@ public class OpenAiConfig {
     @Bean
     public ChatMemory chatMemory() {
         return MessageWindowChatMemory.builder()
-                .maxMessages(5)
+                .maxMessages(10)
                 .build();
     }
 

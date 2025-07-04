@@ -65,8 +65,8 @@ public class SpringSecurityConfig {
                     authorize.requestMatchers("/api/test/headers").permitAll();
                     authorize.requestMatchers("/api/knowledge/rag").permitAll();
                     authorize.requestMatchers("/api/relics/era/**").permitAll();
-                    authorize.requestMatchers("/api/relics/search/keyword").permitAll();
                     authorize.requestMatchers("/api/relics/search/**").permitAll();
+                    authorize.requestMatchers("/api/sensor/analysis/**").permitAll();
                     // WebSocket端点
                     authorize.requestMatchers("/ws/**").permitAll();
                     // Swagger UI 相关路径
