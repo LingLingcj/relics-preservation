@@ -8,17 +8,19 @@ import com.ling.domain.sensor.service.message.validation.ISensorValidator;
  * @DateTime: 2025/6/30 10:56
  **/
 public class TempValidator implements ISensorValidator {
-    private final double MIN_TEMP_VAL;
-    private final double MAX_TEMP_VAL;
+    private final double TEMP_VAL_STAGE1;
+    private final double TEMP_VAL_STAGE2;
 
-    public TempValidator(double minTempVal, double maxTempVal) {
-        MIN_TEMP_VAL = minTempVal;
-        MAX_TEMP_VAL = maxTempVal;
+    public TempValidator(double tempValStage1, double tempValStage2) {
+        TEMP_VAL_STAGE1 = tempValStage1;
+        TEMP_VAL_STAGE2 = tempValStage2;
     }
 
     @Override
     public Integer validateStatus(double value) {
-        return 0;
+        if (value <= TEMP_VAL_STAGE1) {return 0;}
+        if (value <= TEMP_VAL_STAGE2) {return 1;}
+        return 2;
     }
 }
 

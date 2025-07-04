@@ -16,10 +16,10 @@ import java.util.Map;
 @Component
 public class ValidatorFactory {
     private static final Map<String, ISensorValidator> VALIDATORS = Map.of(
-            "gas", new GasValidator(1000,1200),
-            "temp", new TempValidator(10, 30),
-            "hum", new HumValidator(40,60),
-            "intensity", new IntensityValidator()
+            "gas", new GasValidator(500,600),
+            "temp", new TempValidator(35, 40),
+            "hum", new HumValidator(50,60),
+            "intensity", new IntensityValidator(1000.0)
     );
 
     public static ISensorValidator getValidator(String sensorType) {

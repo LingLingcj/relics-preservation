@@ -8,16 +8,18 @@ import com.ling.domain.sensor.service.message.validation.ISensorValidator;
  * @DateTime: 2025/6/30 15:39
  **/
 public class HumValidator implements ISensorValidator {
-    private final double MIN_HUM_VAL;
-    private final double MAX_HUM_VAL;
+    private final double HUM_VAL_1;
+    private final double HUM_VAL_2;
 
-    public HumValidator(double minHumVal, double maxHumVal) {
-        MIN_HUM_VAL = minHumVal;
-        MAX_HUM_VAL = maxHumVal;
+    public HumValidator(double humVal1, double humVal2) {
+        HUM_VAL_1 = humVal1;
+        HUM_VAL_2 = humVal2;
     }
 
     @Override
     public Integer validateStatus(double value) {
-        return 0;
+        if (value <= HUM_VAL_1) {return 0;}
+        if (value <= HUM_VAL_2) {return 1;}
+        return 2;
     }
 }

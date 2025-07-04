@@ -88,6 +88,63 @@ public class RelicsSearchController {
                 .build();
     }
     
+    @Operation(summary = "多字段搜索文物", description = "根据关键词搜索文物名称、朝代、类别、描述、材质等字段")
+    @GetMapping("/keyword")
+    public Response<Map<String, Object>> searchRelicsByKeyword(
+            @Parameter(description = "搜索关键词", required = true) @RequestParam String keyword) {
+        log.info("多字段搜索文物, 关键词: {}", keyword);
+        
+        // 参数验证
+        if (keyword == null || keyword.trim().isEmpty()) {
+            return Response.<Map<String, Object>>builder()
+                    .code(ResponseCode.INVALID_PARAM.getCode())
+                    .info("搜索关键词不能为空")
+                    .build();
+        }
+        
+        // 调用搜索服务
+        List<RelicsEntity> relicsEntities = relicsSearchService.searchRelicsByKeyword(keyword);
+        
+        if (relicsEntities.isEmpty()) {
+            return Response.<Map<String, Object>>builder()
+                    .code(ResponseCode.RELICS_NOT_FOUND.getCode())
+                    .info("未找到匹配的文物")
+                    .build();
+        }
+        
+        // 构建响应数据
+        Map<String, Object> result = new HashMap<>();
+        
+        List<RelicsResponseDTO> relicsDTOs = new ArrayList<>();
+
+        for (RelicsEntity relicsEntity : relicsEntities) {
+            relicsDTOs.add(
+                    RelicsResponseDTO.builder()
+                            .relicsId(relicsEntity.getRelicsId())
+                            .name(relicsEntity.getName())
+                            .era(relicsEntity.getEra())
+                            .category(relicsEntity.getCategory())
+                            .description(relicsEntity.getDescription())
+                            .imageUrl(relicsEntity.getImageUrl())
+                            .locationId(relicsEntity.getLocationId())
+                            .preservation(relicsEntity.getPreservation())
+                            .material(relicsEntity.getMaterial())
+                            .status(relicsEntity.getStatus())
+                            .build()
+            );
+        }
+        
+        result.put("total", relicsDTOs.size());
+        result.put("list", relicsDTOs);
+        
+        log.info("多字段搜索成功，关键词: {}, 找到{}条记录", keyword, relicsDTOs.size());
+        return Response.<Map<String, Object>>builder()
+                .code(ResponseCode.SUCCESS.getCode())
+                .info("搜索成功")
+                .data(result)
+                .build();
+    }
+    
     @Operation(summary = "同步文物到ES", description = "同步所有文物数据到Elasticsearch")
     @PostMapping("/sync")
     public Response<Boolean> syncRelicsToEs() {

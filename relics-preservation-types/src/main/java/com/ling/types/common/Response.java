@@ -26,4 +26,20 @@ public class Response<T> {
 
     @JsonProperty("data")
     private T data;
+
+    public static <T> Response<T> success(T data) {
+        return Response.<T>builder()
+                .code(ResponseCode.SUCCESS.getCode())
+                .info(ResponseCode.SUCCESS.getInfo())
+                .data(data)
+                .build();
+    }
+
+    public static <T> Response<T> error(T data) {
+        return Response.<T>builder()
+                .code(ResponseCode.SYSTEM_ERROR.getCode())
+                .info(ResponseCode.SYSTEM_ERROR.getInfo())
+                .data(data)
+                .build();
+    }
 }
