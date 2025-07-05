@@ -1,5 +1,6 @@
 package com.ling.domain.sensor.service.notification.impl;
 
+import com.ling.domain.sensor.adapter.IAlertRecordRepository;
 import com.ling.domain.sensor.model.valobj.AlertMessageVO;
 import com.ling.domain.sensor.service.notification.NotificationService;
 import com.ling.domain.sensor.service.notification.model.AlertNotification;
@@ -20,10 +21,14 @@ import java.util.concurrent.ConcurrentHashMap;
 public class WebSocketAlertNotificationService implements NotificationService<AlertNotification> {
     
     private final SimpMessagingTemplate messagingTemplate;
+    private final IAlertRecordRepository alertRecordRepository;
     
     @Autowired
-    public WebSocketAlertNotificationService(SimpMessagingTemplate messagingTemplate) {
+    public WebSocketAlertNotificationService(
+            SimpMessagingTemplate messagingTemplate,
+            IAlertRecordRepository alertRecordRepository) {
         this.messagingTemplate = messagingTemplate;
+        this.alertRecordRepository = alertRecordRepository;
     }
     
     // 用于存储最近发送的通知，键为 "sensorId:alertType"
@@ -42,6 +47,11 @@ public class WebSocketAlertNotificationService implements NotificationService<Al
         if (!shouldSendNotification(alertNotification)) {
             return;
         }
+        
+        // 持久化告警记录
+        persistAlertNotification(alertNotification);
+        
+        // 发送WebSocket消息
         messagingTemplate.convertAndSend("/topic/alerts", alertNotification);
     }
     
@@ -55,6 +65,7 @@ public class WebSocketAlertNotificationService implements NotificationService<Al
         notification.setRelicsId(alertMessage.getRelicsId());
         notification.setValue(alertMessage.getCurrentReading());
         notification.setThreshold(alertMessage.getThreshold());
+        notification.setStatus("ACTIVE");
         return notification;
     }
     
@@ -62,6 +73,18 @@ public class WebSocketAlertNotificationService implements NotificationService<Al
     public boolean shouldSendNotification(AlertNotification alertNotification) {
         // 实现通知发送条件，例如频率限制、紧急程度等
         return true;
+    }
+    
+    /**
+     * 持久化告警通知
+     * @param alertNotification 告警通知
+     */
+    private void persistAlertNotification(AlertNotification alertNotification) {
+        // 检查是否已存在活跃的告警，如果不存在则持久化
+        if (!alertRecordRepository.existsActiveAlert(
+                alertNotification.getSensorId(), alertNotification.getAlertType())) {
+            alertRecordRepository.saveAlertNotification(alertNotification);
+        }
     }
     
     // 内部类，用于记录最近一次通知

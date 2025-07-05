@@ -6,11 +6,12 @@ import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.client.DefaultChatClientBuilder;
 import org.springframework.ai.chat.client.advisor.PromptChatMemoryAdvisor;
 import org.springframework.ai.chat.memory.ChatMemory;
-import org.springframework.ai.chat.memory.InMemoryChatMemory;
 import org.springframework.ai.chat.memory.MessageWindowChatMemory;
+import org.springframework.ai.document.MetadataMode;
 import org.springframework.ai.mcp.SyncMcpToolCallbackProvider;
 import org.springframework.ai.openai.OpenAiChatModel;
 import org.springframework.ai.openai.OpenAiEmbeddingModel;
+import org.springframework.ai.openai.OpenAiEmbeddingOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,6 +27,12 @@ import java.util.*;
  **/
 @Configuration
 public class OpenAiConfig {
+
+    @Value("${spring.ai.openai.base-url}")
+    String baseUrl;
+    @Value("${spring.ai.openai.api-key}")
+    String apiKey;
+
     @Bean
     public ChatMemory chatMemory() {
         return MessageWindowChatMemory.builder()
@@ -34,7 +41,7 @@ public class OpenAiConfig {
     }
 
     @Bean
-    public OpenAiApi openAiApi(@Value("${spring.ai.openai.base-url}") String baseUrl, @Value("${spring.ai.openai.api-key}") String apiKey ) {
+    public OpenAiApi openAiApi() {
         return OpenAiApi.builder()
                 .baseUrl(baseUrl)
                 .apiKey(apiKey)
@@ -79,6 +86,9 @@ public class OpenAiConfig {
     
     @Bean
     public OpenAiEmbeddingModel openAiEmbeddingModel(OpenAiApi openAiApi) {
-        return new OpenAiEmbeddingModel(openAiApi);
+        OpenAiEmbeddingOptions build = OpenAiEmbeddingOptions.builder()
+                .model("Qwen/Qwen3-Embedding-8B")
+                .build();
+        return new OpenAiEmbeddingModel(openAiApi, MetadataMode.NONE, build);
     }
 }

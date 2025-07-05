@@ -15,15 +15,15 @@ spring:
         username: postgres
         password: postgres
     openai:
+      base-url: https://api.siliconflow.cn
+      api-key:
 
       chat:
         options:
-          model: gemini-2.5-pro
-#          model: gpt-4.1-mini
+          model: Pro/THUDM/glm-4-9b-chat
       embedding:
         options:
-          num-batch: 1536
-          model: text-embedding-3-small
+          model: BAAI/bge-m3
     mcp:
       client:
         stdio:
@@ -101,10 +101,9 @@ mqtt:
     url: tcp://117.72.63.151:1883
   client:
     id: relics-preservation-client
-  username: dowithout
+  username: random
   password: dowithout
-  topics:
-    ems,light_intensity_1
+  topics: ems, light_intensity_1
 
 # 传感器数据配置
 sensor:

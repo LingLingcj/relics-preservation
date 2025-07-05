@@ -7,4 +7,5 @@ package com.ling.domain.sensor.service.message.validation;
  **/
 public interface ISensorValidator {
     Integer validateStatus(double value);
+    Double getThreshold(double value);
 }

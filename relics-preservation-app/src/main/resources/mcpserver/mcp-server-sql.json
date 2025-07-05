@@ -1,12 +1,20 @@
 {
     "mcpServers": {
-    "my_mysql_db": {
-        "command": "uvx",
-            "args": ["--from", "mcp-alchemy==2025.6.19.201831", "--with", "pymysql",
-            "--refresh-package", "mcp-alchemy", "mcp-alchemy"],
+        "mysql": {
+            "command": "uv",
+            "args": [
+                "--directory",
+                "C:\\Users\\31229\\AppData\\Roaming\\Python\\Python311\\site-packages",
+                "run",
+                "mysql_mcp_server"
+            ],
             "env": {
-            "DB_URL": "mysql+pymysql://root:123456@localhost:3309/relics"
+                "MYSQL_HOST": "localhost",
+                "MYSQL_PORT": "3309",
+                "MYSQL_USER": "root",
+                "MYSQL_PASSWORD": "123456",
+                "MYSQL_DATABASE": "relics"
+            }
         }
     }
-}
 }

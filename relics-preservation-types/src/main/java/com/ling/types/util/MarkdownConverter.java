@@ -4,6 +4,7 @@ import com.vladsch.flexmark.html.HtmlRenderer;
 import com.vladsch.flexmark.parser.Parser;
 import com.vladsch.flexmark.util.data.MutableDataSet;
 import com.vladsch.flexmark.parser.ParserEmulationProfile;
+import com.vladsch.flexmark.ext.tables.TablesExtension;
 
 /**
  * @Author: LingRJ
@@ -19,6 +20,9 @@ public class MarkdownConverter {
 
         // 设置解析器配置，支持换行符转换
         options.setFrom(ParserEmulationProfile.GITHUB);
+
+        // 启用表格扩展
+        options.set(Parser.EXTENSIONS, java.util.Arrays.asList(TablesExtension.create()));
 
         // 启用软换行转换为<br>标签
         options.set(HtmlRenderer.SOFT_BREAK, "<br />\n");
@@ -40,10 +44,14 @@ public class MarkdownConverter {
             return "";
         }
 
-        // 预处理：将单个换行符转换为双换行符（Markdown段落分隔）
+        // 预处理Markdown文本，处理换行符
         String processedMarkdown = preprocessMarkdown(markdown);
 
-        return renderer.render(parser.parse(processedMarkdown));
+        // 转换为HTML并后处理
+        String html = renderer.render(parser.parse(processedMarkdown));
+
+        // 移除多余的换行符
+        return html.replaceAll("\\n+", "");
     }
 
     /**
@@ -52,28 +60,9 @@ public class MarkdownConverter {
      * @return 处理后的Markdown文本
      */
     private static String preprocessMarkdown(String markdown) {
-        // 将单个\n替换为两个空格+\n（Markdown的硬换行语法）
-        return markdown.replaceAll("(?<!\\n)\\n(?!\\n)", "  \n");
+        // 将单个换行符转换为Markdown的硬换行语法（两个空格+换行）
+        // 这样可以确保换行符被正确转换为<br>标签而不是保留为\n
+        return markdown.replaceAll("(?<!\\s)\\n(?!\\n)", "  \n");
     }
 
-    /**
-     * 简单的文本换行处理（如果不需要完整的Markdown功能）
-     * @param text 普通文本
-     * @return HTML文本
-     */
-    public static String convertTextToHtml(String text) {
-        if (text == null || text.trim().isEmpty()) {
-            return "";
-        }
-
-        // 转义HTML特殊字符
-        String escaped = text.replace("&", "&amp;")
-                            .replace("<", "&lt;")
-                            .replace(">", "&gt;")
-                            .replace("\"", "&quot;")
-                            .replace("'", "&#39;");
-
-        // 将换行符转换为<br>标签
-        return escaped.replace("\n", "<br>");
-    }
 }

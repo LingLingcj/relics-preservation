@@ -22,5 +22,12 @@ public class TempValidator implements ISensorValidator {
         if (value <= TEMP_VAL_STAGE2) {return 1;}
         return 2;
     }
+
+    @Override
+    public Double getThreshold(double value) {
+        if (value >= TEMP_VAL_STAGE2) {return TEMP_VAL_STAGE2;}
+        if (value >= TEMP_VAL_STAGE1) {return TEMP_VAL_STAGE1;}
+        return 0.0;
+    }
 }
 

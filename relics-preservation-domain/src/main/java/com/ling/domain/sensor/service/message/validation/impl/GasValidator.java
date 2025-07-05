@@ -26,4 +26,11 @@ public class GasValidator implements ISensorValidator {
         }
         return 0;
     }
+
+    @Override
+    public Double getThreshold(double value) {
+        if (value >= this.thresholdStage2) return this.thresholdStage2;
+        if (value >= this.thresholdStage1) return this.thresholdStage1;
+        return 0.0;
+    }
 }

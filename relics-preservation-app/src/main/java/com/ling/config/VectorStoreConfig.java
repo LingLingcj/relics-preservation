@@ -1,6 +1,8 @@
 package com.ling.config;
 
+import org.springframework.ai.document.MetadataMode;
 import org.springframework.ai.openai.OpenAiEmbeddingModel;
+import org.springframework.ai.openai.OpenAiEmbeddingOptions;
 import org.springframework.ai.openai.api.OpenAiApi;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.pgvector.PgVectorStore;
@@ -50,8 +52,12 @@ public class VectorStoreConfig {
     public PgVectorStore pgVectorStore(
             OpenAiApi openAiApi,
             @Qualifier("pgJdbcTemplate") JdbcTemplate jdbcTemplate) {
-        
-        OpenAiEmbeddingModel embeddingModel = new OpenAiEmbeddingModel(openAiApi);
+
+        OpenAiEmbeddingOptions build = OpenAiEmbeddingOptions.builder()
+                .model("Qwen/Qwen3-Embedding-8B")
+                .build();
+
+        OpenAiEmbeddingModel embeddingModel = new OpenAiEmbeddingModel(openAiApi,  MetadataMode.NONE, build);
         
         return PgVectorStore.builder(jdbcTemplate, embeddingModel)
                 .build();

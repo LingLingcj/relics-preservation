@@ -20,4 +20,10 @@ public class IntensityValidator implements ISensorValidator {
         }
         return 0;
     }
+
+    @Override
+    public Double getThreshold(double value) {
+        if (value > IntensityVal) {return IntensityVal;}
+        return 0.0;
+    }
 }
