@@ -326,7 +326,7 @@
             connectBtn.disabled = true;
             
             // 创建SockJS连接
-            const socket = new WebSocket('ws://localhost:8080/ws');
+            const socket = new WebSocket('ws://sj.frp.one:40098/ws');
             // 禁用凭证发送
             socket._transportClose = socket._transportClose || socket.close;
             socket.close = function() {

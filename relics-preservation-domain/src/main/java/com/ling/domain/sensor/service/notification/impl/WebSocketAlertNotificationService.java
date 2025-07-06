@@ -65,7 +65,6 @@ public class WebSocketAlertNotificationService implements NotificationService<Al
         notification.setRelicsId(alertMessage.getRelicsId());
         notification.setValue(alertMessage.getCurrentReading());
         notification.setThreshold(alertMessage.getThreshold());
-        notification.setStatus("ACTIVE");
         return notification;
     }
     
@@ -80,11 +79,7 @@ public class WebSocketAlertNotificationService implements NotificationService<Al
      * @param alertNotification 告警通知
      */
     private void persistAlertNotification(AlertNotification alertNotification) {
-        // 检查是否已存在活跃的告警，如果不存在则持久化
-        if (!alertRecordRepository.existsActiveAlert(
-                alertNotification.getSensorId(), alertNotification.getAlertType())) {
-            alertRecordRepository.saveAlertNotification(alertNotification);
-        }
+        alertRecordRepository.saveAlertNotification(alertNotification);
     }
     
     // 内部类，用于记录最近一次通知

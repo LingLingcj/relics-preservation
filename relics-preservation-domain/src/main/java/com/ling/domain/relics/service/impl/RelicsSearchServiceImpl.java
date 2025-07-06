@@ -55,13 +55,6 @@ public class RelicsSearchServiceImpl implements IRelicsSearchService {
 
     @Override
     public List<RelicsEntity> searchRelicsByKeyword(String keyword) {
-        if (!elasticsearchEnabled) {
-            log.warn("Elasticsearch未启用，使用数据库查询");
-            // 如果ES未启用，可以从数据库中模糊查询名称字段
-            // 数据库层面目前不支持多字段搜索，回退到名称搜索
-            return relicsRepository.findByNameContaining(keyword);
-        }
-        
         log.info("使用Elasticsearch多字段搜索文物，关键词: {}", keyword);
         try {
             // 调用ES的多字段搜索
@@ -75,18 +68,13 @@ public class RelicsSearchServiceImpl implements IRelicsSearchService {
         } catch (Exception e) {
             log.error("Elasticsearch多字段搜索文物失败", e);
             // ES查询失败时，回退到数据库查询
-            log.info("回退到数据库查询");
+            log.info("回退到数据库查询, 查询名称");
             return relicsRepository.findByNameContaining(keyword);
         }
     }
 
     @Override
     public boolean syncRelicsToEs(RelicsEntity relicsEntity) {
-        if (!elasticsearchEnabled) {
-            log.warn("Elasticsearch未启用，无法同步文物数据");
-            return false;
-        }
-        
         try {
             RelicsDocument document = convertToDocument(relicsEntity);
             relicsElasticsearchRepository.save(document);
@@ -100,11 +88,6 @@ public class RelicsSearchServiceImpl implements IRelicsSearchService {
 
     @Override
     public boolean syncAllRelicsToEs() {
-        if (!elasticsearchEnabled) {
-            log.warn("Elasticsearch未启用，无法同步文物数据");
-            return false;
-        }
-        
         try {
             // 清空当前索引中的所有数据，避免重复
             clearRelicsIndex();

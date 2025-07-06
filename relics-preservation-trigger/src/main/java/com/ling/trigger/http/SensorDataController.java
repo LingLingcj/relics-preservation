@@ -41,19 +41,15 @@ public class SensorDataController {
             // 创建结果集合
             Map<String, List<SensorMessageVO>> result = new HashMap<>();
             
-            // 获取当前时间
-            LocalDateTime endTime = LocalDateTime.now();
-            // 设置一个较早的开始时间，确保能够获取到足够数据
-            LocalDateTime startTime = endTime.minusDays(7);
-            
             // 对每种传感器类型执行查询
             for (String type : sensorTypes) {
-                // 查询指定类型的5条最新传感器数据
+                // 直接查询指定类型的5条最新传感器数据，不使用时间范围过滤
+                // 数据库查询已按时间戳降序排序，所以会返回最新的数据
                 List<SensorMessageVO> data = sensorDataService.querySensorData(
                         null,  // 不限制传感器ID
                         type,  // 传感器类型
-                        startTime,  // 开始时间
-                        endTime,    // 结束时间
+                        null,  // 不限制开始时间
+                        null,  // 不限制结束时间
                         5      // 限制5条数据
                 );
                 

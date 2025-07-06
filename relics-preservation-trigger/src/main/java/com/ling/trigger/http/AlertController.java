@@ -31,7 +31,7 @@ public class AlertController {
                 queryDTO.getStatus(),
                 queryDTO.getStartTime(),
                 queryDTO.getEndTime(),
-                queryDTO.getLimit()
+                100
         );
         
         List<AlertResponseDTO> result = alerts.stream()

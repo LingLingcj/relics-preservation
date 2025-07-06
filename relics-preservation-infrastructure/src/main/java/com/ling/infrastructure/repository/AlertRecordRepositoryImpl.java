@@ -56,13 +56,7 @@ public class AlertRecordRepositoryImpl implements IAlertRecordRepository {
     @Override
     public boolean saveAlertNotification(AlertNotification alertNotification) {
         try {
-            // 检查是否已经存在活跃的告警
-            if (existsActiveAlert(alertNotification.getSensorId(), alertNotification.getAlertType())) {
-                log.info("已存在活跃的告警记录，不重复记录. sensorId={}, alertType={}", 
-                        alertNotification.getSensorId(), alertNotification.getAlertType());
-                return true;
-            }
-            
+
             // 转换为持久化对象
             AlertRecord alertRecord = convertToAlertRecord(alertNotification);
             // 生成告警ID
