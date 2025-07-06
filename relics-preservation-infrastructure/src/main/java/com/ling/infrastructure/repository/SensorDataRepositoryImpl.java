@@ -147,6 +147,7 @@ public class SensorDataRepositoryImpl implements ISensorDataRepository {
         sensorMessage.setSensorType(sensorData.getType());
         sensorMessage.setValue(sensorData.getValue());
         sensorMessage.setUnit(sensorData.getUnit());
+        sensorMessage.setIsAbnormal(sensorData.getIsAbnormal());
         
         // 转换时间戳
         sensorMessage.setTimestamp(sensorData.getTimestamp().toInstant()

@@ -69,6 +69,7 @@ public class SpringSecurityConfig {
                     authorize.requestMatchers("/api/relics/search/**").permitAll();
                     authorize.requestMatchers("/api/sensor/analysis/**").permitAll();
                     authorize.requestMatchers("/api/sensor/**").permitAll();
+                    authorize.requestMatchers("/api/sensor/data/**").permitAll();
                     authorize.requestMatchers("/api/knowledge/rag/**").permitAll();
                     authorize.requestMatchers("/api/knowledge/rag").permitAll();
                     // WebSocket端点

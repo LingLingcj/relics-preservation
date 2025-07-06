@@ -57,6 +57,8 @@ public class SensorMessageVO {
      * 文物ID
      */
     private Long relicsId;
+
+    private Boolean isAbnormal;
     
     /**
      * 创建基本传感器消息
