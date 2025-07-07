@@ -4,7 +4,7 @@ import com.ling.domain.relics.adapter.IRelicsRepository;
 import com.ling.domain.relics.adapter.es.RelicsElasticsearchRepository;
 import com.ling.domain.relics.model.document.RelicsDocument;
 import com.ling.domain.relics.model.entity.RelicsEntity;
-import com.ling.domain.relics.service.IRelicsSearchService;;
+import com.ling.domain.relics.service.IRelicsSearchService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
