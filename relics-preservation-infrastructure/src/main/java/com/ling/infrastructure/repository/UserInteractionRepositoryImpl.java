@@ -1,21 +1,32 @@
 package com.ling.infrastructure.repository;
 
-import com.ling.domain.interaction.adapter.IUserInteractionRepository;
-import com.ling.domain.interaction.model.entity.UserInteraction;
-import com.ling.domain.interaction.model.valobj.*;
-import com.ling.domain.user.model.valobj.Username;
-import com.ling.infrastructure.dao.IUserFavoriteDao;
-import com.ling.infrastructure.dao.IUserCommentDao;
-import com.ling.infrastructure.dao.po.UserFavorite;
-import com.ling.infrastructure.dao.po.UserComment;
-import lombok.extern.slf4j.Slf4j;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
+import com.ling.domain.interaction.adapter.IUserInteractionRepository;
+import com.ling.domain.interaction.model.entity.UserInteraction;
+import com.ling.domain.interaction.model.valobj.CommentAction;
+import com.ling.domain.interaction.model.valobj.CommentContent;
+import com.ling.domain.interaction.model.valobj.CommentStatus;
+import com.ling.domain.interaction.model.valobj.CommentWithUser;
+import com.ling.domain.interaction.model.valobj.FavoriteAction;
+import com.ling.domain.interaction.model.valobj.RelicsComment;
+import com.ling.domain.user.model.valobj.Username;
+import com.ling.infrastructure.dao.IUserCommentDao;
+import com.ling.infrastructure.dao.IUserFavoriteDao;
+import com.ling.infrastructure.dao.po.UserComment;
+import com.ling.infrastructure.dao.po.UserFavorite;
+import com.ling.infrastructure.repository.converter.UserInteractionConverter;
+
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * 用户交互仓储实现
@@ -29,9 +40,12 @@ public class UserInteractionRepositoryImpl implements IUserInteractionRepository
     
     @Autowired
     private IUserFavoriteDao userFavoriteDao;
-    
+
     @Autowired
     private IUserCommentDao userCommentDao;
+
+    @Autowired
+    private UserInteractionConverter converter;
     
     // ==================== 聚合根操作 ====================
     
@@ -280,166 +294,7 @@ public class UserInteractionRepositoryImpl implements IUserInteractionRepository
         }
     }
 
-    // ==================== 统计查询 ====================
-    
-    @Override
-    public InteractionStatistics getUserStatistics(Username username) {
-        try {
-            long favoriteCount = getUserFavoriteCount(username);
-            long commentCount = getUserCommentCount(username, null);
-            
-            return InteractionStatistics.builder()
-                    .username(username.getValue())
-                    .favoriteCount(favoriteCount)
-                    .commentCount(commentCount)
-                    .lastActiveTime(LocalDateTime.now()) // TODO: 实际计算最后活跃时间
-                    .build();
-        } catch (Exception e) {
-            log.error("获取用户统计失败: {} - {}", username.getValue(), e.getMessage(), e);
-            return InteractionStatistics.builder()
-                    .username(username.getValue())
-                    .favoriteCount(0)
-                    .commentCount(0)
-                    .build();
-        }
-    }
-    
-    @Override
-    public RelicsInteractionStatistics getRelicsStatistics(Long relicsId) {
-        try {
-            long favoriteCount = getRelicsFavoriteCount(relicsId);
-            long commentCount = getRelicsCommentCount(relicsId);
-            
-            return new RelicsInteractionStatistics(
-                    relicsId,
-                    favoriteCount,
-                    commentCount,
-                    favoriteCount + commentCount,
-                    LocalDateTime.now(), // TODO: 实际计算最后交互时间
-                    calculatePopularityScore(favoriteCount, commentCount)
-            );
-        } catch (Exception e) {
-            log.error("获取文物统计失败: {} - {}", relicsId, e.getMessage(), e);
-            return new RelicsInteractionStatistics(relicsId, 0, 0, 0, null, 0.0);
-        }
-    }
-    
-    @Override
-    public List<RelicsInteractionSummary> getPopularRelics(int limit) {
-        try {
-            // TODO: 实现热门文物查询逻辑
-            return List.of();
-        } catch (Exception e) {
-            log.error("获取热门文物失败: {}", e.getMessage(), e);
-            return List.of();
-        }
-    }
-    
-    @Override
-    public List<RelicsInteractionSummary> getRecentlyInteractedRelics(int limit) {
-        try {
-            // TODO: 实现最近交互文物查询逻辑
-            return List.of();
-        } catch (Exception e) {
-            log.error("获取最近交互文物失败: {}", e.getMessage(), e);
-            return List.of();
-        }
-    }
-    
-    @Override
-    public List<String> getActiveUsers(int limit) {
-        try {
-            // TODO: 实现活跃用户查询逻辑
-            return List.of();
-        } catch (Exception e) {
-            log.error("获取活跃用户失败: {}", e.getMessage(), e);
-            return List.of();
-        }
-    }
-    
-    // ==================== 批量操作 ====================
-    
-    @Override
-    public Map<Long, Boolean> batchCheckFavoriteStatus(Username username, List<Long> relicsIds) {
-        try {
-            List<UserFavorite> favorites = userFavoriteDao.batchSelectByUsernameAndRelicsIds(
-                    username.getValue(), relicsIds);
-            
-            Set<Long> favoritedIds = favorites.stream()
-                    .filter(f -> f.getStatus() == 0)
-                    .map(UserFavorite::getRelicsId)
-                    .collect(Collectors.toSet());
-            
-            return relicsIds.stream()
-                    .collect(Collectors.toMap(id -> id, favoritedIds::contains));
-        } catch (Exception e) {
-            log.error("批量检查收藏状态失败: {} - {}", username.getValue(), e.getMessage(), e);
-            return relicsIds.stream()
-                    .collect(Collectors.toMap(id -> id, id -> false));
-        }
-    }
-    
-    @Override
-    public Map<Long, Long> batchGetRelicsFavoriteCounts(List<Long> relicsIds) {
-        try {
-            List<IUserFavoriteDao.RelicsFavoriteCount> counts = 
-                    userFavoriteDao.batchCountByRelicsIds(relicsIds);
-            
-            return counts.stream()
-                    .collect(Collectors.toMap(
-                            IUserFavoriteDao.RelicsFavoriteCount::relicsId,
-                            IUserFavoriteDao.RelicsFavoriteCount::favoriteCount));
-        } catch (Exception e) {
-            log.error("批量获取文物收藏数量失败: {}", e.getMessage(), e);
-            return relicsIds.stream()
-                    .collect(Collectors.toMap(id -> id, id -> 0L));
-        }
-    }
-    
-    @Override
-    public Map<Long, Long> batchGetRelicsCommentCounts(List<Long> relicsIds) {
-        try {
-            List<IUserCommentDao.RelicsCommentCount> counts = 
-                    userCommentDao.batchCountByRelicsIds(relicsIds);
-            
-            return counts.stream()
-                    .collect(Collectors.toMap(
-                            IUserCommentDao.RelicsCommentCount::relicsId,
-                            IUserCommentDao.RelicsCommentCount::commentCount));
-        } catch (Exception e) {
-            log.error("批量获取文物评论数量失败: {}", e.getMessage(), e);
-            return relicsIds.stream()
-                    .collect(Collectors.toMap(id -> id, id -> 0L));
-        }
-    }
-    
-    // ==================== 时间范围查询 ====================
-    
-    @Override
-    public List<InteractionActivity> getUserActivitiesInTimeRange(Username username, 
-                                                                LocalDateTime startTime, 
-                                                                LocalDateTime endTime) {
-        try {
-            // TODO: 实现用户活动查询逻辑
-            return List.of();
-        } catch (Exception e) {
-            log.error("获取用户活动失败: {} - {}", username.getValue(), e.getMessage(), e);
-            return List.of();
-        }
-    }
-    
-    @Override
-    public List<InteractionActivity> getRelicsActivitiesInTimeRange(Long relicsId, 
-                                                                  LocalDateTime startTime, 
-                                                                  LocalDateTime endTime) {
-        try {
-            // TODO: 实现文物活动查询逻辑
-            return List.of();
-        } catch (Exception e) {
-            log.error("获取文物活动失败: {} - {}", relicsId, e.getMessage(), e);
-            return List.of();
-        }
-    }
+    // 统计查询、批量操作、时间范围查询方法已移至对应的应用服务
     
     // ==================== 私有辅助方法 ====================
     
@@ -447,26 +302,162 @@ public class UserInteractionRepositoryImpl implements IUserInteractionRepository
      * 保存收藏数据
      */
     private void saveFavorites(UserInteraction userInteraction) {
-        // TODO: 实现收藏数据保存逻辑
-        // 需要比较现有数据和聚合根中的数据，进行增删改操作
+        try {
+            String username = userInteraction.getUsername().getValue();
+            Set<FavoriteAction> currentFavorites = userInteraction.getFavorites();
+
+            // 获取数据库中现有的收藏记录
+            List<UserFavorite> existingFavorites = userFavoriteDao.selectByUsername(
+                    username, 0, Integer.MAX_VALUE);
+
+            // 构建现有记录的映射（relicsId -> UserFavorite）
+            Map<Long, UserFavorite> existingMap = existingFavorites.stream()
+                    .collect(Collectors.toMap(UserFavorite::getRelicsId, f -> f));
+
+            // 构建当前聚合根中的映射（relicsId -> FavoriteAction）
+            Map<Long, FavoriteAction> currentMap = currentFavorites.stream()
+                    .collect(Collectors.toMap(FavoriteAction::getRelicsId, f -> f));
+
+            // 处理新增和更新
+            for (FavoriteAction favorite : currentFavorites) {
+                UserFavorite existing = existingMap.get(favorite.getRelicsId());
+
+                if (existing == null) {
+                    // 新增收藏记录
+                    UserFavorite newFavorite = new UserFavorite();
+                    newFavorite.setUsername(username);
+                    newFavorite.setRelicsId(favorite.getRelicsId());
+                    newFavorite.setStatus(favorite.isDeleted() ? 1 : 0);
+                    newFavorite.setCreateTime(favorite.getCreateTime());
+                    newFavorite.setUpdateTime(LocalDateTime.now());
+
+                    userFavoriteDao.insert(newFavorite);
+                    log.debug("新增收藏记录: {} - {}", username, favorite.getRelicsId());
+
+                } else {
+                    // 更新现有记录（主要是状态变化）
+                    int newStatus = favorite.isDeleted() ? 1 : 0;
+                    if (existing.getStatus() != newStatus) {
+                        existing.setStatus(newStatus);
+                        existing.setUpdateTime(LocalDateTime.now());
+                        userFavoriteDao.update(existing);
+                        log.debug("更新收藏记录状态: {} - {} -> {}", username, favorite.getRelicsId(), newStatus);
+                    }
+                }
+            }
+
+            // 处理删除（在聚合根中不存在但在数据库中存在的记录）
+            for (UserFavorite existing : existingFavorites) {
+                if (!currentMap.containsKey(existing.getRelicsId()) && existing.getStatus() == 0) {
+                    // 逻辑删除
+                    existing.setStatus(1);
+                    existing.setUpdateTime(LocalDateTime.now());
+                    userFavoriteDao.update(existing);
+                    log.debug("删除收藏记录: {} - {}", username, existing.getRelicsId());
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("保存收藏数据失败: {} - {}", userInteraction.getUsername().getValue(), e.getMessage(), e);
+            throw new RuntimeException("保存收藏数据失败", e);
+        }
     }
     
     /**
      * 保存评论数据
      */
     private void saveComments(UserInteraction userInteraction) {
-        // TODO: 实现评论数据保存逻辑
-        // 需要比较现有数据和聚合根中的数据，进行增删改操作
+        try {
+            String username = userInteraction.getUsername().getValue();
+            List<CommentAction> currentComments = userInteraction.getComments();
+
+            // 获取数据库中现有的评论记录
+            List<UserComment> existingComments = userCommentDao.selectByUsername(
+                    username, null, 0, Integer.MAX_VALUE);
+
+            // 构建现有记录的映射（commentId -> UserComment）
+            Map<Long, UserComment> existingMap = existingComments.stream()
+                    .collect(Collectors.toMap(UserComment::getCommentId, c -> c));
+
+            // 构建当前聚合根中的映射（commentId -> CommentAction）
+            Map<Long, CommentAction> currentMap = currentComments.stream()
+                    .collect(Collectors.toMap(CommentAction::getId, c -> c));
+
+            // 处理新增和更新
+            for (CommentAction comment : currentComments) {
+                UserComment existing = existingMap.get(comment.getId());
+
+                if (existing == null) {
+                    // 新增评论记录
+                    UserComment newComment = new UserComment();
+                    newComment.setCommentId(comment.getId());
+                    newComment.setUsername(username);
+                    newComment.setRelicsId(comment.getRelicsId());
+                    newComment.setContent(comment.getContent().getContent());
+                    newComment.setCommentStatus(convertCommentStatus(comment.getStatus()));
+                    newComment.setStatus(comment.isDeleted() ? 1 : 0);
+                    newComment.setCreateTime(comment.getCreateTime());
+                    newComment.setUpdateTime(LocalDateTime.now());
+
+                    userCommentDao.insert(newComment);
+                    log.debug("新增评论记录: {} - {}", username, comment.getId());
+
+                } else {
+                    // 更新现有记录
+                    boolean needUpdate = false;
+
+                    // 检查内容是否变化
+                    if (!existing.getContent().equals(comment.getContent().getContent())) {
+                        existing.setContent(comment.getContent().getContent());
+                        needUpdate = true;
+                    }
+
+                    // 检查状态是否变化
+                    int newStatus = comment.isDeleted() ? 1 : 0;
+                    if (existing.getStatus() != newStatus) {
+                        existing.setStatus(newStatus);
+                        needUpdate = true;
+                    }
+
+                    // 检查评论状态是否变化
+                    int newCommentStatus = convertCommentStatus(comment.getStatus());
+                    if (existing.getCommentStatus() != newCommentStatus) {
+                        existing.setCommentStatus(newCommentStatus);
+                        needUpdate = true;
+                    }
+
+                    if (needUpdate) {
+                        existing.setUpdateTime(LocalDateTime.now());
+                        userCommentDao.update(existing);
+                        log.debug("更新评论记录: {} - {}", username, comment.getId());
+                    }
+                }
+            }
+
+            // 处理删除（在聚合根中不存在但在数据库中存在的记录）
+            for (UserComment existing : existingComments) {
+                if (!currentMap.containsKey(existing.getCommentId()) && existing.getStatus() == 0) {
+                    // 逻辑删除
+                    existing.setStatus(1);
+                    existing.setUpdateTime(LocalDateTime.now());
+                    userCommentDao.update(existing);
+                    log.debug("删除评论记录: {} - {}", username, existing.getCommentId());
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("保存评论数据失败: {} - {}", userInteraction.getUsername().getValue(), e.getMessage(), e);
+            throw new RuntimeException("保存评论数据失败", e);
+        }
     }
     
     /**
      * 构建用户交互聚合根
      */
-    private UserInteraction buildUserInteraction(Username username, 
-                                               List<UserFavorite> favorites, 
+    private UserInteraction buildUserInteraction(Username username,
+                                               List<UserFavorite> favorites,
                                                List<UserComment> comments) {
-        // TODO: 实现聚合根构建逻辑
-        return UserInteraction.create(username);
+        return converter.buildUserInteraction(username, favorites, comments);
     }
     
     /**
@@ -508,11 +499,20 @@ public class UserInteractionRepositoryImpl implements IUserInteractionRepository
                 .build();
     }
 
+
+
     /**
-     * 计算热度分数
+     * 转换评论状态
      */
-    private double calculatePopularityScore(long favoriteCount, long commentCount) {
-        // 简单的热度计算公式：收藏数 * 2 + 评论数 * 1
-        return favoriteCount * 2.0 + commentCount * 1.0;
+    private int convertCommentStatus(CommentStatus status) {
+        if (status == null) {
+            return 0; // 默认待审核
+        }
+
+        return switch (status) {
+            case PENDING_REVIEW -> 0;  // 待审核
+            case APPROVED -> 1;        // 已通过
+            case REJECTED -> 2;        // 已拒绝
+        };
     }
 }

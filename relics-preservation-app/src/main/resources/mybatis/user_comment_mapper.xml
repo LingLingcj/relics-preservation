@@ -210,4 +210,19 @@
         ORDER BY create_time DESC
     </select>
 
+    <select id="selectApprovedCommentsByRelicsId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user_comments
+        WHERE relics_id = #{relicsId} AND status = 0 AND comment_status = 1
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countApprovedCommentsByRelicsId" resultType="long">
+        SELECT COUNT(1)
+        FROM user_comments
+        WHERE relics_id = #{relicsId} AND status = 0 AND comment_status = 1
+    </select>
+
 </mapper>

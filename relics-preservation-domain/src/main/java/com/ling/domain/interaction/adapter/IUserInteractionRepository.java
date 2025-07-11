@@ -1,12 +1,13 @@
 package com.ling.domain.interaction.adapter;
 
-import com.ling.domain.interaction.model.entity.UserInteraction;
-import com.ling.domain.interaction.model.valobj.*;
-import com.ling.domain.user.model.valobj.Username;
-
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+
+import com.ling.domain.interaction.model.entity.UserInteraction;
+import com.ling.domain.interaction.model.valobj.CommentAction;
+import com.ling.domain.interaction.model.valobj.CommentWithUser;
+import com.ling.domain.interaction.model.valobj.RelicsComment;
+import com.ling.domain.user.model.valobj.Username;
 
 /**
  * 用户交互仓储接口
@@ -149,113 +150,11 @@ public interface IUserInteractionRepository {
      */
     Long countApprovedCommentsByRelicsId(Long relicsId);
     
-    // ==================== 统计查询 ====================
+    // 统计查询方法已移至 IInteractionStatisticsService
     
-    /**
-     * 获取用户交互统计
-     * @param username 用户名
-     * @return 交互统计
-     */
-    InteractionStatistics getUserStatistics(Username username);
+    // 批量操作方法已移至 IInteractionBatchService
     
-    /**
-     * 获取文物交互统计
-     * @param relicsId 文物ID
-     * @return 文物交互统计
-     */
-    RelicsInteractionStatistics getRelicsStatistics(Long relicsId);
+    // 时间范围查询方法已移至 IInteractionQueryService
     
-    /**
-     * 获取热门文物列表
-     * @param limit 限制数量
-     * @return 热门文物列表
-     */
-    List<RelicsInteractionSummary> getPopularRelics(int limit);
-    
-    /**
-     * 获取最近有交互的文物
-     * @param limit 限制数量
-     * @return 最近交互文物列表
-     */
-    List<RelicsInteractionSummary> getRecentlyInteractedRelics(int limit);
-    
-    /**
-     * 获取活跃用户列表
-     * @param limit 限制数量
-     * @return 活跃用户列表
-     */
-    List<String> getActiveUsers(int limit);
-    
-    // ==================== 批量操作 ====================
-    
-    /**
-     * 批量检查收藏状态
-     * @param username 用户名
-     * @param relicsIds 文物ID列表
-     * @return 收藏状态映射
-     */
-    java.util.Map<Long, Boolean> batchCheckFavoriteStatus(Username username, List<Long> relicsIds);
-    
-    /**
-     * 批量获取文物收藏数量
-     * @param relicsIds 文物ID列表
-     * @return 收藏数量映射
-     */
-    java.util.Map<Long, Long> batchGetRelicsFavoriteCounts(List<Long> relicsIds);
-    
-    /**
-     * 批量获取文物评论数量
-     * @param relicsIds 文物ID列表
-     * @return 评论数量映射
-     */
-    java.util.Map<Long, Long> batchGetRelicsCommentCounts(List<Long> relicsIds);
-    
-    // ==================== 时间范围查询 ====================
-    
-    /**
-     * 获取指定时间范围内的用户活动
-     * @param username 用户名
-     * @param startTime 开始时间
-     * @param endTime 结束时间
-     * @return 活动列表
-     */
-    List<InteractionActivity> getUserActivitiesInTimeRange(Username username, 
-                                                          LocalDateTime startTime, 
-                                                          LocalDateTime endTime);
-    
-    /**
-     * 获取指定时间范围内的文物交互
-     * @param relicsId 文物ID
-     * @param startTime 开始时间
-     * @param endTime 结束时间
-     * @return 交互列表
-     */
-    List<InteractionActivity> getRelicsActivitiesInTimeRange(Long relicsId, 
-                                                           LocalDateTime startTime, 
-                                                           LocalDateTime endTime);
-    
-    // ==================== 结果对象 ====================
-    
-    /**
-     * 文物交互统计
-     */
-    record RelicsInteractionStatistics(
-            Long relicsId,
-            long favoriteCount,
-            long commentCount,
-            long totalInteractions,
-            LocalDateTime lastInteractionTime,
-            double popularityScore
-    ) {}
-    
-    /**
-     * 文物交互摘要
-     */
-    record RelicsInteractionSummary(
-            Long relicsId,
-            String relicsName,
-            long favoriteCount,
-            long commentCount,
-            LocalDateTime lastInteractionTime
-    ) {}
+    // 结果对象已移至对应的服务接口
 }

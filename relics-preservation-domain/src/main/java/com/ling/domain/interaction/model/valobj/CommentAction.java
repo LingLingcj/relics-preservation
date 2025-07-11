@@ -1,10 +1,10 @@
 package com.ling.domain.interaction.model.valobj;
 
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-
 import java.time.LocalDateTime;
 import java.util.Objects;
+
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
 
 /**
  * 评论行为值对象
@@ -32,7 +32,26 @@ public class CommentAction {
         this.updateTime = this.createTime;
         this.status = content.needsReview() ? CommentStatus.PENDING_REVIEW : CommentStatus.APPROVED;
         this.deleted = false;
-        
+
+        if (relicsId <= 0) {
+            throw new IllegalArgumentException("文物ID必须大于0");
+        }
+    }
+
+    /**
+     * 从数据库重建的包私有构造方法
+     */
+    CommentAction(Long id, Long relicsId, CommentContent content,
+                 LocalDateTime createTime, LocalDateTime updateTime,
+                 CommentStatus status, boolean deleted) {
+        this.id = Objects.requireNonNull(id, "评论ID不能为空");
+        this.relicsId = Objects.requireNonNull(relicsId, "文物ID不能为空");
+        this.content = Objects.requireNonNull(content, "评论内容不能为空");
+        this.createTime = Objects.requireNonNull(createTime, "创建时间不能为空");
+        this.updateTime = updateTime != null ? updateTime : createTime;
+        this.status = status != null ? status : CommentStatus.PENDING_REVIEW;
+        this.deleted = deleted;
+
         if (relicsId <= 0) {
             throw new IllegalArgumentException("文物ID必须大于0");
         }
@@ -46,6 +65,23 @@ public class CommentAction {
      */
     public static CommentAction create(Long relicsId, CommentContent content) {
         return new CommentAction(relicsId, content);
+    }
+
+    /**
+     * 从数据库记录重建评论行为
+     * @param id 评论ID
+     * @param relicsId 文物ID
+     * @param content 评论内容
+     * @param createTime 创建时间
+     * @param updateTime 更新时间
+     * @param status 评论状态
+     * @param deleted 是否已删除
+     * @return 评论行为值对象
+     */
+    public static CommentAction fromDatabase(Long id, Long relicsId, CommentContent content,
+                                           LocalDateTime createTime, LocalDateTime updateTime,
+                                           CommentStatus status, boolean deleted) {
+        return new CommentAction(id, relicsId, content, createTime, updateTime, status, deleted);
     }
     
     /**

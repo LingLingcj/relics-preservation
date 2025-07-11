@@ -1,15 +1,27 @@
 package com.ling.domain.interaction.model.entity;
 
-import com.ling.domain.interaction.model.valobj.*;
-import com.ling.domain.interaction.event.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+
+import com.ling.domain.interaction.event.CommentDeletedEvent;
+import com.ling.domain.interaction.event.UserCommentedOnRelicsEvent;
+import com.ling.domain.interaction.event.UserFavoritedRelicsEvent;
+import com.ling.domain.interaction.event.UserUnfavoritedRelicsEvent;
+import com.ling.domain.interaction.model.valobj.CommentAction;
+import com.ling.domain.interaction.model.valobj.CommentContent;
+import com.ling.domain.interaction.model.valobj.FavoriteAction;
+import com.ling.domain.interaction.model.valobj.InteractionResult;
+import com.ling.domain.interaction.model.valobj.InteractionStatistics;
 import com.ling.domain.user.event.DomainEventPublisher;
 import com.ling.domain.user.model.valobj.Username;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
-
-import java.time.LocalDateTime;
-import java.util.*;
 
 /**
  * 用户交互聚合根
@@ -39,6 +51,29 @@ public class UserInteraction {
                 .comments(new ArrayList<>())
                 .createTime(now)
                 .updateTime(now)
+                .build();
+    }
+
+    /**
+     * 从数据库记录重建用户交互聚合根
+     * @param username 用户名
+     * @param favorites 收藏行为集合
+     * @param comments 评论行为列表
+     * @param createTime 创建时间
+     * @param updateTime 更新时间
+     * @return 用户交互聚合根
+     */
+    public static UserInteraction fromDatabase(Username username,
+                                             Set<FavoriteAction> favorites,
+                                             List<CommentAction> comments,
+                                             LocalDateTime createTime,
+                                             LocalDateTime updateTime) {
+        return UserInteraction.builder()
+                .username(username)
+                .favorites(favorites != null ? favorites : new HashSet<>())
+                .comments(comments != null ? comments : new ArrayList<>())
+                .createTime(createTime != null ? createTime : LocalDateTime.now())
+                .updateTime(updateTime != null ? updateTime : LocalDateTime.now())
                 .build();
     }
     
