@@ -81,7 +81,7 @@ public class AuthController {
         // 处理注册结果
         if (!result.isSuccess()) {
             return Response.<AuthResponseDTO>builder()
-                    .code(getErrorCodeByMessage(result.getMessage()))
+                    .code(result.getErrorCode())
                     .info(result.getMessage())
                     .build();
         }
@@ -89,7 +89,6 @@ public class AuthController {
         // 注册成功后，登录并生成令牌
         Authentication authentication = authenticateUser(registerDTO.getUsername(), registerDTO.getPassword());
         String token = jwtTokenProvider.generateToken(authentication);
-
 
         return buildTokenResponse(token, "注册成功");
     }
@@ -121,10 +120,7 @@ public class AuthController {
         // 检查角色匹配
         User user = result.getUser();
         if (!user.getRole().getCode().equals(loginDTO.getRole().toString())) {
-            return Response.<AuthResponseDTO>builder()
-                    .code(ResponseCode.WRONG_ROLE.getCode())
-                    .info(ResponseCode.WRONG_ROLE.getInfo())
-                    .build();
+            return Response.error(ResponseCode.WRONG_ROLE, null);
         }
         
         // 登录成功，生成JWT令牌
@@ -173,10 +169,7 @@ public class AuthController {
         
         // 校验新密码和确认密码
         if (!changePasswordDTO.getNewPassword().equals(changePasswordDTO.getConfirmPassword())) {
-            return Response.<MessageResponseDTO>builder()
-                    .code(ResponseCode.PASSWORD_CONFIRM_ERROR.getCode())
-                    .info(ResponseCode.PASSWORD_CONFIRM_ERROR.getInfo())
-                    .build();
+            return Response.error(ResponseCode.PASSWORD_CONFIRM_ERROR, null);
         }
 
         // 调用新的用户管理服务修改密码
@@ -197,24 +190,7 @@ public class AuthController {
                 .message("密码修改成功")
                 .build();
                 
-        return Response.<MessageResponseDTO>builder()
-                .code(ResponseCode.SUCCESS.getCode())
-                .info(ResponseCode.SUCCESS.getInfo())
-                .data(messageResponseDTO)
-                .build();
+        return Response.success(messageResponseDTO);
     }
-    
-    /**
-     * 根据错误信息获取对应的错误码
-     * @param message 错误信息
-     * @return 错误码
-     */
-    private String getErrorCodeByMessage(String message) {
-        for (ResponseCode code : ResponseCode.values()) {
-            if (code.getInfo().equals(message)) {
-                return code.getCode();
-            }
-        }
-        return ResponseCode.SYSTEM_ERROR.getCode();
-    }
+
 }

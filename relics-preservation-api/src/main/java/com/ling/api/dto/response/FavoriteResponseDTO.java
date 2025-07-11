@@ -17,8 +17,9 @@ import java.time.LocalDateTime;
 public class FavoriteResponseDTO {
     private Long id;
     private Long relicsId;
+    private String username;
     private String relicsName;
     private String relicsImageUrl;
     private String relicsDescription;
     private LocalDateTime createTime;
-} 
+}

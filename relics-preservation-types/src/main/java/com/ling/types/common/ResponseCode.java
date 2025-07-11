@@ -35,7 +35,9 @@ public enum ResponseCode {
     // 评论相关错误码
     FORBIDDEN("2101", "没有权限"),
 
-    INVALID_PARAM("3001", "参数错误")
+    // 通用错误码
+    INVALID_PARAM("3001", "参数错误"),
+    UN_ERROR("9998", "未知错误")
 
     ;
 

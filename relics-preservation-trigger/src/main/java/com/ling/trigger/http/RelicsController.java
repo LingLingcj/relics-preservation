@@ -4,8 +4,8 @@ import com.ling.api.dto.request.RelicsUploadDTO;
 import com.ling.api.dto.response.CommentResponseDTO;
 import com.ling.api.dto.response.RelicsResponseDTO;
 import com.ling.api.dto.response.RelicsUploadResponseDTO;
-import com.ling.domain.comment.model.entity.CommentEntity;
-import com.ling.domain.comment.service.ICommentService;
+import com.ling.domain.interaction.model.valobj.CommentAction;
+import com.ling.domain.interaction.service.IUserInteractionService;
 import com.ling.domain.relics.model.entity.RelicsEntity;
 import com.ling.domain.relics.model.valobj.RelicsVO;
 import com.ling.domain.relics.service.IRelicsService;
@@ -41,7 +41,7 @@ public class RelicsController {
     private IRelicsService relicsService;
     
     @Autowired
-    private ICommentService commentService;
+    private IUserInteractionService userInteractionService;
 
     @Operation(summary = "添加文物", description = "添加文物信息，返回文物ID和上传结果")
     @PostMapping
@@ -204,17 +204,20 @@ public class RelicsController {
         // 获取当前用户名
         String currentUsername = getCurrentUsername();
         
-        // 获取评论列表
-        List<CommentEntity> comments = commentService.getCommentsByRelicsId(relicsId);
-        
+        // 获取评论列表 - 使用新的交互服务
+        IUserInteractionService.CommentListResult result =
+                userInteractionService.getUserComments(currentUsername, relicsId, 1, 100);
+
         // 转换为DTO
-        List<CommentResponseDTO> commentDTOs = comments.stream()
-                .map(entity -> {
-                    CommentResponseDTO dto = new CommentResponseDTO();
-                    BeanUtils.copyProperties(entity, dto);
-                    dto.setIsOwner(entity.getUsername().equals(currentUsername));
-                    return dto;
-                })
+        List<CommentResponseDTO> commentDTOs = result.comments().stream()
+                .map(comment -> CommentResponseDTO.builder()
+                        .id(comment.getId())
+                        .relicsId(comment.getRelicsId())
+                        .username(currentUsername)
+                        .content(comment.getFullContent())
+                        .createTime(comment.getCreateTime())
+                        .isOwner(true)
+                        .build())
                 .collect(Collectors.toList());
         
         return Response.<List<CommentResponseDTO>>builder()

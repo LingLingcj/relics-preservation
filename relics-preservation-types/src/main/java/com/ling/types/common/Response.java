@@ -42,4 +42,12 @@ public class Response<T> {
                 .data(data)
                 .build();
     }
+
+    public static <T> Response<T> error(ResponseCode code, T data) {
+        return Response.<T>builder()
+                .code(code.getCode())
+                .info(code.getInfo())
+                .data(data)
+                .build();
+    }
 }

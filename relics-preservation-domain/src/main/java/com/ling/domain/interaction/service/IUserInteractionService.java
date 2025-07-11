@@ -1,0 +1,153 @@
+package com.ling.domain.interaction.service;
+
+import com.ling.domain.interaction.model.entity.UserInteraction;
+import com.ling.domain.interaction.model.valobj.*;
+import com.ling.domain.user.model.valobj.Username;
+
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * 用户交互服务接口
+ * @Author: LingRJ
+ * @Description: 处理用户与文物的交互业务逻辑
+ * @DateTime: 2025/7/11
+ */
+public interface IUserInteractionService {
+    
+    // ==================== 收藏相关 ====================
+    
+    /**
+     * 添加收藏
+     * @param username 用户名
+     * @param relicsId 文物ID
+     * @return 操作结果
+     */
+    InteractionResult addFavorite(String username, Long relicsId);
+    
+    /**
+     * 取消收藏
+     * @param username 用户名
+     * @param relicsId 文物ID
+     * @return 操作结果
+     */
+    InteractionResult removeFavorite(String username, Long relicsId);
+    
+    /**
+     * 检查收藏状态
+     * @param username 用户名
+     * @param relicsId 文物ID
+     * @return 是否已收藏
+     */
+    boolean isFavorited(String username, Long relicsId);
+    
+    /**
+     * 获取用户收藏列表
+     * @param username 用户名
+     * @param page 页码
+     * @param size 每页大小
+     * @return 收藏列表结果
+     */
+    FavoriteListResult getUserFavorites(String username, int page, int size);
+    
+    // ==================== 评论相关 ====================
+    
+    /**
+     * 添加评论
+     * @param username 用户名
+     * @param relicsId 文物ID
+     * @param content 评论内容
+     * @return 操作结果
+     */
+    InteractionResult addComment(String username, Long relicsId, String content);
+    
+    /**
+     * 删除评论
+     * @param username 用户名
+     * @param commentId 评论ID
+     * @return 操作结果
+     */
+    InteractionResult deleteComment(String username, Long commentId);
+    
+    /**
+     * 获取用户评论列表
+     * @param username 用户名
+     * @param relicsId 文物ID（可选）
+     * @param page 页码
+     * @param size 每页大小
+     * @return 评论列表结果
+     */
+    CommentListResult getUserComments(String username, Long relicsId, int page, int size);
+    
+    // ==================== 交互管理 ====================
+    
+    /**
+     * 获取用户交互聚合根
+     * @param username 用户名
+     * @return 用户交互聚合根
+     */
+    Optional<UserInteraction> getUserInteraction(String username);
+    
+    /**
+     * 创建用户交互聚合根
+     * @param username 用户名
+     * @return 用户交互聚合根
+     */
+    UserInteraction createUserInteraction(String username);
+    
+    /**
+     * 保存用户交互聚合根
+     * @param userInteraction 用户交互聚合根
+     * @return 保存结果
+     */
+    boolean saveUserInteraction(UserInteraction userInteraction);
+    
+    /**
+     * 获取用户交互统计
+     * @param username 用户名
+     * @return 交互统计信息
+     */
+    InteractionStatistics getUserStatistics(String username);
+    
+    // ==================== 批量操作 ====================
+    
+    /**
+     * 批量检查收藏状态
+     * @param username 用户名
+     * @param relicsIds 文物ID列表
+     * @return 收藏状态映射
+     */
+    java.util.Map<Long, Boolean> batchCheckFavoriteStatus(String username, List<Long> relicsIds);
+    
+    /**
+     * 获取用户最近的交互活动
+     * @param username 用户名
+     * @param limit 限制数量
+     * @return 最近活动列表
+     */
+    List<InteractionActivity> getRecentActivities(String username, int limit);
+    
+    // ==================== 结果对象 ====================
+    
+    /**
+     * 收藏列表结果
+     */
+    record FavoriteListResult(
+            List<FavoriteAction> favorites,
+            long total,
+            int page,
+            int size,
+            boolean hasNext
+    ) {}
+    
+    /**
+     * 评论列表结果
+     */
+    record CommentListResult(
+            List<CommentAction> comments,
+            long total,
+            int page,
+            int size,
+            boolean hasNext
+    ) {}
+}

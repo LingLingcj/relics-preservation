@@ -11,7 +11,7 @@ import lombok.Value;
 @Value
 public class Username {
     
-    private final String value;
+    String value;
     
     private Username(String value) {
         this.value = value;

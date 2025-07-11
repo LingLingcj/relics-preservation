@@ -15,7 +15,7 @@ public class Password {
     
     private static final PasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder();
     
-    private final String encodedValue;
+    String encodedValue;
     
     private Password(String encodedValue) {
         this.encodedValue = encodedValue;

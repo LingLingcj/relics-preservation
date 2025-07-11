@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ling.infrastructure.dao.IUserCommentDao">
+
+    <resultMap id="BaseResultMap" type="com.ling.infrastructure.dao.po.UserComment">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="comment_id" property="commentId" jdbcType="BIGINT"/>
+        <result column="username" property="username" jdbcType="VARCHAR"/>
+        <result column="relics_id" property="relicsId" jdbcType="BIGINT"/>
+        <result column="content" property="content" jdbcType="VARCHAR"/>
+        <result column="comment_status" property="commentStatus" jdbcType="INTEGER"/>
+        <result column="create_time" property="createTime" jdbcType="TIMESTAMP"/>
+        <result column="update_time" property="updateTime" jdbcType="TIMESTAMP"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id, comment_id, username, relics_id, content, comment_status, create_time, update_time, status
+    </sql>
+
+    <!-- 基础CRUD -->
+    <insert id="insert" parameterType="com.ling.infrastructure.dao.po.UserComment" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO user_comments (comment_id, username, relics_id, content, comment_status, create_time, update_time, status)
+        VALUES (#{commentId}, #{username}, #{relicsId}, #{content}, #{commentStatus}, #{createTime}, #{updateTime}, #{status})
+    </insert>
+
+    <select id="selectById" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user_comments
+        WHERE id = #{id}
+    </select>
+
+    <select id="selectByCommentId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user_comments
+        WHERE comment_id = #{commentId} AND status = 0
+    </select>
+
+    <update id="update" parameterType="com.ling.infrastructure.dao.po.UserComment">
+        UPDATE user_comments
+        SET comment_id = #{commentId},
+            username = #{username},
+            relics_id = #{relicsId},
+            content = #{content},
+            comment_status = #{commentStatus},
+            update_time = #{updateTime},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <update id="deleteById">
+        UPDATE user_comments
+        SET status = 1, update_time = NOW()
+        WHERE id = #{id}
+    </update>
+
+    <update id="deleteByCommentId">
+        UPDATE user_comments
+        SET status = 1, update_time = NOW()
+        WHERE comment_id = #{commentId}
+    </update>
+
+    <!-- 业务查询 -->
+    <select id="selectByUsername" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user_comments
+        WHERE username = #{username} AND status = 0
+        <if test="relicsId != null">
+            AND relics_id = #{relicsId}
+        </if>
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countByUsername" resultType="long">
+        SELECT COUNT(1)
+        FROM user_comments
+        WHERE username = #{username} AND status = 0
+        <if test="relicsId != null">
+            AND relics_id = #{relicsId}
+        </if>
+    </select>
+
+    <select id="selectByRelicsId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user_comments
+        WHERE relics_id = #{relicsId} AND status = 0 AND comment_status = 1
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countByRelicsId" resultType="long">
+        SELECT COUNT(1)
+        FROM user_comments
+        WHERE relics_id = #{relicsId} AND status = 0 AND comment_status = 1
+    </select>
+
+    <select id="selectPendingComments" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user_comments
+        WHERE status = 0 AND comment_status = 0
+        <if test="relicsId != null">
+            AND relics_id = #{relicsId}
+        </if>
+        ORDER BY create_time ASC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countPendingComments" resultType="long">
+        SELECT COUNT(1)
+        FROM user_comments
+        WHERE status = 0 AND comment_status = 0
+        <if test="relicsId != null">
+            AND relics_id = #{relicsId}
+        </if>
+    </select>
+
+    <!-- 批量操作 -->
+    <insert id="batchInsert" parameterType="java.util.List">
+        INSERT INTO user_comments (comment_id, username, relics_id, content, comment_status, create_time, update_time, status)
+        VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.commentId}, #{item.username}, #{item.relicsId}, #{item.content}, #{item.commentStatus}, #{item.createTime}, #{item.updateTime}, #{item.status})
+        </foreach>
+    </insert>
+
+    <select id="batchCountByRelicsIds" resultType="com.ling.infrastructure.dao.IUserCommentDao$RelicsCommentCount">
+        SELECT 
+            uc.relics_id as relicsId,
+            r.name as relicsName,
+            COUNT(uc.id) as commentCount,
+            MAX(uc.create_time) as lastCommentTime
+        FROM user_comments uc
+        LEFT JOIN relics r ON uc.relics_id = r.relics_id
+        WHERE uc.status = 0 AND uc.comment_status = 1 AND uc.relics_id IN
+        <foreach collection="relicsIds" item="relicsId" open="(" separator="," close=")">
+            #{relicsId}
+        </foreach>
+        GROUP BY uc.relics_id, r.name
+    </select>
+
+    <update id="batchUpdateCommentStatus">
+        UPDATE user_comments
+        SET comment_status = #{commentStatus}, update_time = NOW()
+        WHERE comment_id IN
+        <foreach collection="commentIds" item="commentId" open="(" separator="," close=")">
+            #{commentId}
+        </foreach>
+        AND status = 0
+    </update>
+
+    <!-- 统计查询 -->
+    <select id="selectPopularRelicsByComments" resultType="com.ling.infrastructure.dao.IUserCommentDao$RelicsCommentCount">
+        SELECT 
+            uc.relics_id as relicsId,
+            r.name as relicsName,
+            COUNT(uc.id) as commentCount,
+            MAX(uc.create_time) as lastCommentTime
+        FROM user_comments uc
+        LEFT JOIN relics r ON uc.relics_id = r.relics_id
+        WHERE uc.status = 0 AND uc.comment_status = 1
+        GROUP BY uc.relics_id, r.name
+        ORDER BY commentCount DESC, lastCommentTime DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectRecentlyCommentedRelics" resultType="com.ling.infrastructure.dao.IUserCommentDao$RelicsCommentCount">
+        SELECT 
+            uc.relics_id as relicsId,
+            r.name as relicsName,
+            COUNT(uc.id) as commentCount,
+            MAX(uc.create_time) as lastCommentTime
+        FROM user_comments uc
+        LEFT JOIN relics r ON uc.relics_id = r.relics_id
+        WHERE uc.status = 0 AND uc.comment_status = 1 AND uc.create_time >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+        GROUP BY uc.relics_id, r.name
+        ORDER BY lastCommentTime DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectActiveCommenters" resultType="com.ling.infrastructure.dao.IUserCommentDao$UserCommentCount">
+        SELECT 
+            username,
+            COUNT(id) as commentCount,
+            MAX(create_time) as lastCommentTime
+        FROM user_comments
+        WHERE status = 0 AND comment_status = 1
+        GROUP BY username
+        ORDER BY commentCount DESC, lastCommentTime DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectByTimeRange" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM user_comments
+        WHERE status = 0
+        <if test="username != null">
+            AND username = #{username}
+        </if>
+        <if test="relicsId != null">
+            AND relics_id = #{relicsId}
+        </if>
+        AND create_time BETWEEN #{startTime} AND #{endTime}
+        ORDER BY create_time DESC
+    </select>
+
+</mapper>

@@ -65,4 +65,58 @@ public class SwaggerConfig {
                 .pathsToMatch("/api/user/**")
                 .build();
     }
-} 
+
+    @Bean
+    public GroupedOpenApi commentReviewApi() {
+        return GroupedOpenApi.builder()
+                .group("comment-review-api")
+                .displayName("评论审核管理")
+                .pathsToMatch("/api/v1/admin/comments/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi permissionTestApi() {
+        return GroupedOpenApi.builder()
+                .group("permission-test-api")
+                .displayName("权限测试")
+                .pathsToMatch("/api/test/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi relicsApi() {
+        return GroupedOpenApi.builder()
+                .group("relics-api")
+                .displayName("文物管理")
+                .pathsToMatch("/api/relics/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi interactionApi() {
+        return GroupedOpenApi.builder()
+                .group("interaction-api")
+                .displayName("用户交互")
+                .pathsToMatch("/api/interaction/**", "/api/favorite/**", "/api/comment/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi knowledgeApi() {
+        return GroupedOpenApi.builder()
+                .group("knowledge-api")
+                .displayName("知识问答")
+                .pathsToMatch("/api/knowledge/**")
+                .build();
+    }
+
+    @Bean
+    public GroupedOpenApi sensorApi() {
+        return GroupedOpenApi.builder()
+                .group("sensor-api")
+                .displayName("传感器监控")
+                .pathsToMatch("/api/sensor/**")
+                .build();
+    }
+}

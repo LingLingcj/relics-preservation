@@ -1,5 +1,6 @@
 package com.ling.domain.user.event;
 
+import com.ling.types.event.DomainEvent;
 import lombok.Getter;
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -27,7 +28,7 @@ public class UserProfileUpdatedEvent implements DomainEvent {
 
     @Override
     public LocalDateTime occurredOn() {
-        return LocalDateTime.now();
+        return this.occurredOn;
     }
 
     @Override

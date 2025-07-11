@@ -81,6 +81,24 @@ public class SpringSecurityConfig {
                     authorize.requestMatchers("/api-docs/**").permitAll();
                     authorize.requestMatchers("/doc.html").permitAll();
                     authorize.requestMatchers("/webjars/**").permitAll();
+
+                    // 评论审核相关权限控制 - 只有专家和管理员可以访问
+                    authorize.requestMatchers("/api/v1/admin/comments/**").hasAnyRole("EXPERT", "ADMIN");
+                    authorize.requestMatchers("/api/admin/comments/**").hasAnyRole("EXPERT", "ADMIN");
+
+                    // 用户交互功能 - 需要认证
+                    authorize.requestMatchers("/api/interaction/**").authenticated();
+                    authorize.requestMatchers("/api/favorite/**").authenticated();
+                    authorize.requestMatchers("/api/comment/**").authenticated();
+
+                    // 文物上传 - 只有专家可以访问
+                    authorize.requestMatchers("/api/relics/upload").hasRole("EXPERT");
+
+                    // 测试接口权限
+                    authorize.requestMatchers("/api/test/protected").authenticated();
+                    authorize.requestMatchers("/api/test/expert").hasRole("EXPERT");
+                    authorize.requestMatchers("/api/test/admin").hasRole("ADMIN");
+
                     authorize.anyRequest().authenticated();
                     log.debug("已配置请求授权规则");
                 })

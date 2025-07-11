@@ -42,7 +42,11 @@ public class Email {
         }
         
         String trimmedEmail = email.trim();
-        
+
+        if (!trimmedEmail.contains("@")) {
+            throw new IllegalArgumentException("邮箱必须包含@符号");
+        }
+
         if (trimmedEmail.length() > 254) {
             throw new IllegalArgumentException("邮箱长度不能超过254个字符");
         }

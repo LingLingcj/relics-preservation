@@ -16,7 +16,7 @@ public class PhoneNumber {
     private static final Pattern CHINA_MOBILE_PATTERN = 
         Pattern.compile("^1[3-9]\\d{9}$");
     
-    private final String value;
+    String value;
     
     private PhoneNumber(String value) {
         this.value = value;

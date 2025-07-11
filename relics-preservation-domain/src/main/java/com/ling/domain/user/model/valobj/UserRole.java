@@ -17,7 +17,8 @@ import java.util.stream.Collectors;
 public enum UserRole {
     
     USER("USER", "普通用户", 1, Set.of("READ_RELICS", "COMMENT", "FAVORITE")),
-    EXPERT("EXPERT", "专家", 2, Set.of("READ_RELICS", "COMMENT", "FAVORITE", "UPLOAD_RELICS", "REVIEW_COMMENTS"));
+    EXPERT("EXPERT", "专家", 2, Set.of("READ_RELICS", "COMMENT", "FAVORITE", "UPLOAD_RELICS", "REVIEW_COMMENTS")),
+    ADMIN("ADMIN", "管理员", 3, Set.of("READ_RELICS", "COMMENT", "FAVORITE", "UPLOAD_RELICS", "REVIEW_COMMENTS", "MANAGE_USERS", "SYSTEM_CONFIG"));
     
     private final String code;
     private final String description;
@@ -117,7 +118,15 @@ public enum UserRole {
     public boolean isExpert() {
         return this == EXPERT;
     }
-    
+
+    /**
+     * 检查是否为管理员角色
+     * @return 是否为管理员
+     */
+    public boolean isAdmin() {
+        return this == ADMIN;
+    }
+
     /**
      * 检查是否为普通用户角色
      * @return 是否为普通用户
