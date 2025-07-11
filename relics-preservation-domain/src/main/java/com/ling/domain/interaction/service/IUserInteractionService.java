@@ -78,6 +78,15 @@ public interface IUserInteractionService {
      * @return 评论列表结果
      */
     CommentListResult getUserComments(String username, Long relicsId, int page, int size);
+
+    /**
+     * 获取文物的所有评论列表（公开接口）
+     * @param relicsId 文物ID
+     * @param page 页码
+     * @param size 每页大小
+     * @return 文物评论列表结果
+     */
+    RelicsCommentListResult getRelicsComments(Long relicsId, int page, int size);
     
     // ==================== 交互管理 ====================
     

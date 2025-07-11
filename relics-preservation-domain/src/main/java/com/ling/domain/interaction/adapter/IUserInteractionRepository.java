@@ -132,6 +132,22 @@ public interface IUserInteractionRepository {
      * @return 待审核评论列表
      */
     List<CommentWithUser> getPendingComments(Long relicsId, int page, int size);
+
+    /**
+     * 获取文物的已通过审核的评论列表（用于公开展示）
+     * @param relicsId 文物ID
+     * @param page 页码（从1开始）
+     * @param size 每页大小
+     * @return 已通过审核的评论列表
+     */
+    List<RelicsComment> getApprovedCommentsByRelicsId(Long relicsId, int page, int size);
+
+    /**
+     * 统计文物的已通过审核评论总数
+     * @param relicsId 文物ID
+     * @return 评论总数
+     */
+    Long countApprovedCommentsByRelicsId(Long relicsId);
     
     // ==================== 统计查询 ====================
     

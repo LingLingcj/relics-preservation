@@ -251,7 +251,35 @@ public class UserInteractionRepositoryImpl implements IUserInteractionRepository
             return List.of();
         }
     }
-    
+
+    @Override
+    public List<RelicsComment> getApprovedCommentsByRelicsId(Long relicsId, int page, int size) {
+        try {
+            int offset = (page - 1) * size;
+            // 查询已通过审核的评论（comment_status = 1）
+            List<UserComment> comments = userCommentDao.selectApprovedCommentsByRelicsId(
+                    relicsId, offset, size);
+            return comments.stream()
+                    .map(this::convertToRelicsComment)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("获取文物已通过审核评论失败: relicsId={}, page={}, size={} - {}",
+                     relicsId, page, size, e.getMessage(), e);
+            return List.of();
+        }
+    }
+
+    @Override
+    public Long countApprovedCommentsByRelicsId(Long relicsId) {
+        try {
+            // 统计已通过审核的评论数量
+            return userCommentDao.countApprovedCommentsByRelicsId(relicsId);
+        } catch (Exception e) {
+            log.error("统计文物已通过审核评论数量失败: relicsId={} - {}", relicsId, e.getMessage(), e);
+            return 0L;
+        }
+    }
+
     // ==================== 统计查询 ====================
     
     @Override
@@ -464,7 +492,22 @@ public class UserInteractionRepositoryImpl implements IUserInteractionRepository
                 .deleted(comment.getStatus() == 1) // status=1表示已删除
                 .build();
     }
-    
+
+    /**
+     * 转换为文物评论值对象（用于公开展示）
+     */
+    private RelicsComment convertToRelicsComment(UserComment comment) {
+        return RelicsComment.builder()
+                .commentId(comment.getCommentId())
+                .relicsId(comment.getRelicsId())
+                .username(comment.getUsername())
+                .content(comment.getContent())
+                .createTime(comment.getCreateTime())
+                .likeCount(0) // 预留字段，暂时设为0
+                .featured(false) // 预留字段，暂时设为false
+                .build();
+    }
+
     /**
      * 计算热度分数
      */

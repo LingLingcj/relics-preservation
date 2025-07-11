@@ -1,5 +1,12 @@
 package com.ling.trigger.http;
 
+import com.ling.api.dto.request.BatchCommentReviewRequestDTO;
+import com.ling.api.dto.request.CommentReviewRequestDTO;
+import com.ling.api.dto.request.RejectCommentRequestDTO;
+import com.ling.api.dto.response.BatchReviewResponseDTO;
+import com.ling.api.dto.response.CommentReviewResponseDTO;
+import com.ling.api.dto.response.PendingCommentDTO;
+import com.ling.api.dto.response.ReviewStatisticsDTO;
 import com.ling.domain.interaction.model.valobj.*;
 import com.ling.domain.interaction.security.CommentReviewPermission;
 import com.ling.domain.interaction.service.ICommentReviewService;
@@ -7,11 +14,6 @@ import com.ling.types.common.Response;
 import com.ling.types.common.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -22,10 +24,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -286,121 +284,5 @@ public class CommentReviewController {
                 .urgent(comment.isUrgent())
                 .build();
     }
-    
-    // ==================== 内部DTO类 ====================
-    
-    public static class CommentReviewRequestDTO {
-        @NotBlank(message = "审核操作不能为空")
-        private String action;
-        
-        @Size(max = 500, message = "审核理由不能超过500字符")
-        private String reason;
-        
-        public CommentReviewRequestDTO() {}
-        
-        public CommentReviewRequestDTO(String action, String reason) {
-            this.action = action;
-            this.reason = reason;
-        }
-        
-        // getters and setters
-        public String getAction() { return action; }
-        public void setAction(String action) { this.action = action; }
-        public String getReason() { return reason; }
-        public void setReason(String reason) { this.reason = reason; }
-    }
-    
-    public static class RejectCommentRequestDTO {
-        @NotBlank(message = "拒绝理由不能为空")
-        @Size(max = 500, message = "拒绝理由不能超过500字符")
-        private String reason;
-        
-        // getters and setters
-        public String getReason() { return reason; }
-        public void setReason(String reason) { this.reason = reason; }
-    }
-    
-    public static class BatchCommentReviewRequestDTO {
-        @NotEmpty(message = "评论ID列表不能为空")
-        private List<Long> commentIds;
 
-        @NotBlank(message = "审核操作不能为空")
-        private String action;
-
-        @Size(max = 500, message = "审核理由不能超过500字符")
-        private String reason;
-
-        // getters and setters
-        public List<Long> getCommentIds() { return commentIds; }
-        public void setCommentIds(List<Long> commentIds) { this.commentIds = commentIds; }
-        public String getAction() { return action; }
-        public void setAction(String action) { this.action = action; }
-        public String getReason() { return reason; }
-        public void setReason(String reason) { this.reason = reason; }
-    }
-
-    // ==================== 响应DTO类 ====================
-
-    @lombok.Data
-    @lombok.Builder
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
-    public static class CommentReviewResponseDTO {
-        private Long commentId;
-        private String action;
-        private String reviewer;
-        private String reason;
-        private LocalDateTime reviewTime;
-        private String beforeStatus;
-        private String afterStatus;
-        private Boolean success;
-        private String message;
-    }
-
-    @lombok.Data
-    @lombok.Builder
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
-    public static class BatchReviewResponseDTO {
-        private Integer totalCount;
-        private Integer successCount;
-        private Integer failureCount;
-        private Double successRate;
-        private Boolean allSuccess;
-        private List<String> errors;
-    }
-
-    @lombok.Data
-    @lombok.Builder
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
-    public static class PendingCommentDTO {
-        private Long id;
-        private Long relicsId;
-        private String relicsName;
-        private String username;
-        private String content;
-        private String status;
-        private LocalDateTime createTime;
-        private Long waitingDays;
-        private Boolean urgent;
-    }
-
-    @lombok.Data
-    @lombok.Builder
-    @lombok.NoArgsConstructor
-    @lombok.AllArgsConstructor
-    public static class ReviewStatisticsDTO {
-        private String reviewer;
-        private LocalDateTime startTime;
-        private LocalDateTime endTime;
-        private Long totalReviewed;
-        private Long approvedCount;
-        private Long rejectedCount;
-        private Double approvalRate;
-        private Double rejectionRate;
-        private Map<String, Long> dailyStats;
-        private Double avgReviewTime;
-        private String efficiencyLevel;
-    }
 }

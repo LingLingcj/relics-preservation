@@ -216,7 +216,38 @@ public class UserInteractionServiceImpl implements IUserInteractionService {
             return new CommentListResult(List.of(), 0, page, size, false);
         }
     }
-    
+
+    @Override
+    public RelicsCommentListResult getRelicsComments(Long relicsId, int page, int size) {
+        try {
+            // 参数验证
+            if (relicsId == null || relicsId <= 0) {
+                log.warn("文物ID无效: {}", relicsId);
+                return RelicsCommentListResult.empty(relicsId, page, size);
+            }
+
+            if (page < 1) page = 1;
+            if (size < 1) size = 10;
+            if (size > 100) size = 100; // 限制最大页面大小
+
+            // 获取已通过审核的评论列表
+            List<RelicsComment> comments = userInteractionRepository.getApprovedCommentsByRelicsId(relicsId, page, size);
+
+            // 获取总数
+            Long totalCount = userInteractionRepository.countApprovedCommentsByRelicsId(relicsId);
+
+            log.debug("获取文物评论成功: relicsId={}, page={}, size={}, totalCount={}",
+                     relicsId, page, size, totalCount);
+
+            return RelicsCommentListResult.success(comments, totalCount, page, size, relicsId);
+
+        } catch (Exception e) {
+            log.error("获取文物评论列表失败: relicsId={}, page={}, size={} - {}",
+                     relicsId, page, size, e.getMessage(), e);
+            return RelicsCommentListResult.empty(relicsId, page, size);
+        }
+    }
+
     // ==================== 交互管理 ====================
     
     @Override

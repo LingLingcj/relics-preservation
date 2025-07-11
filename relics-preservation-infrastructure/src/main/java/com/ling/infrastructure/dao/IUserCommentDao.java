@@ -180,7 +180,25 @@ public interface IUserCommentDao {
                                       @Param("relicsId") Long relicsId,
                                       @Param("startTime") LocalDateTime startTime,
                                       @Param("endTime") LocalDateTime endTime);
-    
+
+    /**
+     * 查询文物的已通过审核评论列表（用于公开展示）
+     * @param relicsId 文物ID
+     * @param offset 偏移量
+     * @param limit 限制数量
+     * @return 已通过审核的评论列表
+     */
+    List<UserComment> selectApprovedCommentsByRelicsId(@Param("relicsId") Long relicsId,
+                                                      @Param("offset") int offset,
+                                                      @Param("limit") int limit);
+
+    /**
+     * 统计文物的已通过审核评论数量
+     * @param relicsId 文物ID
+     * @return 评论数量
+     */
+    Long countApprovedCommentsByRelicsId(@Param("relicsId") Long relicsId);
+
     // ==================== 结果对象 ====================
     
     /**

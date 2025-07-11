@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 用户交互控制器
@@ -285,7 +284,7 @@ public class InteractionController {
             
             List<CommentResponseDTO> commentDTOs = result.comments().stream()
                     .map(comment -> convertToCommentResponseDTO(comment, currentUsername))
-                    .collect(Collectors.toList());
+                    .toList();
             
             Map<String, Object> responseData = Map.of(
                     "comments", commentDTOs,

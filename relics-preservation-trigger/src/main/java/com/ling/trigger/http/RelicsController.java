@@ -1,14 +1,16 @@
 package com.ling.trigger.http;
 
 import com.ling.api.dto.request.RelicsUploadDTO;
-import com.ling.api.dto.response.CommentResponseDTO;
+import com.ling.api.dto.response.RelicsCommentListResponseDTO;
 import com.ling.api.dto.response.RelicsResponseDTO;
 import com.ling.api.dto.response.RelicsUploadResponseDTO;
-import com.ling.domain.interaction.model.valobj.CommentAction;
+import com.ling.domain.interaction.model.valobj.RelicsCommentListResult;
 import com.ling.domain.interaction.service.IUserInteractionService;
 import com.ling.domain.relics.model.entity.RelicsEntity;
 import com.ling.domain.relics.model.valobj.RelicsVO;
 import com.ling.domain.relics.service.IRelicsService;
+import com.ling.trigger.converter.RelicsCommentConverter;
+import com.ling.types.common.PaginationUtils;
 import com.ling.types.common.Response;
 import com.ling.types.common.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,9 +19,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -28,41 +27,72 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
+ * 文物管理控制器
  * @Author: LingRJ
- * @Description: 文物基本信息
+ * @Description: 提供文物基本信息管理和查询功能，包括文物上传、查询、分类获取等
  * @DateTime: 2025/6/28 0:01
- **/
+ * @Version: 1.0
+ */
 @Slf4j
 @Tag(name = "文物管理", description = "文物基本信息管理接口")
 @RestController
 @RequestMapping("/api/relics")
 public class RelicsController {
+
+    // ==================== 依赖注入 ====================
+
     @Autowired
     private IRelicsService relicsService;
-    
+
     @Autowired
     private IUserInteractionService userInteractionService;
+
+    @Autowired
+    private RelicsCommentConverter relicsCommentConverter;
 
     @Operation(summary = "添加文物", description = "添加文物信息，返回文物ID和上传结果")
     @PostMapping
     public Response<RelicsUploadResponseDTO> addRelics(@Parameter(description = "文物上传信息", required = true)
                                         @RequestBody RelicsUploadDTO relicsUploadDTO) {
-        // DTO转VO
-        RelicsVO vo = new RelicsVO();
-        org.springframework.beans.BeanUtils.copyProperties(relicsUploadDTO, vo);
-        RelicsEntity result = relicsService.uploadRelics(vo);
-        
-        // 构建响应DTO
-        RelicsUploadResponseDTO responseDTO = RelicsUploadResponseDTO.builder()
-                .success(result.isSuccess())
-                .message(result.getMessage())
-                .build();
-        
-        return Response.<RelicsUploadResponseDTO>builder()
-                .code(result.isSuccess() ? ResponseCode.SUCCESS.getCode() : ResponseCode.SYSTEM_ERROR.getCode())
-                .info(result.getMessage())
-                .data(responseDTO)
-                .build();
+        try {
+            // 参数验证
+            if (relicsUploadDTO == null) {
+                log.warn("文物上传信息不能为空");
+                return Response.<RelicsUploadResponseDTO>builder()
+                        .code(ResponseCode.INVALID_PARAM.getCode())
+                        .info("文物上传信息不能为空")
+                        .build();
+            }
+
+            log.info("开始上传文物: name={}", relicsUploadDTO.getName());
+
+            // DTO转VO
+            RelicsVO vo = new RelicsVO();
+            BeanUtils.copyProperties(relicsUploadDTO, vo);
+            RelicsEntity result = relicsService.uploadRelics(vo);
+
+            // 构建响应DTO
+            RelicsUploadResponseDTO responseDTO = RelicsUploadResponseDTO.builder()
+                    .success(result.isSuccess())
+                    .message(result.getMessage())
+                    .build();
+
+            log.info("文物上传完成: name={}, success={}", relicsUploadDTO.getName(), result.isSuccess());
+
+            return Response.<RelicsUploadResponseDTO>builder()
+                    .code(result.isSuccess() ? ResponseCode.SUCCESS.getCode() : ResponseCode.SYSTEM_ERROR.getCode())
+                    .info(result.getMessage())
+                    .data(responseDTO)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("文物上传失败: name={} - {}",
+                     relicsUploadDTO != null ? relicsUploadDTO.getName() : "unknown", e.getMessage(), e);
+            return Response.<RelicsUploadResponseDTO>builder()
+                    .code(ResponseCode.SYSTEM_ERROR.getCode())
+                    .info("文物上传失败")
+                    .build();
+        }
     }
 
     @Operation(summary = "按朝代搜索文物", description = "根据朝代名称搜索文物信息")
@@ -196,52 +226,6 @@ public class RelicsController {
                 .build();
     }
 
-    @Operation(summary = "获取文物评论", description = "获取指定文物的评论列表")
-    @GetMapping("/{relicsId}/comments")
-    public Response<List<CommentResponseDTO>> getRelicsComments(
-            @Parameter(description = "文物ID", required = true) @PathVariable Long relicsId) {
-        
-        // 获取当前用户名
-        String currentUsername = getCurrentUsername();
-        
-        // 获取评论列表 - 使用新的交互服务
-        IUserInteractionService.CommentListResult result =
-                userInteractionService.getUserComments(currentUsername, relicsId, 1, 100);
-
-        // 转换为DTO
-        List<CommentResponseDTO> commentDTOs = result.comments().stream()
-                .map(comment -> CommentResponseDTO.builder()
-                        .id(comment.getId())
-                        .relicsId(comment.getRelicsId())
-                        .username(currentUsername)
-                        .content(comment.getFullContent())
-                        .createTime(comment.getCreateTime())
-                        .isOwner(true)
-                        .build())
-                .collect(Collectors.toList());
-        
-        return Response.<List<CommentResponseDTO>>builder()
-                .code(ResponseCode.SUCCESS.getCode())
-                .info("查询成功")
-                .data(commentDTOs)
-                .build();
-    }
-    
-    /**
-     * 获取当前登录用户名
-     */
-    private String getCurrentUsername() {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication == null || !authentication.isAuthenticated()) {
-            return null;
-        }
-        Object principal = authentication.getPrincipal();
-        if (principal instanceof UserDetails) {
-            return ((UserDetails) principal).getUsername();
-        }
-        return principal.toString();
-    }
-
     @Operation(summary = "获取其他朝代文物", description = "获取除唐、宋、明之外的其他朝代文物信息")
     @GetMapping("/other-eras")
     public Response<Map<String, Object>> getRelicsExceptEras() {
@@ -276,6 +260,54 @@ public class RelicsController {
                 .info("查询成功")
                 .data(result)
                 .build();
+    }
+
+    @Operation(summary = "获取文物评论列表")
+    @GetMapping("/{id}/comments")
+    public Response<RelicsCommentListResponseDTO> getRelicsComments(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "1") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        try {
+            if (!isValidRelicsId(id)) {
+                return Response.<RelicsCommentListResponseDTO>builder()
+                        .code(ResponseCode.INVALID_PARAM.getCode())
+                        .info("文物ID无效")
+                        .build();
+            }
+
+            PaginationUtils.PaginationParams params = PaginationUtils.validateAndNormalize(page, size);
+            RelicsCommentListResult result = userInteractionService.getRelicsComments(
+                    id, params.getPage(), params.getSize());
+
+            RelicsCommentListResponseDTO responseDTO = relicsCommentConverter.toRelicsCommentListResponseDTO(result);
+            String message = result.isEmpty() ? "暂无评论" : "查询成功";
+
+            return Response.<RelicsCommentListResponseDTO>builder()
+                    .code(ResponseCode.SUCCESS.getCode())
+                    .info(message)
+                    .data(responseDTO)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("获取文物评论失败: relicsId={}", id, e);
+            return Response.<RelicsCommentListResponseDTO>builder()
+                    .code(ResponseCode.UN_ERROR.getCode())
+                    .info("获取评论列表失败")
+                    .build();
+        }
+    }
+
+    // ==================== 私有工具方法 ====================
+
+    /**
+     * 验证文物ID是否有效
+     * @param relicsId 文物ID
+     * @return 是否有效
+     */
+    private boolean isValidRelicsId(Long relicsId) {
+        return relicsId != null && relicsId > 0;
     }
 
 }

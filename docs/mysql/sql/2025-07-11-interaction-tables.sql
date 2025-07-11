@@ -107,7 +107,7 @@ SELECT
     COALESCE(`create_time`, NOW()),
     COALESCE(`update_time`, NOW()),
     CASE WHEN `status` = 0 THEN 0 ELSE 1 END
-FROM `relics_favorite` 
+FROM `favorites`
 WHERE `relics_id` IS NOT NULL AND `username` IS NOT NULL
 ON DUPLICATE KEY UPDATE 
     `update_time` = VALUES(`update_time`),
