@@ -1,6 +1,6 @@
 package com.ling.api.dto.request;
 
-import com.ling.domain.auth.model.valobj.RoleEnum;
+import com.ling.domain.user.model.valobj.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class LoginDTO {
 
-    private RoleEnum role;
+    private UserRole role;
 
     private String username;
 

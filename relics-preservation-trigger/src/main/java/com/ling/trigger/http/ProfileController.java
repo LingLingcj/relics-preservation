@@ -2,16 +2,15 @@ package com.ling.trigger.http;
 
 import com.ling.api.dto.request.ProfileUpdateDTO;
 import com.ling.api.dto.response.UserInfoResponseDTO;
-import com.ling.domain.auth.model.valobj.ProfileUpdateVO;
-import com.ling.domain.auth.model.valobj.UserInfoVO;
-import com.ling.domain.auth.service.IUserProfileService;
+import com.ling.domain.user.service.IUserManagementService;
+import com.ling.domain.user.model.entity.User;
 import com.ling.types.common.Response;
 import com.ling.types.common.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import org.springframework.beans.BeanUtils;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -29,7 +28,7 @@ import org.springframework.web.bind.annotation.*;
 public class ProfileController {
 
     @Autowired
-    private IUserProfileService userProfileService;
+    private IUserManagementService userManagementService;
 
     /**
      * 获取当前用户信息
@@ -45,9 +44,16 @@ public class ProfileController {
         String username = authentication.getName();
 
         // 获取用户信息
-        UserInfoVO userInfoVO = userProfileService.getUserInfo(username);
+        java.util.Optional<User> userOpt = userManagementService.getUserInfo(username);
 
-        return responseUserInfo(userInfoVO);
+        if (userOpt.isEmpty()) {
+            return Response.<UserInfoResponseDTO>builder()
+                    .code(ResponseCode.USER_NOT_EXIST.getCode())
+                    .info(ResponseCode.USER_NOT_EXIST.getInfo())
+                    .build();
+        }
+
+        return responseUserInfo(userOpt.get());
     }
 
     /**
@@ -66,39 +72,42 @@ public class ProfileController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String username = authentication.getName();
 
-        // 转换DTO到VO
-        ProfileUpdateVO profileUpdateVO = new ProfileUpdateVO();
-        BeanUtils.copyProperties(profileUpdateDTO, profileUpdateVO);
-
         // 更新用户信息
-        UserInfoVO updatedUserInfo = userProfileService.updateUserProfile(profileUpdateVO, username);
+        IUserManagementService.ProfileUpdateResult result = userManagementService.updateUserProfile(
+                username,
+                profileUpdateDTO.getNickname(),
+                profileUpdateDTO.getFullName(),
+                profileUpdateDTO.getEmail(),
+                profileUpdateDTO.getPhoneNumber(),
+                profileUpdateDTO.getAvatarUrl(),
+                profileUpdateDTO.getTitle()
+        );
 
-        return responseUserInfo(updatedUserInfo);
-    }
-
-    /**
-     * 提取验证过程作为辅助方法
-     * @param userInfoVO 用户信息
-     * @return 响应信息
-     */
-    private Response<UserInfoResponseDTO> responseUserInfo(UserInfoVO userInfoVO) {
-        // 处理结果
-        if (!userInfoVO.isSuccess()) {
+        if (!result.isSuccess()) {
             return Response.<UserInfoResponseDTO>builder()
-                    .code(getErrorCodeByMessage(userInfoVO.getMessage()))
-                    .info(userInfoVO.getMessage())
+                    .code(getErrorCodeByMessage(result.getMessage()))
+                    .info(result.getMessage())
                     .build();
         }
 
+        return responseUserInfo(result.getUser());
+    }
+
+    /**
+     * 构建用户信息响应
+     * @param user 用户聚合根
+     * @return 响应信息
+     */
+    private Response<UserInfoResponseDTO> responseUserInfo(User user) {
         UserInfoResponseDTO userInfoResponseDTO = UserInfoResponseDTO.builder()
-                .username(userInfoVO.getUsername())
-                .nickname(userInfoVO.getNickname())
-                .title(userInfoVO.getTitle())
-                .email(userInfoVO.getEmail())
-                .avatarUrl(userInfoVO.getAvatarUrl())
-                .role(userInfoVO.getRole())
-                .fullName(userInfoVO.getFullName())
-                .phoneNumber(userInfoVO.getPhoneNumber())
+                .username(user.getUsername().getValue())
+                .nickname(user.getNickname())
+                .title(user.getTitle())
+                .email(user.getEmail() != null ? user.getEmail().getValue() : null)
+                .avatarUrl(user.getAvatarUrl())
+                .role(user.getRole().getCode())
+                .fullName(user.getFullName())
+                .phoneNumber(user.getPhoneNumber() != null ? user.getPhoneNumber().getValue() : null)
                 .build();
 
         return Response.<UserInfoResponseDTO>builder()

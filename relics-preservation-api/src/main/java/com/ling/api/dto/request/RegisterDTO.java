@@ -1,6 +1,6 @@
 package com.ling.api.dto.request;
 
-import com.ling.domain.auth.model.valobj.RoleEnum;
+import com.ling.domain.user.model.valobj.UserRole;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,5 +26,5 @@ public class RegisterDTO {
     private String confirmPassword;
 
     // 身份
-    private RoleEnum role;
+    private UserRole role;
 }

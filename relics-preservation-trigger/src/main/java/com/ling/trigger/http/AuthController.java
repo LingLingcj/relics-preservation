@@ -5,11 +5,11 @@ import com.ling.api.dto.request.LoginDTO;
 import com.ling.api.dto.request.RegisterDTO;
 import com.ling.api.dto.response.AuthResponseDTO;
 import com.ling.api.dto.response.MessageResponseDTO;
-import com.ling.domain.auth.model.valobj.ChangePasswordVO;
-import com.ling.domain.auth.model.valobj.LoginVO;
-import com.ling.domain.auth.model.valobj.RegisterVO;
-import com.ling.domain.auth.model.valobj.UserInfoVO;
-import com.ling.domain.auth.service.IUserAuthService;
+
+import com.ling.domain.user.service.IUserAuthenticationService;
+import com.ling.domain.user.service.IUserRegistrationService;
+import com.ling.domain.user.service.IUserManagementService;
+import com.ling.domain.user.model.entity.User;
 import com.ling.types.common.Response;
 import com.ling.types.common.ResponseCode;
 import com.ling.types.jwt.JwtTokenProvider;
@@ -18,7 +18,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.ServletResponse;
-import org.springframework.beans.BeanUtils;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -37,15 +37,20 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     @Autowired
-    private IUserAuthService userAuthService;
+    private IUserAuthenticationService userAuthenticationService;
+
+    @Autowired
+    private IUserRegistrationService userRegistrationService;
+
+    @Autowired
+    private IUserManagementService userManagementService;
 
     @Autowired
     private AuthenticationManager authenticationManager;
 
     @Autowired
     private JwtTokenProvider jwtTokenProvider;
-    @Autowired
-    private ServletResponse servletResponse;
+
 
     /**
      * 注册接口
@@ -65,20 +70,19 @@ public class AuthController {
                     .build();
         }
 
-        RegisterVO registerVO = new RegisterVO();
-        registerVO.setRole(registerDTO.getRole().getRole());
-        registerVO.setUsername(registerDTO.getUsername());
-        registerVO.setPassword(registerDTO.getPassword());
-        registerVO.setConfirmPassword(registerDTO.getConfirmPassword());
+        // 调用新的注册服务
+        IUserRegistrationService.RegistrationResult result = userRegistrationService.register(
+                registerDTO.getUsername(),
+                registerDTO.getPassword(),
+                registerDTO.getConfirmPassword(),
+                registerDTO.getRole().toString()
+        );
 
-        // 调用服务进行注册
-        UserInfoVO userInfo = userAuthService.register(registerVO);
-        
         // 处理注册结果
-        if (!userInfo.isSuccess()) {
+        if (!result.isSuccess()) {
             return Response.<AuthResponseDTO>builder()
-                    .code(getErrorCodeByMessage(userInfo.getMessage()))
-                    .info(userInfo.getMessage())
+                    .code(getErrorCodeByMessage(result.getMessage()))
+                    .info(result.getMessage())
                     .build();
         }
         
@@ -100,17 +104,26 @@ public class AuthController {
     public Response<AuthResponseDTO> login(
             @Parameter(description = "登录信息", required = true)
             @RequestBody LoginDTO loginDTO) {
-        LoginVO loginVO = new LoginVO();
-        BeanUtils.copyProperties(loginDTO, loginVO);
-        
-        // 调用服务进行登录验证
-        UserInfoVO userInfo = userAuthService.login(loginVO);
-        
+        // 调用新的认证服务
+        IUserAuthenticationService.AuthenticationResult result = userAuthenticationService.authenticate(
+                loginDTO.getUsername(),
+                loginDTO.getPassword()
+        );
+
         // 处理登录结果
-        if (!userInfo.isSuccess()) {
+        if (!result.isSuccess()) {
             return Response.<AuthResponseDTO>builder()
                     .code(ResponseCode.LOGIN_ERROR.getCode())
                     .info(ResponseCode.LOGIN_ERROR.getInfo())
+                    .build();
+        }
+
+        // 检查角色匹配
+        User user = result.getUser();
+        if (!user.getRole().getCode().equals(loginDTO.getRole().toString())) {
+            return Response.<AuthResponseDTO>builder()
+                    .code(ResponseCode.WRONG_ROLE.getCode())
+                    .info(ResponseCode.WRONG_ROLE.getInfo())
                     .build();
         }
         
@@ -166,16 +179,17 @@ public class AuthController {
                     .build();
         }
 
-        ChangePasswordVO changePasswordVO = new ChangePasswordVO();
-        BeanUtils.copyProperties(changePasswordDTO, changePasswordVO);
-        
-        // 调用服务修改密码
-        boolean success = userAuthService.changePassword(changePasswordVO, username);
-        
-        if (!success) {
+        // 调用新的用户管理服务修改密码
+        IUserManagementService.PasswordChangeResult result = userManagementService.changePassword(
+                username,
+                changePasswordDTO.getOldPassword(),
+                changePasswordDTO.getNewPassword()
+        );
+
+        if (!result.isSuccess()) {
             return Response.<MessageResponseDTO>builder()
                     .code(ResponseCode.OLD_PASSWORD_ERROR.getCode())
-                    .info(ResponseCode.OLD_PASSWORD_ERROR.getInfo())
+                    .info(result.getMessage())
                     .build();
         }
         
