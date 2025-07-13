@@ -525,13 +525,8 @@ CREATE TABLE user_achievements (
 
 ## 👥 团队成员
 
-- **项目开发者**: [LingRJ](https://github.com/lingrj)
+- **项目开发者**: [LingRJ](https://github.com/LingLingcj)
 
-## 📞 联系我们
-
-- **项目地址**: https://github.com/your-repo/relics-preservation
-- **问题反馈**: https://github.com/your-repo/relics-preservation/issues
-- **邮箱**: relics-preservation@example.com
 
 ## 🙏 致谢
 
