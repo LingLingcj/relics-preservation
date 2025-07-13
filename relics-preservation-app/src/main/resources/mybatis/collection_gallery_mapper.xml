@@ -1,0 +1,309 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.ling.infrastructure.dao.ICollectionGalleryDao">
+    
+    <!-- 结果映射 -->
+    <resultMap id="CollectionGalleryResultMap" type="com.ling.infrastructure.dao.po.CollectionGalleryPO">
+        <id property="id" column="id"/>
+        <result property="galleryId" column="gallery_id"/>
+        <result property="username" column="username"/>
+        <result property="name" column="name"/>
+        <result property="description" column="description"/>
+        <result property="theme" column="theme"/>
+        <result property="displayStyle" column="display_style"/>
+        <result property="relicsIds" column="relics_ids"/>
+        <result property="isPublic" column="is_public"/>
+        <result property="shareCode" column="share_code"/>
+        <result property="customThemeName" column="custom_theme_name"/>
+        <result property="createTime" column="create_time"/>
+        <result property="updateTime" column="update_time"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+    <!-- 主题统计结果映射 -->
+    <resultMap id="ThemeStatisticsResultMap" type="com.ling.infrastructure.dao.ICollectionGalleryDao$ThemeStatistics">
+        <result property="theme" column="theme"/>
+        <result property="themeName" column="theme_name"/>
+        <result property="galleryCount" column="gallery_count"/>
+        <result property="userCount" column="user_count"/>
+        <result property="totalRelics" column="total_relics"/>
+    </resultMap>
+
+    <!-- 用户收藏馆统计结果映射 -->
+    <resultMap id="UserGalleryStatisticsResultMap" type="com.ling.infrastructure.dao.ICollectionGalleryDao$UserGalleryStatistics">
+        <result property="username" column="username"/>
+        <result property="totalGalleries" column="total_galleries"/>
+        <result property="publicGalleries" column="public_galleries"/>
+        <result property="privateGalleries" column="private_galleries"/>
+        <result property="totalRelics" column="total_relics"/>
+        <result property="mostUsedTheme" column="most_used_theme"/>
+    </resultMap>
+
+    <!-- 基础CRUD操作 -->
+    <insert id="insert" parameterType="com.ling.infrastructure.dao.po.CollectionGalleryPO" useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO collection_gallery (
+            gallery_id, username, name, description, theme, display_style, 
+            relics_ids, is_public, share_code, custom_theme_name, 
+            create_time, update_time, status
+        ) VALUES (
+            #{galleryId}, #{username}, #{name}, #{description}, #{theme}, #{displayStyle},
+            #{relicsIds}, #{isPublic}, #{shareCode}, #{customThemeName},
+            #{createTime}, #{updateTime}, #{status}
+        )
+    </insert>
+
+    <select id="selectById" parameterType="long" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery WHERE id = #{id}
+    </select>
+
+    <select id="selectByGalleryId" parameterType="string" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery WHERE gallery_id = #{galleryId} AND status = 0
+    </select>
+
+    <update id="update" parameterType="com.ling.infrastructure.dao.po.CollectionGalleryPO">
+        UPDATE collection_gallery SET
+            name = #{name},
+            description = #{description},
+            theme = #{theme},
+            display_style = #{displayStyle},
+            relics_ids = #{relicsIds},
+            is_public = #{isPublic},
+            share_code = #{shareCode},
+            custom_theme_name = #{customThemeName},
+            update_time = #{updateTime},
+            status = #{status}
+        WHERE id = #{id}
+    </update>
+
+    <update id="deleteById" parameterType="long">
+        UPDATE collection_gallery SET status = 1, update_time = NOW() WHERE id = #{id}
+    </update>
+
+    <update id="deleteByGalleryId" parameterType="string">
+        UPDATE collection_gallery SET status = 1, update_time = NOW() WHERE gallery_id = #{galleryId}
+    </update>
+
+    <!-- 用户相关查询 -->
+    <select id="selectByUsername" parameterType="string" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery 
+        WHERE username = #{username} AND status = 0 
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectByUsernameWithPage" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery 
+        WHERE username = #{username} AND status = 0 
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="countByUsername" parameterType="string" resultType="long">
+        SELECT COUNT(*) FROM collection_gallery WHERE username = #{username} AND status = 0
+    </select>
+
+    <select id="selectByUsernameAndName" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery 
+        WHERE username = #{username} AND name = #{name} AND status = 0
+    </select>
+
+    <!-- 公开收藏馆查询 -->
+    <select id="selectPublicGalleries" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery 
+        WHERE is_public = 1 AND status = 0 
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="selectPublicGalleriesByTheme" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery 
+        WHERE is_public = 1 AND theme = #{theme} AND status = 0 
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="selectByShareCode" parameterType="string" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery 
+        WHERE share_code = #{shareCode} AND is_public = 1 AND status = 0
+    </select>
+
+    <select id="countPublicGalleries" resultType="long">
+        SELECT COUNT(*) FROM collection_gallery WHERE is_public = 1 AND status = 0
+    </select>
+
+    <select id="countPublicGalleriesByTheme" parameterType="string" resultType="long">
+        SELECT COUNT(*) FROM collection_gallery WHERE is_public = 1 AND theme = #{theme} AND status = 0
+    </select>
+
+    <!-- 文物相关查询 -->
+    <select id="selectByRelicsId" parameterType="long" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery 
+        WHERE FIND_IN_SET(#{relicsId}, relics_ids) > 0 AND status = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="selectByUsernameAndRelicsId" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery 
+        WHERE username = #{username} AND FIND_IN_SET(#{relicsId}, relics_ids) > 0 AND status = 0
+        ORDER BY create_time DESC
+    </select>
+
+    <select id="countByRelicsId" parameterType="long" resultType="long">
+        SELECT COUNT(*) FROM collection_gallery 
+        WHERE FIND_IN_SET(#{relicsId}, relics_ids) > 0 AND status = 0
+    </select>
+
+    <!-- 批量操作 -->
+    <insert id="batchInsert" parameterType="list">
+        INSERT INTO collection_gallery (
+            gallery_id, username, name, description, theme, display_style, 
+            relics_ids, is_public, share_code, custom_theme_name, 
+            create_time, update_time, status
+        ) VALUES
+        <foreach collection="list" item="item" separator=",">
+            (#{item.galleryId}, #{item.username}, #{item.name}, #{item.description}, 
+             #{item.theme}, #{item.displayStyle}, #{item.relicsIds}, #{item.isPublic}, 
+             #{item.shareCode}, #{item.customThemeName}, #{item.createTime}, 
+             #{item.updateTime}, #{item.status})
+        </foreach>
+    </insert>
+
+    <update id="batchUpdate" parameterType="list">
+        <foreach collection="list" item="item" separator=";">
+            UPDATE collection_gallery SET
+                name = #{item.name},
+                description = #{item.description},
+                theme = #{item.theme},
+                display_style = #{item.displayStyle},
+                relics_ids = #{item.relicsIds},
+                is_public = #{item.isPublic},
+                share_code = #{item.shareCode},
+                custom_theme_name = #{item.customThemeName},
+                update_time = #{item.updateTime},
+                status = #{item.status}
+            WHERE id = #{item.id}
+        </foreach>
+    </update>
+
+    <select id="batchSelectByGalleryIds" parameterType="list" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery 
+        WHERE gallery_id IN
+        <foreach collection="galleryIds" item="galleryId" open="(" separator="," close=")">
+            #{galleryId}
+        </foreach>
+        AND status = 0
+    </select>
+
+    <update id="batchDeleteByGalleryIds" parameterType="list">
+        UPDATE collection_gallery SET status = 1, update_time = NOW()
+        WHERE gallery_id IN
+        <foreach collection="galleryIds" item="galleryId" open="(" separator="," close=")">
+            #{galleryId}
+        </foreach>
+    </update>
+
+    <!-- 统计查询 -->
+    <select id="selectPopularGalleries" parameterType="int" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery 
+        WHERE status = 0 
+        ORDER BY 
+            CASE 
+                WHEN relics_ids IS NULL OR relics_ids = '' THEN 0
+                ELSE (LENGTH(relics_ids) - LENGTH(REPLACE(relics_ids, ',', '')) + 1)
+            END DESC,
+            create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectLatestGalleries" parameterType="int" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery 
+        WHERE status = 0 
+        ORDER BY create_time DESC
+        LIMIT #{limit}
+    </select>
+
+    <select id="selectThemeStatistics" resultMap="ThemeStatisticsResultMap">
+        SELECT 
+            theme,
+            CASE theme
+                WHEN 'bronze' THEN '青铜器'
+                WHEN 'porcelain' THEN '瓷器'
+                WHEN 'painting' THEN '书画'
+                WHEN 'jade' THEN '玉器'
+                WHEN 'calligraphy' THEN '书法'
+                WHEN 'sculpture' THEN '雕塑'
+                WHEN 'furniture' THEN '家具'
+                WHEN 'textile' THEN '织物'
+                WHEN 'coin' THEN '钱币'
+                WHEN 'weapon' THEN '兵器'
+                WHEN 'ornament' THEN '饰品'
+                WHEN 'instrument' THEN '乐器'
+                WHEN 'custom' THEN '自定义'
+                ELSE '未知主题'
+            END as theme_name,
+            COUNT(*) as gallery_count,
+            COUNT(DISTINCT username) as user_count,
+            SUM(
+                CASE 
+                    WHEN relics_ids IS NULL OR relics_ids = '' THEN 0
+                    ELSE (LENGTH(relics_ids) - LENGTH(REPLACE(relics_ids, ',', '')) + 1)
+                END
+            ) as total_relics
+        FROM collection_gallery 
+        WHERE status = 0 
+        GROUP BY theme
+        ORDER BY gallery_count DESC
+    </select>
+
+    <select id="selectActiveUsers" parameterType="int" resultMap="UserGalleryStatisticsResultMap">
+        SELECT 
+            username,
+            COUNT(*) as total_galleries,
+            SUM(CASE WHEN is_public = 1 THEN 1 ELSE 0 END) as public_galleries,
+            SUM(CASE WHEN is_public = 0 THEN 1 ELSE 0 END) as private_galleries,
+            SUM(
+                CASE 
+                    WHEN relics_ids IS NULL OR relics_ids = '' THEN 0
+                    ELSE (LENGTH(relics_ids) - LENGTH(REPLACE(relics_ids, ',', '')) + 1)
+                END
+            ) as total_relics,
+            (
+                SELECT theme 
+                FROM collection_gallery g2 
+                WHERE g2.username = g1.username AND g2.status = 0
+                GROUP BY theme 
+                ORDER BY COUNT(*) DESC 
+                LIMIT 1
+            ) as most_used_theme
+        FROM collection_gallery g1
+        WHERE status = 0 
+        GROUP BY username
+        ORDER BY total_galleries DESC
+        LIMIT #{limit}
+    </select>
+
+    <!-- 搜索功能 -->
+    <select id="searchPublicGalleriesByName" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery 
+        WHERE is_public = 1 AND status = 0 AND name LIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="searchPublicGalleriesByDescription" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery 
+        WHERE is_public = 1 AND status = 0 AND description LIKE CONCAT('%', #{keyword}, '%')
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+    <select id="searchPublicGalleries" resultMap="CollectionGalleryResultMap">
+        SELECT * FROM collection_gallery 
+        WHERE is_public = 1 AND status = 0 
+        AND (name LIKE CONCAT('%', #{keyword}, '%') OR description LIKE CONCAT('%', #{keyword}, '%'))
+        ORDER BY create_time DESC
+        LIMIT #{offset}, #{limit}
+    </select>
+
+</mapper>

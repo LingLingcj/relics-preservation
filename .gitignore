@@ -1,8 +1,48 @@
-HELP.md
+# Compiled class file
+*.class
+
+# Log file
+*.log
+
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.nar
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs
+hs_err_pid*
+replay_pid*
+
+# Maven
 target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
 .mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+
+# Gradle
+.gradle
+build/
+!gradle/wrapper/gradle-wrapper.jar
+!**/src/main/**/build/
+!**/src/test/**/build/
 
 ### STS ###
 .apt_generated
@@ -14,10 +54,13 @@ target/
 .sts4-cache
 
 ### IntelliJ IDEA ###
-.idea
+.idea/
 *.iws
 *.iml
 *.ipr
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
 
 ### NetBeans ###
 /nbproject/private/
@@ -25,10 +68,170 @@ target/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
 ### VS Code ###
 .vscode/
+
+# Mac
+.DS_Store
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Application specific
+logs/
+temp/
+uploads/
+backup/
+
+# Configuration files with sensitive data
+application-local.yml
+application-dev.yml
+application-prod.yml
+!application.yml
+!application-*.yml.template
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Redis dump
+dump.rdb
+
+# Docker
+.dockerignore
+
+# Test coverage
+coverage/
+*.lcov
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Temporary files
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# Spring Boot
+spring-boot-*.log
+application-*.log
+
+# H2 Database
+*.h2.db
+*.trace.db
+
+# Elasticsearch
+data/
+logs/
+
+# Redis
+*.rdb
+*.aof
+
+# SSL certificates
+*.pem
+*.key
+*.crt
+*.p12
+*.jks
+
+# API keys and secrets
+secrets/
+keys/
+certificates/
+
+# Generated documentation
+docs/generated/
+api-docs/
+
+# Test reports
+test-results/
+surefire-reports/
+failsafe-reports/
+
+# Jacoco
+jacoco.exec
+jacoco-it.exec
+
+# SonarQube
+.sonar/
+.scannerwork/
+
+# Local development
+local/
+dev-data/
+
+# Docker volumes
+docker-data/
+mysql-data/
+redis-data/
+elasticsearch-data/
+
+# Backup files
+*.bak
+*.backup
+
+# Cache directories
+.cache/
+.npm/
+.yarn/
+
+# Application logs
+application.log*
+error.log*
+access.log*
+
+# Custom application directories
+storage/
+cache/
+sessions/
+
+# Local configuration overrides
+config/local/
+conf/local/
+
+# Custom application data
+app-data/
+user-uploads/
+file-storage/
+
+# Application-specific exclusions
+relics-images/
+user-avatars/
+document-storage/
+
+# Test data
+test-data/generated/
+test-uploads/
+
+# Local database files
+local.db
+test.db
+dev.db
+
+# Augment specific
+/.augment/
 /docs/ChmlFrp/
+
+# Keep important files
+!docs/
+!README.md
+!CONTRIBUTING.md
+!CHANGELOG.md
+!LICENSE
+!Dockerfile
+!docker-compose.yml
+!docker-compose.*.yml
+!scripts/
+!sql/
+!migrations/

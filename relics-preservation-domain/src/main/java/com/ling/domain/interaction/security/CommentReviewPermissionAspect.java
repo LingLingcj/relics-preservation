@@ -42,7 +42,7 @@ public class CommentReviewPermissionAspect {
         // 获取当前认证用户
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication == null || !authentication.isAuthenticated()) {
-            log.warn("用户未认证，拒绝访问");
+            log.warn("用户未认证，拒绝访问: {}", joinPoint.getSignature().getName());
             throw new AccessDeniedException("用户未认证");
         }
         

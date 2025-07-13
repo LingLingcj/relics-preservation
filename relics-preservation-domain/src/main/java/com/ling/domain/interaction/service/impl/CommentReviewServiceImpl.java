@@ -1,5 +1,6 @@
 package com.ling.domain.interaction.service.impl;
 
+import com.ling.domain.interaction.adapter.IUserCommentsRepository;
 import com.ling.domain.interaction.adapter.IUserInteractionRepository;
 import com.ling.domain.interaction.event.CommentReviewedEvent;
 import com.ling.domain.interaction.model.valobj.*;
@@ -35,6 +36,9 @@ public class CommentReviewServiceImpl implements ICommentReviewService {
     
     @Autowired
     private IUserManagementService userManagementService;
+
+    @Autowired
+    private IUserCommentsRepository userCommentsRepository;
     
     @Autowired
     private ApplicationEventPublisher eventPublisher;
@@ -98,21 +102,9 @@ public class CommentReviewServiceImpl implements ICommentReviewService {
 
     @Override
     public boolean deleteComment(Long commentId, String reviewer, String reason) {
-        log.info("删除评论，id:{}, 审核人：{}", commentId, reviewer);
-
-        // 查找评论（需要获取包含用户信息的评论）
-        Optional<CommentAction> comment = userInteractionRepository.findCommentById(commentId);
-
-        if (comment.isEmpty()) {
-            return false;
-        }
-
-        comment.get().delete();
-
-        
-
         return false;
     }
+
 
     // ==================== 批量审核 ====================
     

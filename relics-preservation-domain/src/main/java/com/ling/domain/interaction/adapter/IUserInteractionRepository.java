@@ -3,13 +3,10 @@ package com.ling.domain.interaction.adapter;
 import java.util.List;
 import java.util.Optional;
 
-import com.ling.domain.interaction.model.entity.UserInteraction;
 import com.ling.domain.interaction.model.valobj.CommentAction;
 import com.ling.domain.interaction.model.valobj.CommentStatus;
 import com.ling.domain.interaction.model.valobj.CommentWithUser;
-import com.ling.domain.interaction.model.valobj.FavoriteAction;
 import com.ling.domain.interaction.model.valobj.RelicsComment;
-import com.ling.domain.user.model.valobj.Username;
 
 /**
  * 用户交互仓储接口
@@ -18,101 +15,7 @@ import com.ling.domain.user.model.valobj.Username;
  * @DateTime: 2025/7/11
  */
 public interface IUserInteractionRepository {
-    
-    // ==================== 聚合根操作 ====================
 
-    /**
-     * 根据用户名查找用户交互聚合根
-     * @param username 用户名值对象
-     * @return 用户交互聚合根
-     */
-    Optional<UserInteraction> findByUsername(Username username);
-    
-    /**
-     * 删除用户交互聚合根
-     * @param username 用户名值对象
-     * @return 删除结果
-     */
-    boolean deleteByUsername(Username username);
-    
-    // ==================== 收藏相关查询 ====================
-    
-    /**
-     * 检查用户是否收藏了文物
-     * @param username 用户名
-     * @param relicsId 文物ID
-     * @return 是否收藏
-     */
-    boolean isFavorited(Username username, Long relicsId);
-    
-    /**
-     * 获取用户收藏的文物ID列表
-     * @param username 用户名
-     * @param page 页码
-     * @param size 每页大小
-     * @return 文物ID列表
-     */
-    List<Long> getUserFavoriteRelicsIds(Username username, int page, int size);
-    
-    /**
-     * 获取用户收藏总数
-     * @param username 用户名
-     * @return 收藏总数
-     */
-    long getUserFavoriteCount(Username username);
-    
-    /**
-     * 获取收藏了指定文物的用户列表
-     * @param relicsId 文物ID
-     * @param page 页码
-     * @param size 每页大小
-     * @return 用户名列表
-     */
-    List<String> getRelicsFavoriteUsers(Long relicsId, int page, int size);
-    
-    /**
-     * 获取文物收藏总数
-     * @param relicsId 文物ID
-     * @return 收藏总数
-     */
-    long getRelicsFavoriteCount(Long relicsId);
-    
-    // ==================== 评论相关查询 ====================
-    
-    /**
-     * 获取用户评论列表
-     * @param username 用户名
-     * @param relicsId 文物ID（可选）
-     * @param page 页码
-     * @param size 每页大小
-     * @return 评论列表
-     */
-    List<CommentAction> getUserComments(Username username, Long relicsId, int page, int size);
-    
-    /**
-     * 获取用户评论总数
-     * @param username 用户名
-     * @param relicsId 文物ID（可选）
-     * @return 评论总数
-     */
-    long getUserCommentCount(Username username, Long relicsId);
-    
-    /**
-     * 获取文物评论列表
-     * @param relicsId 文物ID
-     * @param page 页码
-     * @param size 每页大小
-     * @return 评论列表
-     */
-    List<CommentAction> getRelicsComments(Long relicsId, int page, int size);
-    
-    /**
-     * 获取文物评论总数
-     * @param relicsId 文物ID
-     * @return 评论总数
-     */
-    long getRelicsCommentCount(Long relicsId);
-    
     /**
      * 根据评论ID查找评论
      * @param commentId 评论ID
@@ -147,44 +50,4 @@ public interface IUserInteractionRepository {
 
     boolean updateCommentStatus(Long commentId, CommentStatus status);
 
-    // ==================== 增量保存操作 ====================
-
-    /**
-     * 增量保存用户交互聚合根（只保存变更的数据）
-     * @param userInteraction 用户交互聚合根
-     * @return 保存结果
-     */
-    boolean saveIncremental(UserInteraction userInteraction);
-
-    /**
-     * 保存单个收藏操作
-     * @param username 用户名
-     * @param favoriteAction 收藏行为
-     * @return 保存结果
-     */
-    boolean saveFavorite(Username username, FavoriteAction favoriteAction);
-
-    /**
-     * 保存单个评论操作
-     * @param username 用户名
-     * @param commentAction 评论行为
-     * @return 保存结果
-     */
-    boolean saveComment(Username username, CommentAction commentAction);
-
-    /**
-     * 删除单个收藏
-     * @param username 用户名
-     * @param relicsId 文物ID
-     * @return 删除结果
-     */
-    boolean deleteFavorite(Username username, Long relicsId);
-
-    /**
-     * 删除单个评论
-     * @param username 用户名
-     * @param commentId 评论ID
-     * @return 删除结果
-     */
-    boolean deleteComment(Username username, Long commentId);
 }

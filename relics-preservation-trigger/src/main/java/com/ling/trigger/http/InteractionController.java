@@ -3,6 +3,7 @@ package com.ling.trigger.http;
 import com.ling.api.dto.request.FavoriteRequestDTO;
 import com.ling.api.dto.request.NewCommentRequestDTO;
 import com.ling.api.dto.response.*;
+import com.ling.domain.interaction.adapter.IUserFavoritesRepository;
 import com.ling.domain.interaction.model.valobj.*;
 import com.ling.domain.interaction.service.IUserInteractionService;
 import com.ling.types.common.Response;
@@ -122,9 +123,9 @@ public class InteractionController {
         String currentUsername = getCurrentUsername();
         
         try {
-            IUserInteractionService.FavoriteListResult result = 
+            IUserInteractionService.FavoriteListResult result =
                     userInteractionService.getUserFavorites(currentUsername, page, size) ;
-            
+
             Map<String, Object> responseData = Map.of(
                     "favorites", result.favorites(),
                     "total", result.total(),

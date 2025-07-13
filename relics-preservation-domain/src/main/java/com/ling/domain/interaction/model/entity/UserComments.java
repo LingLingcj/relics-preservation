@@ -2,22 +2,16 @@ package com.ling.domain.interaction.model.entity;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
 import com.ling.domain.interaction.event.CommentDeletedEvent;
 import com.ling.domain.interaction.event.UserCommentedOnRelicsEvent;
-import com.ling.domain.interaction.event.UserFavoritedRelicsEvent;
-import com.ling.domain.interaction.event.UserUnfavoritedRelicsEvent;
 import com.ling.domain.interaction.model.valobj.ChangeTracker;
-import com.ling.domain.interaction.model.valobj.CollectionGallery;
 import com.ling.domain.interaction.model.valobj.CommentAction;
 import com.ling.domain.interaction.model.valobj.CommentContent;
-import com.ling.domain.interaction.model.valobj.FavoriteAction;
 import com.ling.domain.interaction.model.valobj.InteractionResult;
-import com.ling.domain.interaction.model.valobj.InteractionStatistics;
 import com.ling.domain.user.event.DomainEventPublisher;
 import com.ling.domain.user.model.valobj.Username;
 
@@ -28,22 +22,20 @@ import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 用户交互聚合根
+ * 用户评论聚合根
  * @Author: LingRJ
- * @Description: 管理单个用户与文物的所有交互行为
- * @DateTime: 2025/7/11
+ * @Description: 专门管理用户评论功能的聚合根，负责评论创建/删除、评论状态管理等
+ * @DateTime: 2025/7/13
  */
 @Getter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor(force = true)
 @Slf4j
-public class UserInteraction {
+public class UserComments {
 
     private final Username username;
-    private final Set<FavoriteAction> favorites;
     private final List<CommentAction> comments;
-    private final List<CollectionGallery> galleries; // 用户的收藏馆列表
     private final LocalDateTime createTime;
     private LocalDateTime updateTime;
 
@@ -51,15 +43,13 @@ public class UserInteraction {
     private final ChangeTracker changeTracker;
 
     /**
-     * 创建用户交互聚合根
+     * 创建用户评论聚合根
      */
-    public static UserInteraction create(Username username) {
+    public static UserComments create(Username username) {
         LocalDateTime now = LocalDateTime.now();
-        return UserInteraction.builder()
+        return UserComments.builder()
                 .username(username)
-                .favorites(new HashSet<>())
                 .comments(new ArrayList<>())
-                .galleries(new ArrayList<>())
                 .createTime(now)
                 .updateTime(now)
                 .changeTracker(new ChangeTracker())
@@ -67,131 +57,25 @@ public class UserInteraction {
     }
 
     /**
-     * 从数据库重建用户交互聚合根
+     * 从数据库记录重建用户评论聚合根
      * @param username 用户名
-     * @param favorites 收藏行为集合
      * @param comments 评论行为列表
-     * @param galleries 收藏馆列表
      * @param createTime 创建时间
      * @param updateTime 更新时间
-     * @return 用户交互聚合根
+     * @return 用户评论聚合根
      */
-    public static UserInteraction fromDatabase(Username username,
-                                             Set<FavoriteAction> favorites,
-                                             List<CommentAction> comments,
-                                             List<CollectionGallery> galleries,
-                                             LocalDateTime createTime,
-                                             LocalDateTime updateTime) {
-        return UserInteraction.builder()
+    public static UserComments fromDatabase(Username username,
+                                          List<CommentAction> comments,
+                                          LocalDateTime createTime,
+                                          LocalDateTime updateTime) {
+        return UserComments.builder()
                 .username(username)
-                .favorites(favorites != null ? favorites : new HashSet<>())
                 .comments(comments != null ? comments : new ArrayList<>())
-                .galleries(galleries != null ? galleries : new ArrayList<>())
                 .createTime(createTime != null ? createTime : LocalDateTime.now())
                 .updateTime(updateTime != null ? updateTime : LocalDateTime.now())
                 .changeTracker(new ChangeTracker()) // 从数据库重建时创建新的变更跟踪器
                 .build();
     }
-
-    // ==================== 收藏相关方法 ====================
-
-    /**
-     * 添加收藏
-     * @param relicsId 文物ID
-     * @return 操作结果
-     */
-    public InteractionResult addFavorite(Long relicsId) {
-        try {
-            FavoriteAction favorite = FavoriteAction.create(relicsId);
-
-            // 检查是否已收藏
-            if (favorites.contains(favorite)) {
-                return InteractionResult.failure("已经收藏过该文物");
-            }
-
-            favorites.add(favorite);
-            updateTime = LocalDateTime.now();
-
-            // 记录变更
-            changeTracker.recordAdd("FAVORITE", relicsId, favorite);
-
-            // 发布收藏事件
-            DomainEventPublisher.publish(new UserFavoritedRelicsEvent(
-                    username.getValue(), relicsId));
-
-            log.info("用户 {} 收藏文物 {}", username.getValue(), relicsId);
-            return InteractionResult.success("收藏成功");
-
-        } catch (Exception e) {
-            log.error("添加收藏失败: {} - {}", username.getValue(), e.getMessage(), e);
-            return InteractionResult.failure("收藏失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 取消收藏
-     * @param relicsId 文物ID
-     * @return 操作结果
-     */
-    public InteractionResult removeFavorite(Long relicsId) {
-        try {
-            FavoriteAction favorite = FavoriteAction.create(relicsId);
-
-            if (!favorites.contains(favorite)) {
-                return InteractionResult.failure("未收藏该文物");
-            }
-
-            // 找到实际的收藏对象并标记删除
-            Optional<FavoriteAction> existingFavorite = favorites.stream()
-                    .filter(f -> f.equals(favorite))
-                    .findFirst();
-
-            if (existingFavorite.isPresent()) {
-                FavoriteAction actualFavorite = existingFavorite.get();
-                actualFavorite.delete();
-                updateTime = LocalDateTime.now();
-
-                // 记录变更
-                changeTracker.recordDelete("FAVORITE", relicsId, actualFavorite);
-
-                // 发布取消收藏事件
-                DomainEventPublisher.publish(new UserUnfavoritedRelicsEvent(
-                        username.getValue(), relicsId));
-
-                log.info("用户 {} 取消收藏文物 {}", username.getValue(), relicsId);
-                return InteractionResult.success("取消收藏成功");
-            }
-
-            return InteractionResult.failure("取消收藏失败");
-
-        } catch (Exception e) {
-            log.error("取消收藏失败: {} - {}", username.getValue(), e.getMessage(), e);
-            return InteractionResult.failure("取消收藏失败: " + e.getMessage());
-        }
-    }
-
-    /**
-     * 检查是否已收藏文物
-     * @param relicsId 文物ID
-     * @return 是否已收藏
-     */
-    public boolean isFavorited(Long relicsId) {
-        return favorites.contains(FavoriteAction.create(relicsId));
-    }
-
-    /**
-     * 获取收藏的文物ID列表
-     * @return 文物ID列表
-     */
-    public List<Long> getFavoritedRelicsIds() {
-        return favorites.stream()
-                .filter(f -> !f.isDeleted())
-                .map(FavoriteAction::getRelicsId)
-                .sorted()
-                .toList();
-    }
-
-    // ==================== 评论相关方法 ====================
 
     /**
      * 添加评论
@@ -272,34 +156,29 @@ public class UserInteraction {
                 .toList();
     }
 
-    // ==================== 统计相关方法 ====================
-
     /**
-     * 获取交互统计信息
-     * @return 交互统计
+     * 获取评论统计信息
+     * @return 评论统计
      */
-    public InteractionStatistics getStatistics() {
-        long favoriteCount = favorites.stream()
-                .filter(f -> !f.isDeleted())
-                .count();
-
+    public CommentStatistics getStatistics() {
         long commentCount = comments.stream()
                 .filter(c -> !c.isDeleted())
                 .count();
 
-        // 计算最早交互时间
-        LocalDateTime firstInteractionTime = null;
-        if (createTime != null) {
-            firstInteractionTime = createTime;
-        }
+        long approvedCount = comments.stream()
+                .filter(c -> !c.isDeleted() && c.isVisible())
+                .count();
 
-        return InteractionStatistics.builder()
+        long pendingCount = comments.stream()
+                .filter(c -> !c.isDeleted() && !c.isVisible())
+                .count();
+
+        return CommentStatistics.builder()
                 .username(username.getValue())
-                .favoriteCount(favoriteCount)
-                .commentCount(commentCount)
-                .totalInteractions(favoriteCount + commentCount)
-                .lastActiveTime(updateTime)
-                .firstInteractionTime(firstInteractionTime)
+                .totalComments(commentCount)
+                .approvedComments(approvedCount)
+                .pendingComments(pendingCount)
+                .lastCommentTime(updateTime)
                 .build();
     }
 
@@ -319,14 +198,6 @@ public class UserInteraction {
      */
     public boolean hasChanges() {
         return changeTracker.isHasChanges();
-    }
-
-    /**
-     * 获取收藏变更记录
-     * @return 收藏变更记录集合
-     */
-    public Set<ChangeTracker.ChangeRecord> getFavoriteChanges() {
-        return changeTracker.getChangesByType("FAVORITE");
     }
 
     /**
@@ -353,9 +224,22 @@ public class UserInteraction {
             return "无变更";
         }
 
-        int favoriteChanges = changeTracker.getChangeCount("FAVORITE");
         int commentChanges = changeTracker.getChangeCount("COMMENT");
+        return String.format("评论变更: %d", commentChanges);
+    }
 
-        return String.format("收藏变更: %d, 评论变更: %d", favoriteChanges, commentChanges);
+    /**
+     * 评论统计值对象
+     */
+    @Getter
+    @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor(force = true)
+    public static class CommentStatistics {
+        private final String username;
+        private final long totalComments;
+        private final long approvedComments;
+        private final long pendingComments;
+        private final LocalDateTime lastCommentTime;
     }
 }

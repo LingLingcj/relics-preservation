@@ -98,6 +98,43 @@ public final class UserInteractionCacheConfig {
      * 空结果缓存过期时间（2分钟）- 防止缓存穿透
      */
     public static final Duration NULL_RESULT_TTL = Duration.ofMinutes(2);
+
+    // ==================== 新聚合根缓存过期时间 ====================
+
+    /**
+     * 用户收藏聚合根缓存过期时间（20分钟）
+     */
+    public static final Duration USER_FAVORITES_TTL = Duration.ofMinutes(20);
+
+    /**
+     * 用户评论聚合根缓存过期时间（20分钟）
+     */
+    public static final Duration USER_COMMENTS_TTL = Duration.ofMinutes(20);
+
+    /**
+     * 收藏馆管理聚合根缓存过期时间（30分钟）
+     */
+    public static final Duration GALLERY_MANAGER_TTL = Duration.ofMinutes(30);
+
+    /**
+     * 收藏统计缓存过期时间（10分钟）
+     */
+    public static final Duration FAVORITE_STATISTICS_TTL = Duration.ofMinutes(10);
+
+    /**
+     * 评论统计缓存过期时间（10分钟）
+     */
+    public static final Duration COMMENT_STATISTICS_TTL = Duration.ofMinutes(10);
+
+    /**
+     * 收藏馆统计缓存过期时间（15分钟）
+     */
+    public static final Duration GALLERY_STATISTICS_TTL = Duration.ofMinutes(15);
+
+    /**
+     * 文物评论列表缓存过期时间（15分钟）
+     */
+    public static final Duration RELICS_COMMENTS_TTL = Duration.ofMinutes(15);
     
     // ==================== 缓存配置参数 ====================
     

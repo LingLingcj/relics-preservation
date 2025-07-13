@@ -23,6 +23,11 @@ public class AlertController {
     @Autowired
     private IAlertService alertService;
 
+    /**
+     * 查询告警记录
+     * @param queryDTO 查询dto
+     * @return 查询结果
+     */
     @GetMapping("/list")
     public Response<List<AlertResponseDTO>> queryAlerts(AlertQueryDTO queryDTO) {
         List<AlertNotification> alerts = alertService.queryAlerts(
@@ -41,6 +46,12 @@ public class AlertController {
         return Response.success(result);
     }
 
+    /**
+     * 更新告警状态
+     * @param alertId 告警id
+     * @param status 告警状态
+     * @return 更新结果
+     */
     @PutMapping("/{alertId}/status")
     public Response<Boolean> updateAlertStatus(
             @PathVariable String alertId,

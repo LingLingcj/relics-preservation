@@ -1,11 +1,8 @@
 package com.ling.domain.interaction.service;
 
-import com.ling.domain.interaction.model.entity.UserInteraction;
 import com.ling.domain.interaction.model.valobj.*;
-import com.ling.domain.user.model.valobj.Username;
 
 import java.util.List;
-import java.util.Optional;
 
 /**
  * 用户交互服务接口
@@ -87,29 +84,6 @@ public interface IUserInteractionService {
      * @return 文物评论列表结果
      */
     RelicsCommentListResult getRelicsComments(Long relicsId, int page, int size);
-    
-    // ==================== 交互管理 ====================
-    
-    /**
-     * 获取用户交互聚合根
-     * @param username 用户名
-     * @return 用户交互聚合根
-     */
-    Optional<UserInteraction> getUserInteraction(String username);
-    
-    /**
-     * 创建用户交互聚合根
-     * @param username 用户名
-     * @return 用户交互聚合根
-     */
-    UserInteraction createUserInteraction(String username);
-    
-    /**
-     * 保存用户交互聚合根
-     * @param userInteraction 用户交互聚合根
-     * @return 保存结果
-     */
-    boolean saveUserInteraction(UserInteraction userInteraction);
 
     // ==================== 结果对象 ====================
     

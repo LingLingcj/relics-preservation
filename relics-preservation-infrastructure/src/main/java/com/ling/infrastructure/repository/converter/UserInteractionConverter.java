@@ -8,13 +8,11 @@ import java.util.Set;
 
 import org.springframework.stereotype.Component;
 
-import com.ling.domain.interaction.model.entity.UserInteraction;
 import com.ling.domain.interaction.model.valobj.CommentAction;
 import com.ling.domain.interaction.model.valobj.CommentContent;
 import com.ling.domain.interaction.model.valobj.CommentStatus;
 import com.ling.domain.interaction.model.valobj.FavoriteAction;
 import com.ling.domain.interaction.model.valobj.InteractionActivity;
-import com.ling.domain.user.model.valobj.Username;
 import com.ling.infrastructure.dao.po.UserComment;
 import com.ling.infrastructure.dao.po.UserFavorite;
 
@@ -30,32 +28,6 @@ import lombok.extern.slf4j.Slf4j;
 @Component
 public class UserInteractionConverter {
 
-    /**
-     * 构建用户交互聚合根
-     */
-    public UserInteraction buildUserInteraction(Username username,
-                                               List<UserFavorite> favorites,
-                                               List<UserComment> comments) {
-        try {
-            log.debug("构建用户交互聚合根: {}, 收藏数: {}, 评论数: {}",
-                    username.getValue(), favorites.size(), comments.size());
-
-            // 转换数据
-            Set<FavoriteAction> favoriteActions = convertFavorites(favorites);
-            List<CommentAction> commentActions = convertComments(comments);
-
-            // 计算时间信息
-            LocalDateTime earliestTime = calculateEarliestTime(favorites, comments);
-            LocalDateTime latestTime = calculateLatestTime(favorites, comments);
-
-            // 使用工厂方法重建聚合根
-            return UserInteraction.fromDatabase(username, favoriteActions, commentActions, earliestTime, latestTime);
-
-        } catch (Exception e) {
-            log.error("构建用户交互聚合根失败: {} - {}", username.getValue(), e.getMessage(), e);
-            return UserInteraction.create(username);
-        }
-    }
 
     /**
      * 转换收藏记录
