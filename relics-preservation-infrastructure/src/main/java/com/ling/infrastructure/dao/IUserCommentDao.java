@@ -59,6 +59,14 @@ public interface IUserCommentDao {
      * @return 影响行数
      */
     int deleteByCommentId(Long commentId);
+
+    /**
+     * 根据评论业务Id更新状态
+     * @param commentId
+     * @param Status
+     * @return
+     */
+    boolean updateStatusByCommentId(@Param("commentId")Long commentId, @Param("commentStatus") Integer Status);
     
     // ==================== 业务查询 ====================
     

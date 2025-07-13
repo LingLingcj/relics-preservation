@@ -2,6 +2,7 @@ package com.ling.domain.interaction.model.valobj;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.util.Objects;
 import java.util.regex.Pattern;
@@ -14,6 +15,7 @@ import java.util.regex.Pattern;
  */
 @Getter
 @EqualsAndHashCode(of = "content")
+@NoArgsConstructor(force = true)
 public class CommentContent {
     
     private static final int MIN_LENGTH = 1;

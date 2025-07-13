@@ -113,32 +113,6 @@ public class InteractionController {
         }
     }
     
-    @Operation(summary = "批量检查收藏状态", description = "批量检查用户对多个文物的收藏状态")
-    @PostMapping("/favorites/batch-status")
-    public Response<Map<Long, Boolean>> batchCheckFavoriteStatus(
-            @RequestBody List<Long> relicsIds) {
-        
-        String currentUsername = getCurrentUsername();
-        
-        try {
-            Map<Long, Boolean> statusMap = userInteractionService.batchCheckFavoriteStatus(
-                    currentUsername, relicsIds);
-            
-            return Response.<Map<Long, Boolean>>builder()
-                    .code(ResponseCode.SUCCESS.getCode())
-                    .info("查询成功")
-                    .data(statusMap)
-                    .build();
-                    
-        } catch (Exception e) {
-            log.error("批量检查收藏状态失败: {} - {}", currentUsername, e.getMessage(), e);
-            return Response.<Map<Long, Boolean>>builder()
-                    .code(ResponseCode.UN_ERROR.getCode())
-                    .info("查询失败")
-                    .build();
-        }
-    }
-    
     @Operation(summary = "获取用户收藏列表", description = "分页获取用户的收藏文物列表")
     @GetMapping("/favorites")
     public Response<Map<String, Object>> getUserFavorites(
@@ -149,7 +123,7 @@ public class InteractionController {
         
         try {
             IUserInteractionService.FavoriteListResult result = 
-                    userInteractionService.getUserFavorites(currentUsername, page, size);
+                    userInteractionService.getUserFavorites(currentUsername, page, size) ;
             
             Map<String, Object> responseData = Map.of(
                     "favorites", result.favorites(),
@@ -279,10 +253,11 @@ public class InteractionController {
         String currentUsername = getCurrentUsername();
         
         try {
-            IUserInteractionService.CommentListResult result = 
+            IUserInteractionService.CommentListResult result =
                     userInteractionService.getUserComments(currentUsername, relicsId, page, size);
-            
+
             List<CommentResponseDTO> commentDTOs = result.comments().stream()
+                    .filter(CommentAction::isVisible)
                     .map(comment -> convertToCommentResponseDTO(comment, currentUsername))
                     .toList();
             
@@ -308,46 +283,7 @@ public class InteractionController {
                     .build();
         }
     }
-    
-    // ==================== 统计相关 ====================
-    
-    @Operation(summary = "获取用户交互统计", description = "获取当前用户的交互统计信息")
-    @GetMapping("/statistics")
-    public Response<InteractionStatisticsResponseDTO> getUserStatistics() {
-        String currentUsername = getCurrentUsername();
-        
-        try {
-            InteractionStatistics statistics = userInteractionService.getUserStatistics(currentUsername);
-            
-            InteractionStatisticsResponseDTO responseDTO = InteractionStatisticsResponseDTO.builder()
-                    .username(statistics.getUsername())
-                    .favoriteCount(statistics.getFavoriteCount())
-                    .commentCount(statistics.getCommentCount())
-                    .totalInteractions(statistics.getTotalInteractions())
-                    .lastActiveTime(statistics.getLastActiveTime())
-                    .firstInteractionTime(statistics.getFirstInteractionTime())
-                    .activityLevel(statistics.getActivityLevel().name())
-                    .activityLevelDescription(statistics.getActivityLevel().getDescription())
-                    .isActiveUser(statistics.isActiveUser())
-                    .isNewUser(statistics.isNewUser())
-                    .favoriteCommentRatio(statistics.getFavoriteCommentRatio())
-                    .build();
-            
-            return Response.<InteractionStatisticsResponseDTO>builder()
-                    .code(ResponseCode.SUCCESS.getCode())
-                    .info("查询成功")
-                    .data(responseDTO)
-                    .build();
-                    
-        } catch (Exception e) {
-            log.error("获取用户统计失败: {} - {}", currentUsername, e.getMessage(), e);
-            return Response.<InteractionStatisticsResponseDTO>builder()
-                    .code(ResponseCode.UN_ERROR.getCode())
-                    .info("查询失败")
-                    .build();
-        }
-    }
-    
+
     // ==================== 私有辅助方法 ====================
     
     /**

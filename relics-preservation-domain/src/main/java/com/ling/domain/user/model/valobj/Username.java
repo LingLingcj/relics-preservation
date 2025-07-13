@@ -1,5 +1,6 @@
 package com.ling.domain.user.model.valobj;
 
+import lombok.NoArgsConstructor;
 import lombok.Value;
 
 /**
@@ -9,6 +10,7 @@ import lombok.Value;
  * @DateTime: 2025/7/11
  */
 @Value
+@NoArgsConstructor(force = true)
 public class Username {
     
     String value;

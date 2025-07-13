@@ -110,7 +110,6 @@ public class RelicsController {
         Map<String, Object> result = new HashMap<>();
         result.put("total", relicsEntities.size());
 
-        
         // 转换为DTO
         List<RelicsResponseDTO> relicsDTOs = relicsEntities.stream().map(entity -> RelicsResponseDTO.builder()
             .name(entity.getName())
@@ -223,42 +222,6 @@ public class RelicsController {
                 .code(ResponseCode.SUCCESS.getCode())
                 .info("获取成功")
                 .data(relicsResponseDTO)
-                .build();
-    }
-
-    @Operation(summary = "获取其他朝代文物", description = "获取除唐、宋、明之外的其他朝代文物信息")
-    @GetMapping("/other-eras")
-    public Response<Map<String, Object>> getRelicsExceptEras() {
-        log.info("查询除唐、宋、明之外的其他朝代文物");
-        
-        // 调用服务获取文物信息
-        List<RelicsEntity> relicsEntities = relicsService.getRelicsExceptEras(List.of("唐", "宋", "明"));
-        
-        if (relicsEntities == null || relicsEntities.isEmpty()) {
-            log.warn("未找到符合条件的文物");
-            return Response.<Map<String, Object>>builder()
-                    .code(ResponseCode.RELICS_NOT_FOUND.getCode())
-                    .info("未找到符合条件的文物")
-                    .build();
-        }
-        
-        // 构建响应数据
-        Map<String, Object> result = new HashMap<>();
-        result.put("total", relicsEntities.size());
-        
-        // 转换为DTO
-        List<RelicsResponseDTO> relicsDTOs = relicsEntities.stream().map(entity -> {
-            RelicsResponseDTO dto = new RelicsResponseDTO();
-            BeanUtils.copyProperties(entity, dto);
-            return dto;
-        }).collect(Collectors.toList());
-        result.put("list", relicsDTOs);
-        
-        log.info("查询成功，共返回{}条文物记录", relicsEntities.size());
-        return Response.<Map<String, Object>>builder()
-                .code(ResponseCode.SUCCESS.getCode())
-                .info("查询成功")
-                .data(result)
                 .build();
     }
 

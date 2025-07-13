@@ -25,24 +25,15 @@ public interface ICommentReviewService {
      * @return 审核结果
      */
     CommentReviewResult reviewComment(Long commentId, ReviewAction action, String reviewer, String reason);
-    
+
     /**
-     * 通过评论
-     * @param commentId 评论ID
+     * 删除不合适评论
+     * @param commentId 评论id
      * @param reviewer 审核人
-     * @param reason 通过理由
-     * @return 审核结果
+     * @param reason 删除原因
+     * @return 删除结果
      */
-    CommentReviewResult approveComment(Long commentId, String reviewer, String reason);
-    
-    /**
-     * 拒绝评论
-     * @param commentId 评论ID
-     * @param reviewer 审核人
-     * @param reason 拒绝理由
-     * @return 审核结果
-     */
-    CommentReviewResult rejectComment(Long commentId, String reviewer, String reason);
+    boolean deleteComment(Long commentId, String reviewer, String reason);
     
     // ==================== 批量审核 ====================
     
@@ -55,25 +46,7 @@ public interface ICommentReviewService {
      * @return 批量审核结果
      */
     BatchReviewResult batchReviewComments(List<Long> commentIds, ReviewAction action, String reviewer, String reason);
-    
-    /**
-     * 批量通过评论
-     * @param commentIds 评论ID列表
-     * @param reviewer 审核人
-     * @param reason 通过理由
-     * @return 批量审核结果
-     */
-    BatchReviewResult batchApproveComments(List<Long> commentIds, String reviewer, String reason);
-    
-    /**
-     * 批量拒绝评论
-     * @param commentIds 评论ID列表
-     * @param reviewer 审核人
-     * @param reason 拒绝理由
-     * @return 批量审核结果
-     */
-    BatchReviewResult batchRejectComments(List<Long> commentIds, String reviewer, String reason);
-    
+
     // ==================== 查询功能 ====================
     
     /**

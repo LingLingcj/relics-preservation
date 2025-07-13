@@ -3,8 +3,10 @@ package com.ling.domain.interaction.model.valobj;
 import java.time.LocalDateTime;
 import java.util.Objects;
 
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * 收藏行为值对象
@@ -13,7 +15,9 @@ import lombok.Getter;
  * @DateTime: 2025/7/11
  */
 @Getter
-@EqualsAndHashCode(of = "relicsId")
+@Builder
+@NoArgsConstructor(force = true)
+@EqualsAndHashCode(of = {"relicsId", "deleted"})
 public class FavoriteAction {
     
     private final Long relicsId;

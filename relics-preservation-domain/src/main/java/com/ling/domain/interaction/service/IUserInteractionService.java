@@ -110,32 +110,7 @@ public interface IUserInteractionService {
      * @return 保存结果
      */
     boolean saveUserInteraction(UserInteraction userInteraction);
-    
-    /**
-     * 获取用户交互统计
-     * @param username 用户名
-     * @return 交互统计信息
-     */
-    InteractionStatistics getUserStatistics(String username);
-    
-    // ==================== 批量操作 ====================
-    
-    /**
-     * 批量检查收藏状态
-     * @param username 用户名
-     * @param relicsIds 文物ID列表
-     * @return 收藏状态映射
-     */
-    java.util.Map<Long, Boolean> batchCheckFavoriteStatus(String username, List<Long> relicsIds);
-    
-    /**
-     * 获取用户最近的交互活动
-     * @param username 用户名
-     * @param limit 限制数量
-     * @return 最近活动列表
-     */
-    List<InteractionActivity> getRecentActivities(String username, int limit);
-    
+
     // ==================== 结果对象 ====================
     
     /**

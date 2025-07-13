@@ -5,6 +5,7 @@ import java.util.Objects;
 
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 /**
  * 评论行为值对象
@@ -13,7 +14,8 @@ import lombok.Getter;
  * @DateTime: 2025/7/11
  */
 @Getter
-@EqualsAndHashCode(of = "id")
+@NoArgsConstructor(force = true)
+@EqualsAndHashCode(of = {"id", "status", "deleted"})
 public class CommentAction {
     
     private final Long id;

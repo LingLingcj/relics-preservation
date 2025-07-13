@@ -10,14 +10,8 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.core.io.Resource;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -65,28 +59,5 @@ public class IndexController {
                 .data(result)
                 .build();
     }
-    
-    @Operation(summary = "传感器数据监控页面", description = "提供传感器数据实时监控页面")
-    @GetMapping(value = "/sensor-charts", produces = MediaType.TEXT_HTML_VALUE)
-    public String getSensorChartsPage() throws IOException {
-        // 从classpath加载静态页面
-        Resource resource = new ClassPathResource("static/sensor-charts.html");
-        if (resource.exists()) {
-            return new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-        } else {
-            return "<html><body><h1>页面不存在</h1></body></html>";
-        }
-    }
-    
-    @Operation(summary = "传感器报警监控页面", description = "提供传感器报警实时监控页面")
-    @GetMapping(value = "/sensor-alerts", produces = MediaType.TEXT_HTML_VALUE)
-    public String getSensorAlertsPage() throws IOException {
-        // 从classpath加载静态页面
-        Resource resource = new ClassPathResource("static/alerts.html");
-        if (resource.exists()) {
-            return new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
-        } else {
-            return "<html><body><h1>页面不存在</h1></body></html>";
-        }
-    }
+
 }

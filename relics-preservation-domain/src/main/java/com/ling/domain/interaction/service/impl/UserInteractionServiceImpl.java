@@ -44,7 +44,7 @@ public class UserInteractionServiceImpl implements IUserInteractionService {
             
             if (result.isSuccess()) {
                 // 保存聚合根
-                boolean saved = userInteractionRepository.save(userInteraction);
+                boolean saved = userInteractionRepository.saveIncremental(userInteraction);
                 if (!saved) {
                     log.error("保存用户交互失败: {}", username);
                     return InteractionResult.failure("保存失败");
@@ -74,7 +74,7 @@ public class UserInteractionServiceImpl implements IUserInteractionService {
             InteractionResult result = userInteraction.removeFavorite(relicsId);
             
             if (result.isSuccess()) {
-                boolean saved = userInteractionRepository.save(userInteraction);
+                boolean saved = userInteractionRepository.saveIncremental(userInteraction);
                 if (!saved) {
                     log.error("保存用户交互失败: {}", username);
                     return InteractionResult.failure("保存失败");
@@ -146,7 +146,7 @@ public class UserInteractionServiceImpl implements IUserInteractionService {
             
             if (result.isSuccess()) {
                 // 保存聚合根
-                boolean saved = userInteractionRepository.save(userInteraction);
+                boolean saved = userInteractionRepository.saveIncremental(userInteraction);
                 if (!saved) {
                     log.error("保存用户交互失败: {}", username);
                     return InteractionResult.failure("保存失败");
@@ -176,7 +176,7 @@ public class UserInteractionServiceImpl implements IUserInteractionService {
             InteractionResult result = userInteraction.deleteComment(commentId);
             
             if (result.isSuccess()) {
-                boolean saved = userInteractionRepository.save(userInteraction);
+                boolean saved = userInteractionRepository.saveIncremental(userInteraction);
                 if (!saved) {
                     log.error("保存用户交互失败: {}", username);
                     return InteractionResult.failure("保存失败");
@@ -265,7 +265,7 @@ public class UserInteractionServiceImpl implements IUserInteractionService {
     public UserInteraction createUserInteraction(String username) {
         try {
             UserInteraction userInteraction = UserInteraction.create(Username.of(username));
-            boolean saved = userInteractionRepository.save(userInteraction);
+            boolean saved = userInteractionRepository.saveIncremental(userInteraction);
             if (!saved) {
                 throw new RuntimeException("创建用户交互失败");
             }
@@ -280,67 +280,13 @@ public class UserInteractionServiceImpl implements IUserInteractionService {
     @Transactional
     public boolean saveUserInteraction(UserInteraction userInteraction) {
         try {
-            return userInteractionRepository.save(userInteraction);
+            return userInteractionRepository.saveIncremental(userInteraction);
         } catch (Exception e) {
             log.error("保存用户交互失败: {} - {}", userInteraction.getDisplayName(), e.getMessage(), e);
             return false;
         }
     }
-    
-    @Override
-    public InteractionStatistics getUserStatistics(String username) {
-        try {
-            Optional<UserInteraction> userInteractionOpt = getUserInteraction(username);
-            return userInteractionOpt.map(UserInteraction::getStatistics)
-                    .orElse(InteractionStatistics.builder()
-                            .username(username)
-                            .favoriteCount(0)
-                            .commentCount(0)
-                            .build());
-        } catch (Exception e) {
-            log.error("获取用户统计失败: {} - {}", username, e.getMessage(), e);
-            return InteractionStatistics.builder()
-                    .username(username)
-                    .favoriteCount(0)
-                    .commentCount(0)
-                    .build();
-        }
-    }
-    
-    // ==================== 批量操作 ====================
-    
-    @Override
-    public Map<Long, Boolean> batchCheckFavoriteStatus(String username, List<Long> relicsIds) {
-        try {
-            Optional<UserInteraction> userInteractionOpt = getUserInteraction(username);
-            if (userInteractionOpt.isEmpty()) {
-                return relicsIds.stream()
-                        .collect(Collectors.toMap(id -> id, id -> false));
-            }
-            
-            UserInteraction userInteraction = userInteractionOpt.get();
-            return relicsIds.stream()
-                    .collect(Collectors.toMap(id -> id, userInteraction::isFavorited));
-                    
-        } catch (Exception e) {
-            log.error("批量检查收藏状态失败: {} - {}", username, e.getMessage(), e);
-            return relicsIds.stream()
-                    .collect(Collectors.toMap(id -> id, id -> false));
-        }
-    }
-    
-    @Override
-    public List<InteractionActivity> getRecentActivities(String username, int limit) {
-        try {
-            // TODO: 实现最近活动获取逻辑
-            // 这里应该从活动记录表或事件存储中获取
-            return List.of();
-        } catch (Exception e) {
-            log.error("获取最近活动失败: {} - {}", username, e.getMessage(), e);
-            return List.of();
-        }
-    }
-    
+
     // ==================== 私有辅助方法 ====================
     
     /**

@@ -45,6 +45,7 @@ public interface IUserFavoriteDao {
      * @return 影响行数
      */
     int deleteById(Long id);
+
     
     // ==================== 业务查询 ====================
     

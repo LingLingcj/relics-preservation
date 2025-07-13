@@ -7,10 +7,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.ling.domain.interaction.event.CommentDeletedEvent;
 import com.ling.domain.interaction.event.UserCommentedOnRelicsEvent;
 import com.ling.domain.interaction.event.UserFavoritedRelicsEvent;
 import com.ling.domain.interaction.event.UserUnfavoritedRelicsEvent;
+import com.ling.domain.interaction.model.valobj.ChangeTracker;
 import com.ling.domain.interaction.model.valobj.CommentAction;
 import com.ling.domain.interaction.model.valobj.CommentContent;
 import com.ling.domain.interaction.model.valobj.FavoriteAction;
@@ -19,8 +21,10 @@ import com.ling.domain.interaction.model.valobj.InteractionStatistics;
 import com.ling.domain.user.event.DomainEventPublisher;
 import com.ling.domain.user.model.valobj.Username;
 
+import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
@@ -31,15 +35,20 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Getter
 @Builder
+@AllArgsConstructor
+@NoArgsConstructor(force = true)
 @Slf4j
 public class UserInteraction {
-    
-    private Username username;
-    private Set<FavoriteAction> favorites;
-    private List<CommentAction> comments;
-    private LocalDateTime createTime;
+
+    private final Username username;
+    private final Set<FavoriteAction> favorites;
+    private final List<CommentAction> comments;
+    private final LocalDateTime createTime;
     private LocalDateTime updateTime;
-    
+
+    // 变更跟踪器，用于增量保存
+    private final ChangeTracker changeTracker;
+
     /**
      * 创建用户交互聚合根
      */
@@ -51,8 +60,10 @@ public class UserInteraction {
                 .comments(new ArrayList<>())
                 .createTime(now)
                 .updateTime(now)
+                .changeTracker(new ChangeTracker())
                 .build();
     }
+
 
     /**
      * 从数据库记录重建用户交互聚合根
@@ -74,6 +85,7 @@ public class UserInteraction {
                 .comments(comments != null ? comments : new ArrayList<>())
                 .createTime(createTime != null ? createTime : LocalDateTime.now())
                 .updateTime(updateTime != null ? updateTime : LocalDateTime.now())
+                .changeTracker(new ChangeTracker()) // 从数据库重建时创建新的变更跟踪器
                 .build();
     }
     
@@ -85,22 +97,25 @@ public class UserInteraction {
     public InteractionResult addFavorite(Long relicsId) {
         try {
             FavoriteAction favorite = FavoriteAction.create(relicsId);
-            
+
             // 检查是否已收藏
             if (favorites.contains(favorite)) {
                 return InteractionResult.failure("已经收藏过该文物");
             }
-            
+
             favorites.add(favorite);
             updateTime = LocalDateTime.now();
-            
+
+            // 记录变更
+            changeTracker.recordAdd("FAVORITE", relicsId, favorite);
+
             // 发布收藏事件
             DomainEventPublisher.publish(new UserFavoritedRelicsEvent(
                     username.getValue(), relicsId));
-            
+
             log.info("用户 {} 收藏文物 {}", username.getValue(), relicsId);
             return InteractionResult.success("收藏成功");
-            
+
         } catch (Exception e) {
             log.error("添加收藏失败: {} - {}", username.getValue(), e.getMessage(), e);
             return InteractionResult.failure("收藏失败: " + e.getMessage());
@@ -115,21 +130,34 @@ public class UserInteraction {
     public InteractionResult removeFavorite(Long relicsId) {
         try {
             FavoriteAction favorite = FavoriteAction.create(relicsId);
-            
+
             if (!favorites.contains(favorite)) {
                 return InteractionResult.failure("未收藏该文物");
             }
-            
-            favorites.remove(favorite);
-            updateTime = LocalDateTime.now();
-            
-            // 发布取消收藏事件
-            DomainEventPublisher.publish(new UserUnfavoritedRelicsEvent(
-                    username.getValue(), relicsId));
-            
-            log.info("用户 {} 取消收藏文物 {}", username.getValue(), relicsId);
-            return InteractionResult.success("取消收藏成功");
-            
+
+            // 找到实际的收藏对象并标记删除
+            Optional<FavoriteAction> existingFavorite = favorites.stream()
+                    .filter(f -> f.equals(favorite))
+                    .findFirst();
+
+            if (existingFavorite.isPresent()) {
+                FavoriteAction actualFavorite = existingFavorite.get();
+                actualFavorite.delete();
+                updateTime = LocalDateTime.now();
+
+                // 记录变更
+                changeTracker.recordDelete("FAVORITE", relicsId, actualFavorite);
+
+                // 发布取消收藏事件
+                DomainEventPublisher.publish(new UserUnfavoritedRelicsEvent(
+                        username.getValue(), relicsId));
+
+                log.info("用户 {} 取消收藏文物 {}", username.getValue(), relicsId);
+                return InteractionResult.success("取消收藏成功");
+            }
+
+            return InteractionResult.failure("取消收藏失败");
+
         } catch (Exception e) {
             log.error("取消收藏失败: {} - {}", username.getValue(), e.getMessage(), e);
             return InteractionResult.failure("取消收藏失败: " + e.getMessage());
@@ -146,18 +174,21 @@ public class UserInteraction {
         try {
             CommentContent commentContent = CommentContent.of(content);
             CommentAction comment = CommentAction.create(relicsId, commentContent);
-            
+
             comments.add(comment);
             updateTime = LocalDateTime.now();
-            
+
+            // 记录变更
+            changeTracker.recordAdd("COMMENT", comment.getId(), comment);
+
             // 发布评论事件
             DomainEventPublisher.publish(new UserCommentedOnRelicsEvent(
                     username.getValue(), relicsId, content, comment.getId()));
-            
-            log.info("用户 {} 评论文物 {}: {}", username.getValue(), relicsId, 
+
+            log.info("用户 {} 评论文物 {}: {}", username.getValue(), relicsId,
                     content.length() > 50 ? content.substring(0, 50) + "..." : content);
             return InteractionResult.success("评论成功", comment.getId());
-            
+
         } catch (Exception e) {
             log.error("添加评论失败: {} - {}", username.getValue(), e.getMessage(), e);
             return InteractionResult.failure("评论失败: " + e.getMessage());
@@ -174,22 +205,25 @@ public class UserInteraction {
             Optional<CommentAction> commentOpt = comments.stream()
                     .filter(c -> c.getId().equals(commentId))
                     .findFirst();
-            
+
             if (commentOpt.isEmpty()) {
                 return InteractionResult.failure("评论不存在");
             }
-            
+
             CommentAction comment = commentOpt.get();
             comment.delete();
             updateTime = LocalDateTime.now();
-            
+
+            // 记录变更
+            changeTracker.recordDelete("COMMENT", commentId, comment);
+
             // 发布评论删除事件
             DomainEventPublisher.publish(new CommentDeletedEvent(
                     username.getValue(), comment.getRelicsId(), commentId));
-            
+
             log.info("用户 {} 删除评论 {}", username.getValue(), commentId);
             return InteractionResult.success("删除评论成功");
-            
+
         } catch (Exception e) {
             log.error("删除评论失败: {} - {}", username.getValue(), e.getMessage(), e);
             return InteractionResult.failure("删除评论失败: " + e.getMessage());
@@ -257,5 +291,69 @@ public class UserInteraction {
      */
     public String getDisplayName() {
         return username.getValue();
+    }
+
+    // ==================== 增量保存相关方法 ====================
+
+    /**
+     * 检查是否有变更
+     * @return 是否有变更
+     */
+    public boolean hasChanges() {
+        return changeTracker.isHasChanges();
+    }
+
+    /**
+     * 检查是否有收藏变更
+     * @return 是否有收藏变更
+     */
+    public boolean hasFavoriteChanges() {
+        return changeTracker.hasChanges("FAVORITE");
+    }
+
+    /**
+     * 检查是否有评论变更
+     * @return 是否有评论变更
+     */
+    public boolean hasCommentChanges() {
+        return changeTracker.hasChanges("COMMENT");
+    }
+
+    /**
+     * 获取收藏变更记录
+     * @return 收藏变更记录集合
+     */
+    public Set<ChangeTracker.ChangeRecord> getFavoriteChanges() {
+        return changeTracker.getChangesByType("FAVORITE");
+    }
+
+    /**
+     * 获取评论变更记录
+     * @return 评论变更记录集合
+     */
+    public Set<ChangeTracker.ChangeRecord> getCommentChanges() {
+        return changeTracker.getChangesByType("COMMENT");
+    }
+
+    /**
+     * 清空变更记录（保存成功后调用）
+     */
+    public void clearChanges() {
+        changeTracker.clearChanges();
+    }
+
+    /**
+     * 获取变更统计信息
+     * @return 变更统计信息
+     */
+    public String getChangesSummary() {
+        if (!hasChanges()) {
+            return "无变更";
+        }
+
+        int favoriteChanges = changeTracker.getChangeCount("FAVORITE");
+        int commentChanges = changeTracker.getChangeCount("COMMENT");
+
+        return String.format("收藏变更: %d, 评论变更: %d", favoriteChanges, commentChanges);
     }
 }

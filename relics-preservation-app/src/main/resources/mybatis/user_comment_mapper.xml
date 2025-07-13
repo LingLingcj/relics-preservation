@@ -154,6 +154,12 @@
         AND status = 0
     </update>
 
+    <update id="updateStatusByCommentId">
+        update user_comments
+        set comment_status = #{commentStatus}, update_time = NOW()
+        where comment_id = #{commentId}
+    </update>
+
     <!-- 统计查询 -->
     <select id="selectPopularRelicsByComments" resultType="com.ling.infrastructure.dao.IUserCommentDao$RelicsCommentCount">
         SELECT 

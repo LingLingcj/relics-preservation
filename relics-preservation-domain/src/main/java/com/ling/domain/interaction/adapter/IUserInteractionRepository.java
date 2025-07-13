@@ -5,7 +5,9 @@ import java.util.Optional;
 
 import com.ling.domain.interaction.model.entity.UserInteraction;
 import com.ling.domain.interaction.model.valobj.CommentAction;
+import com.ling.domain.interaction.model.valobj.CommentStatus;
 import com.ling.domain.interaction.model.valobj.CommentWithUser;
+import com.ling.domain.interaction.model.valobj.FavoriteAction;
 import com.ling.domain.interaction.model.valobj.RelicsComment;
 import com.ling.domain.user.model.valobj.Username;
 
@@ -18,14 +20,7 @@ import com.ling.domain.user.model.valobj.Username;
 public interface IUserInteractionRepository {
     
     // ==================== 聚合根操作 ====================
-    
-    /**
-     * 保存用户交互聚合根
-     * @param userInteraction 用户交互聚合根
-     * @return 保存结果
-     */
-    boolean save(UserInteraction userInteraction);
-    
+
     /**
      * 根据用户名查找用户交互聚合根
      * @param username 用户名值对象
@@ -149,12 +144,47 @@ public interface IUserInteractionRepository {
      * @return 评论总数
      */
     Long countApprovedCommentsByRelicsId(Long relicsId);
-    
-    // 统计查询方法已移至 IInteractionStatisticsService
-    
-    // 批量操作方法已移至 IInteractionBatchService
-    
-    // 时间范围查询方法已移至 IInteractionQueryService
-    
-    // 结果对象已移至对应的服务接口
+
+    boolean updateCommentStatus(Long commentId, CommentStatus status);
+
+    // ==================== 增量保存操作 ====================
+
+    /**
+     * 增量保存用户交互聚合根（只保存变更的数据）
+     * @param userInteraction 用户交互聚合根
+     * @return 保存结果
+     */
+    boolean saveIncremental(UserInteraction userInteraction);
+
+    /**
+     * 保存单个收藏操作
+     * @param username 用户名
+     * @param favoriteAction 收藏行为
+     * @return 保存结果
+     */
+    boolean saveFavorite(Username username, FavoriteAction favoriteAction);
+
+    /**
+     * 保存单个评论操作
+     * @param username 用户名
+     * @param commentAction 评论行为
+     * @return 保存结果
+     */
+    boolean saveComment(Username username, CommentAction commentAction);
+
+    /**
+     * 删除单个收藏
+     * @param username 用户名
+     * @param relicsId 文物ID
+     * @return 删除结果
+     */
+    boolean deleteFavorite(Username username, Long relicsId);
+
+    /**
+     * 删除单个评论
+     * @param username 用户名
+     * @param commentId 评论ID
+     * @return 删除结果
+     */
+    boolean deleteComment(Username username, Long commentId);
 }

@@ -48,7 +48,7 @@
         SELECT
         <include refid="Base_Column_List"/>
         FROM user_favorites
-        WHERE username = #{username} AND relics_id = #{relicsId} AND status = 0
+        WHERE username = #{username} AND relics_id = #{relicsId}
     </select>
 
     <select id="selectByUsername" resultMap="BaseResultMap">

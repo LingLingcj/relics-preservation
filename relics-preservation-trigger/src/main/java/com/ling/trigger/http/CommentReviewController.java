@@ -10,6 +10,7 @@ import com.ling.api.dto.response.ReviewStatisticsDTO;
 import com.ling.domain.interaction.model.valobj.*;
 import com.ling.domain.interaction.security.CommentReviewPermission;
 import com.ling.domain.interaction.service.ICommentReviewService;
+import com.ling.domain.interaction.service.IUserInteractionService;
 import com.ling.types.common.Response;
 import com.ling.types.common.ResponseCode;
 import io.swagger.v3.oas.annotations.Operation;
@@ -215,6 +216,27 @@ public class CommentReviewController {
                     .info("查询失败")
                     .build();
         }
+    }
+
+    @Operation(summary = "删除已发布的评论", description = "删除已发布但不符合规范的评论")
+    @DeleteMapping("/{commentId}")
+    public Response<Void> deleteComment(
+            @Parameter(description = "评论ID") @PathVariable Long commentId) {
+        String currentUsername = getCurrentUsername();
+        log.info("用户 {} 尝试删除评论 {}", currentUsername, commentId);
+
+        // 权限校验
+       if (!commentReviewService.hasReviewPermission(currentUsername)) {
+           return Response.error(ResponseCode.FORBIDDEN, null);
+       }
+
+        try {
+
+
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+        return Response.success(null);
     }
     
     @Operation(summary = "获取审核统计", description = "获取审核人员的统计信息")

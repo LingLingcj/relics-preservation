@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 /**
  * 评论审核服务实现
@@ -96,17 +95,25 @@ public class CommentReviewServiceImpl implements ICommentReviewService {
             return CommentReviewResult.failure(commentId, action, reviewer, "审核失败: " + e.getMessage());
         }
     }
-    
+
     @Override
-    public CommentReviewResult approveComment(Long commentId, String reviewer, String reason) {
-        return reviewComment(commentId, ReviewAction.APPROVE, reviewer, reason);
+    public boolean deleteComment(Long commentId, String reviewer, String reason) {
+        log.info("删除评论，id:{}, 审核人：{}", commentId, reviewer);
+
+        // 查找评论（需要获取包含用户信息的评论）
+        Optional<CommentAction> comment = userInteractionRepository.findCommentById(commentId);
+
+        if (comment.isEmpty()) {
+            return false;
+        }
+
+        comment.get().delete();
+
+        
+
+        return false;
     }
-    
-    @Override
-    public CommentReviewResult rejectComment(Long commentId, String reviewer, String reason) {
-        return reviewComment(commentId, ReviewAction.REJECT, reviewer, reason);
-    }
-    
+
     // ==================== 批量审核 ====================
     
     @Override
@@ -144,17 +151,7 @@ public class CommentReviewServiceImpl implements ICommentReviewService {
         
         return new BatchReviewResult(commentIds.size(), successCount, failureCount, results, errors);
     }
-    
-    @Override
-    public BatchReviewResult batchApproveComments(List<Long> commentIds, String reviewer, String reason) {
-        return batchReviewComments(commentIds, ReviewAction.APPROVE, reviewer, reason);
-    }
-    
-    @Override
-    public BatchReviewResult batchRejectComments(List<Long> commentIds, String reviewer, String reason) {
-        return batchReviewComments(commentIds, ReviewAction.REJECT, reviewer, reason);
-    }
-    
+
     // ==================== 查询功能 ====================
     
     @Override
@@ -262,9 +259,8 @@ public class CommentReviewServiceImpl implements ICommentReviewService {
      */
     private boolean updateCommentStatus(Long commentId, CommentStatus status) {
         try {
-            // TODO: 在仓储层实现评论状态更新方法
-            // userInteractionRepository.updateCommentStatus(commentId, status);
-            return true;
+            return userInteractionRepository.updateCommentStatus(commentId, status);
+
         } catch (Exception e) {
             log.error("更新评论状态失败: commentId={}, status={} - {}", 
                     commentId, status, e.getMessage(), e);
