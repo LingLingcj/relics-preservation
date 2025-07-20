@@ -1,11 +1,12 @@
 package com.ling.infrastructure.dao;
 
-import com.ling.infrastructure.dao.po.UserFavorite;
+import java.time.LocalDateTime;
+import java.util.List;
+
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDateTime;
-import java.util.List;
+import com.ling.infrastructure.dao.po.UserFavorite;
 
 /**
  * 用户收藏DAO接口
@@ -154,6 +155,24 @@ public interface IUserFavoriteDao {
                                        @Param("relicsId") Long relicsId,
                                        @Param("startTime") LocalDateTime startTime,
                                        @Param("endTime") LocalDateTime endTime);
+
+    // ==================== 缓存预热查询 ====================
+
+    /**
+     * 获取最近活跃的用户列表（用于缓存预热）
+     * @param since 起始时间
+     * @param limit 限制数量
+     * @return 活跃用户名列表
+     */
+    List<String> selectRecentActiveUsers(@Param("since") LocalDateTime since,
+                                       @Param("limit") int limit);
+
+    /**
+     * 获取热门文物ID列表（按收藏数排序，用于缓存预热）
+     * @param limit 限制数量
+     * @return 热门文物ID列表
+     */
+    List<Long> selectPopularRelicsIds(@Param("limit") int limit);
     
     // ==================== 结果对象 ====================
     

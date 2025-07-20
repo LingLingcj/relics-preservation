@@ -33,7 +33,7 @@ public class User {
     private UserStatus status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
-    
+
     /**
      * 创建新用户
      * @param username 用户名

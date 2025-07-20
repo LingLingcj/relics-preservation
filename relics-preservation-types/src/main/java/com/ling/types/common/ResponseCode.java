@@ -22,6 +22,7 @@ public enum ResponseCode {
     LOGIN_ERROR("1007", "用户名或密码错误"),
     OLD_PASSWORD_ERROR("1008", "原密码错误"),
     USER_NOT_LOGGED_IN("1009", "用户未登录"),
+    TOKEN_INVALID("1016", "令牌无效或已过期"),
     INVALID_ROLE("1010", "无效的用户角色"),
     USER_NOT_EXIST("1011", "用户不存在"),
     PROFILE_UPDATE_FAILED("1012", "更新用户信息失败"),

@@ -144,6 +144,66 @@ public class KnowledgeController {
                 .build();
     }
 
+    @RequestMapping(value = "/ai/flux", method = RequestMethod.POST)
+    public Flux<ChatResponse> generateFluxResponse(@RequestBody String message, @RequestBody(required = false) String ragTag) {
+        // 检查message参数是否为空
+        if (message == null || message.trim().isEmpty()) {
+            log.error("消息内容不能为空");
+            return null;
+        }
+
+        String SYSTEM_PROMPT = """
+                Use the information from the DOCUMENTS section to provide accurate answers but act as if you knew this information innately.
+                If unsure, simply state that you don't know.
+                Another thing you need to note is that your reply must be in Chinese!
+                DOCUMENTS:
+                    {documents}
+                """;
+
+        // 构建搜索请求
+        SearchRequest.Builder requestBuilder = SearchRequest.builder().query(message).topK(5);
+
+        // 如果指定了ragTag，则添加过滤条件
+        if (ragTag != null && !ragTag.isEmpty()) {
+            requestBuilder.filterExpression("tag == '" + ragTag + "'");
+            log.info("使用指定知识库标签进行查询: {}", ragTag);
+        } else {
+            // 如果没有指定ragTag，查询所有可用标签的内容（不添加过滤器）
+            RList<String> ragTags = redissonClient.getList("ragTag");
+            log.info("未指定标签，在所有知识库中查询: {}", ragTags);
+            // 不添加filter，默认在所有知识库中搜索
+        }
+
+        SearchRequest request = requestBuilder.build();
+        log.info("执行向量搜索，查询: {}", message);
+
+        List<Document> documents = pgVectorStore.similaritySearch(request);
+        log.info("找到相关文档数量: {}", documents.size());
+
+        List<Message> messages = new ArrayList<>();
+        // 确保使用trim后的消息
+        messages.add(new UserMessage(message.trim()));
+
+        // 检查是否找到了文档
+        if (documents.isEmpty()) {
+            // 如果没有找到文档，添加一个默认的系统消息
+            messages.add(new SystemMessage(
+                    "我的知识库中没有关于这个问题的具体信息。我将尝试根据一般知识回答您的问题。"));
+            log.info("未找到相关文档，使用默认提示");
+        } else {
+            // 找到了文档，使用文档内容创建消息
+            String documentCollectors = documents.stream().map(Document::getText).collect(Collectors.joining("\n\n"));
+            Message ragMessage = new SystemPromptTemplate(SYSTEM_PROMPT).createMessage(Map.of("documents", documentCollectors));
+            messages.add(ragMessage);
+            log.info("使用找到的文档创建提示");
+        }
+
+        // 创建并返回流式响应
+        Prompt prompt = new Prompt(messages, OpenAiChatOptions.builder().streamUsage(true).build());
+        log.info("prompt: {}", prompt);
+        return chatClient.prompt(prompt).user(message).stream().chatResponse();
+    }
+
 
     @Data
     public static class KnowledgeVO {

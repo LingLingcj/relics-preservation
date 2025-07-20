@@ -2,6 +2,7 @@ package com.ling.trigger.http;
 
 import com.ling.api.dto.request.ChangePasswordDTO;
 import com.ling.api.dto.request.LoginDTO;
+import com.ling.api.dto.request.RefreshTokenRequestDTO;
 import com.ling.api.dto.request.RegisterDTO;
 import com.ling.api.dto.response.AuthResponseDTO;
 import com.ling.api.dto.response.MessageResponseDTO;
@@ -13,11 +14,13 @@ import com.ling.domain.user.model.entity.User;
 import com.ling.types.common.Response;
 import com.ling.types.common.ResponseCode;
 import com.ling.types.jwt.JwtTokenProvider;
+import com.ling.types.jwt.TokenPair;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import jakarta.servlet.ServletResponse;
+import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -34,6 +37,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/auth")
 @Tag(name = "用户认证", description = "用户登录、注册和密码管理接口")
+@Slf4j
 public class AuthController {
 
     @Autowired
@@ -88,9 +92,15 @@ public class AuthController {
         
         // 注册成功后，登录并生成令牌
         Authentication authentication = authenticateUser(registerDTO.getUsername(), registerDTO.getPassword());
-        String token = jwtTokenProvider.generateToken(authentication);
 
-        return buildTokenResponse(token, "注册成功");
+        // 根据配置决定生成单Token还是双Token
+        if (jwtTokenProvider.isDualTokenEnabled()) {
+            TokenPair tokenPair = jwtTokenProvider.generateTokenPair(authentication);
+            return buildDualTokenResponse(tokenPair, "注册成功");
+        } else {
+            String token = jwtTokenProvider.generateToken(authentication);
+            return buildTokenResponse(token, "注册成功");
+        }
     }
 
     /**
@@ -125,9 +135,15 @@ public class AuthController {
         
         // 登录成功，生成JWT令牌
         Authentication authentication = authenticateUser(loginDTO.getUsername(), loginDTO.getPassword());
-        String token = jwtTokenProvider.generateToken(authentication);
 
-        return buildTokenResponse(token, "登录成功");
+        // 根据配置决定生成单Token还是双Token
+        if (jwtTokenProvider.isDualTokenEnabled()) {
+            TokenPair tokenPair = jwtTokenProvider.generateTokenPair(authentication);
+            return buildDualTokenResponse(tokenPair, "登录成功");
+        } else {
+            String token = jwtTokenProvider.generateToken(authentication);
+            return buildTokenResponse(token, "登录成功");
+        }
     }
 
     private Authentication authenticateUser(String username, String password) {
@@ -138,12 +154,76 @@ public class AuthController {
         return authentication;
     }
 
-    // 令牌响应
+    /**
+     * 刷新令牌接口
+     * @param refreshTokenRequest 刷新令牌请求
+     * @return 新的令牌对
+     */
+    @PostMapping("/refresh")
+    @Operation(summary = "刷新令牌", description = "使用刷新令牌获取新的访问令牌")
+    public Response<AuthResponseDTO> refreshToken(
+            @Parameter(description = "刷新令牌请求", required = true)
+            @RequestBody RefreshTokenRequestDTO refreshTokenRequest) {
+
+        try {
+            String refreshToken = refreshTokenRequest.getRefreshToken();
+
+            // 验证刷新令牌
+            if (!jwtTokenProvider.validateRefreshToken(refreshToken)) {
+                return Response.<AuthResponseDTO>builder()
+                        .code(ResponseCode.TOKEN_INVALID.getCode())
+                        .info("刷新令牌无效或已过期")
+                        .build();
+            }
+
+            // 生成新的访问令牌
+            String newAccessToken = jwtTokenProvider.generateAccessTokenFromRefresh(refreshToken);
+
+            // 构建响应
+            AuthResponseDTO response = AuthResponseDTO.builder()
+                    .token(newAccessToken) // 向后兼容
+                    .accessToken(newAccessToken)
+                    .refreshToken(refreshToken) // 返回原刷新令牌
+                    .message("令牌刷新成功")
+                    .build();
+
+            return Response.<AuthResponseDTO>builder()
+                    .code(ResponseCode.SUCCESS.getCode())
+                    .info(ResponseCode.SUCCESS.getInfo())
+                    .data(response)
+                    .build();
+
+        } catch (Exception e) {
+            log.error("刷新令牌失败: {}", e.getMessage());
+            return Response.<AuthResponseDTO>builder()
+                    .code(ResponseCode.TOKEN_INVALID.getCode())
+                    .info("刷新令牌失败: " + e.getMessage())
+                    .build();
+        }
+    }
+
+    // 令牌响应（向后兼容）
     private Response<AuthResponseDTO> buildTokenResponse(String token, String message) {
-        AuthResponseDTO response = AuthResponseDTO.builder()
-                .token(token)
-                .message(message)
+        AuthResponseDTO response = AuthResponseDTO.singleToken(token, message);
+
+        return Response.<AuthResponseDTO>builder()
+                .code(ResponseCode.SUCCESS.getCode())
+                .info(ResponseCode.SUCCESS.getInfo())
+                .data(response)
                 .build();
+    }
+
+    // 双令牌响应
+    private Response<AuthResponseDTO> buildDualTokenResponse(TokenPair tokenPair, String message) {
+        AuthResponseDTO response = AuthResponseDTO.dualToken(
+                tokenPair.getAccessToken(),
+                tokenPair.getRefreshToken(),
+                tokenPair.getAccessTokenExpiresAt(),
+                tokenPair.getRefreshTokenExpiresAt(),
+                tokenPair.getAccessTokenExpiresIn(),
+                tokenPair.getRefreshTokenExpiresIn(),
+                message
+        );
 
         return Response.<AuthResponseDTO>builder()
                 .code(ResponseCode.SUCCESS.getCode())
