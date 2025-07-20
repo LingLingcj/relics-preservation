@@ -17,12 +17,11 @@
 #### 核心框架
 - **Spring Boot 3.0+** - 现代化Java应用框架，提供自动配置和生产就绪特性
 - **Spring Security 6.0+** - 企业级安全框架，支持OAuth2、JWT认证授权
-- **Spring Data JPA** - 简化数据访问层开发，支持自动查询生成
 - **MyBatis 3.5+** - 灵活的SQL映射框架，支持复杂查询和动态SQL
 
 #### 数据存储
 - **MySQL 8.0+** - 主数据库，支持JSON字段、窗口函数等现代特性
-- **Redis 7.0+** - 分布式缓存，支持多种数据结构和持久化
+- **Redis 6.0+** - 分布式缓存，支持多种数据结构和持久化
 - **Elasticsearch 8.0+** - 全文搜索引擎，提供强大的文物搜索能力
 
 #### 消息与通信
@@ -525,13 +524,8 @@ CREATE TABLE user_achievements (
 
 ## 👥 团队成员
 
-- **项目开发者**: [LingRJ](https://github.com/lingrj)
+- **项目开发者**: [LingRJ](https://github.com/LingLingcj)
 
-## 📞 联系我们
-
-- **项目地址**: https://github.com/your-repo/relics-preservation
-- **问题反馈**: https://github.com/your-repo/relics-preservation/issues
-- **邮箱**: relics-preservation@example.com
 
 ## 🙏 致谢
 
